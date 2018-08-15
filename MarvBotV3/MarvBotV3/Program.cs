@@ -5,6 +5,7 @@ using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
 using System.IO;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MarvBotV3
 {
@@ -19,47 +20,60 @@ namespace MarvBotV3
         private async Task Start()
         {
             EnsureConfigExists();
+            var services = ConfigureServices();
 
-            client = new DiscordSocketClient(new DiscordSocketConfig
-            {
-                LogLevel = LogSeverity.Debug
-            });
+            //client = new DiscordSocketClient(new DiscordSocketConfig
+            //{
+            //    LogLevel = LogSeverity.Debug
+            //});
 
-            commands = new CommandService(new CommandServiceConfig
-            {
-                CaseSensitiveCommands = true,
-                DefaultRunMode = RunMode.Async,
-                LogLevel = LogSeverity.Debug
-            });
+            client = services.GetRequiredService<DiscordSocketClient>();
+            client.Log += LogAsync;
 
-            client.MessageReceived += Client_MessageReceived;
-            await commands.AddModulesAsync(Assembly.GetEntryAssembly());
+            services.GetRequiredService<CommandService>().Log += LogAsync;
 
-            client.Ready += Client_Ready;
-            client.Log += Client_Log;
+            //commands = new CommandService(new CommandServiceConfig
+            //{
+            //    CaseSensitiveCommands = true,
+            //    DefaultRunMode = RunMode.Async,
+            //    LogLevel = LogSeverity.Debug
+            //});
+
+            //client.MessageReceived += Client_MessageReceived;
+            //await commands.AddModulesAsync(Assembly.GetEntryAssembly());
+
+            //client.Ready += Client_Ready;
 
             await client.LoginAsync(TokenType.Bot, Configuration.Load().Token);
             await client.StartAsync();
+            await services.GetRequiredService<CommandHandler>().InitializeAsync();
 
             await Task.Delay(-1);
         }
 
-        private async Task Client_Log(LogMessage arg)
+        private Task LogAsync(LogMessage log)
         {
-            Console.WriteLine($"[{DateTime.Now} at {arg.Source}] {arg.Message}");
-            
+            Console.WriteLine(log.ToString());
+
+            return Task.CompletedTask;
         }
+
 
         private async Task Client_Ready()
         {
             throw new NotImplementedException();
         }
 
-        private async Task Client_MessageReceived(SocketMessage message)
+        private async Task Client_MessageReceived(SocketMessage _message)
         {
-            Console.WriteLine($"User: {message.Author} Sent message: {message}");
+            Console.WriteLine($"User: {_message.Author} Sent message: {_message}");
 
-            string msg = message.ToString();
+            SocketUserMessage message = _message as SocketUserMessage;
+            SocketCommandContext context = new SocketCommandContext(client, message);
+
+            if (context.Message.Content.Length > 0 || context.User.IsBot)
+                return;
+
         }
 
         public static void EnsureConfigExists()
@@ -80,6 +94,15 @@ namespace MarvBotV3
                 config.Save();                                  // Save the new configuration object to file.
             }
             Console.WriteLine("Configuration Loaded...");
+        }
+
+        private IServiceProvider ConfigureServices()
+        {
+            return new ServiceCollection()
+                .AddSingleton<DiscordSocketClient>()
+                .AddSingleton<CommandService>()
+                .AddSingleton<CommandHandler>()
+                .BuildServiceProvider();
         }
     }
 }
