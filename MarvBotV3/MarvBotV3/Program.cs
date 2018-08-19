@@ -6,20 +6,22 @@ using Discord.WebSocket;
 using Discord.Commands;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MarvBotV3
 {
     class Program
     {
         private DiscordSocketClient client;
-        private CommandService commands;
+        public static List<string> videoList = new List<string>() { "youtube.com", "vimeo.com", "liveleak.com", "youtu.be" };
 
         public static void Main(string[] args) =>
             new Program().Start().GetAwaiter().GetResult();
 
         private async Task Start()
         {
-            EnsureConfigExists();
+            EnsureBotConfigExists();
             var services = ConfigureServices();
 
             //client = new DiscordSocketClient(new DiscordSocketConfig
@@ -64,7 +66,7 @@ namespace MarvBotV3
             throw new NotImplementedException();
         }
 
-        private async Task Client_MessageReceived(SocketMessage _message)
+        private async Task Client_MessageReceived(SocketMessage _message) // Not active due to services
         {
             Console.WriteLine($"User: {_message.Author} Sent message: {_message}");
 
@@ -73,10 +75,9 @@ namespace MarvBotV3
 
             if (context.Message.Content.Length > 0 || context.User.IsBot)
                 return;
-
         }
 
-        public static void EnsureConfigExists()
+        public static void EnsureBotConfigExists()
         {
             if (!Directory.Exists(Path.Combine(AppContext.BaseDirectory, "Data")))
                 Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "Data"));
@@ -96,12 +97,31 @@ namespace MarvBotV3
             Console.WriteLine("Configuration Loaded...");
         }
 
+        public static void EnsureServerConfigExists(SocketGuildChannel typingChannel)
+        {
+            if (!Directory.Exists(Path.Combine(AppContext.BaseDirectory, "Data")))
+                Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "Data"));
+
+            string loc = Path.Combine(AppContext.BaseDirectory, "Data/serverConfiguration.json");
+
+            //if (!File.Exists(loc))                              // Check if the configuration file exists.
+            {
+                var config = new ServerConfig();               // Create a new configuration object.
+                
+                config.videoChannel = typingChannel.Id;
+
+                config.Save();                                  // Save the new configuration object to file.
+            }
+            Console.WriteLine("Configuration Loaded...");
+        }
+
         private IServiceProvider ConfigureServices()
         {
             return new ServiceCollection()
                 .AddSingleton<DiscordSocketClient>()
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandler>()
+                //.AddSingleton<Program>()
                 .BuildServiceProvider();
         }
     }
