@@ -22,6 +22,7 @@ namespace MarvBotV3
             _services = services;
 
             _discord.MessageReceived += MessageReceivedAsync;
+            _discord.GuildMemberUpdated += ChangeGameAndRole;
         }
 
         public async Task InitializeAsync()
@@ -39,7 +40,7 @@ namespace MarvBotV3
             {
                 ulong videoChan = ServerConfig.Load().videoChannel;
                 await message.DeleteAsync();
-                await message.Channel.SendMessageAsync("Please don't post videos in this channel. I have posted if for you in " + MentionUtils.MentionChannel(videoChan));
+                await message.Channel.SendMessageAsync("Please don't post videos in this channel. I have posted it for you in " + MentionUtils.MentionChannel(videoChan));
                 var cchannel = (message.Channel as SocketGuildChannel)?.Guild;
                 var textChannel = (ISocketMessageChannel)cchannel.GetChannel(videoChan);
                 await textChannel.SendMessageAsync(message + " Posted by: " + message.Author.Mention);
@@ -52,10 +53,67 @@ namespace MarvBotV3
             var context = new SocketCommandContext(_discord, message);
             var result = await _commands.ExecuteAsync(context, argPos, _services);
 
+
             if (result.Error.HasValue)
                 await context.Channel.SendMessageAsync(result.ToString());
 
 
+        }
+
+        public async Task ChangeGameAndRole(SocketGuildUser beforeChangeUser, SocketGuildUser afterChangeUser)
+        {
+            SocketGuildUser user = afterChangeUser;
+            IRole gameRole = null;
+            SocketGuild guild = user.Guild;
+            if(afterChangeUser.Game != null)
+            {
+                if(beforeChangeUser.Game != null)
+                {
+                    if(beforeChangeUser.Game.Value.Name == afterChangeUser.Game.Value.Name)
+                    {
+                        return;
+                    }
+                    gameRole = guild.Roles.Where(input => input.ToString().Equals(beforeChangeUser.Game.Value.Name)).FirstOrDefault();
+                    await user.RemoveRoleAsync(gameRole);
+                    gameRole = null;
+                }
+                gameRole = guild.Roles.Where(input => input.ToString().Equals(afterChangeUser.Game.Value.Name)).FirstOrDefault();
+                if (gameRole == null)
+                {
+                    gameRole = await guild.CreateRoleAsync(afterChangeUser.Game.Value.Name, permissions: GuildPermissions.None, color: Color.Default, isHoisted: false);
+                }
+                Discord.Rest.RestVoiceChannel altChannel = null;
+                var channel = guild.VoiceChannels.Where(input => input.ToString().Equals(gameRole.Name)).FirstOrDefault();
+                if (channel == null)
+                {
+                    VoiceChannelProperties properties = new VoiceChannelProperties();
+                    properties.Bitrate = 96000;
+                    altChannel = await guild.CreateVoiceChannelAsync(gameRole.Name);
+                    await altChannel.ModifyAsync(x => x.Bitrate = properties.Bitrate);
+                    await user.ModifyAsync(x => x.Channel = altChannel);
+                }
+                else
+                {
+                    await user.ModifyAsync(x => x.Channel = channel);
+                }
+                await user.AddRoleAsync(gameRole);
+            }
+            else if (beforeChangeUser.Game != null && afterChangeUser.Game == null)
+            {
+                gameRole = guild.Roles.Where(input => input.ToString().Equals(beforeChangeUser.Game.Value.Name)).FirstOrDefault();
+                Discord.Rest.RestVoiceChannel altChannel = null;
+                SocketVoiceChannel channel = guild.VoiceChannels.Where(input => input.ToString().Equals("General")).FirstOrDefault();
+                if (channel == null)
+                {
+                    altChannel = await guild.CreateVoiceChannelAsync("General");
+                    await user.ModifyAsync(x => x.Channel = altChannel);
+                }
+                else
+                {
+                    await user.ModifyAsync(x => x.Channel = channel);
+                }
+                await user.RemoveRoleAsync(gameRole);
+            }
         }
     }
 }
