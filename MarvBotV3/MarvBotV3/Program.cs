@@ -97,21 +97,36 @@ namespace MarvBotV3
             Console.WriteLine("Configuration Loaded...");
         }
 
-        public static void EnsureServerConfigExists(SocketGuildChannel typingChannel)
+        public static void EnsureServerConfigExists(SocketGuildChannel typingChannel, string chatChannel = "")
         {
             if (!Directory.Exists(Path.Combine(AppContext.BaseDirectory, "Data")))
                 Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "Data"));
 
             string loc = Path.Combine(AppContext.BaseDirectory, "Data/serverConfiguration.json");
 
-            //if (!File.Exists(loc))                              // Check if the configuration file exists.
-            {
-                var config = new ServerConfig();               // Create a new configuration object.
-                
-                config.videoChannel = typingChannel.Id;
+            var config = ServerConfig.Load();
 
-                config.Save();                                  // Save the new configuration object to file.
+            if (!File.Exists(loc))                              // Check if the configuration file exists.
+            {
+                config = new ServerConfig();               // Create a new configuration object.
+                
+                //config.Save();                                  // Save the new configuration object to file.
             }
+            
+
+            if (chatChannel == "Video")
+            {
+                config.videoChannel = typingChannel.Id;
+            }
+            else if (chatChannel == "Public")
+            {
+                config.publicChannel = typingChannel.Id;
+            }
+            else
+            {
+
+            }
+            config.Save();
             Console.WriteLine("Configuration Loaded...");
         }
 

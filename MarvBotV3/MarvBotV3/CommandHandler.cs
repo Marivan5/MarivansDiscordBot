@@ -15,6 +15,8 @@ namespace MarvBotV3
         private readonly DiscordSocketClient _discord;
         private readonly IServiceProvider _services;
 
+        public static IUserMessage lastNotCommand = null;
+
         public CommandHandler(IServiceProvider services)
         {
             _commands = services.GetRequiredService<CommandService>();
@@ -36,19 +38,40 @@ namespace MarvBotV3
             if (!(rawMessage is SocketUserMessage message)) return;
             if (message.Source != MessageSource.User) return;
 
-            if (Program.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id != ServerConfig.Load().videoChannel && ServerConfig.Load().videoChannel != 0)
+            if(ServerConfig.Load().publicChannel != message.Channel.Id) // Special channel that does not follow the normal rules
             {
-                ulong videoChan = ServerConfig.Load().videoChannel;
-                await message.DeleteAsync();
-                await message.Channel.SendMessageAsync("Please don't post videos in this channel. I have posted it for you in " + MentionUtils.MentionChannel(videoChan));
-                var cchannel = (message.Channel as SocketGuildChannel)?.Guild;
-                var textChannel = (ISocketMessageChannel)cchannel.GetChannel(videoChan);
-                await textChannel.SendMessageAsync(message + " Posted by: " + message.Author.Mention);
+                if (ServerConfig.Load().videoChannel != 0)
+                {
+                    if (Program.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id != ServerConfig.Load().videoChannel)
+                    {
+                        ulong videoChan = ServerConfig.Load().videoChannel;
+                        await message.DeleteAsync();
+                        await message.Channel.SendMessageAsync("Please don't post videos in this channel. I have posted it for you in " + MentionUtils.MentionChannel(videoChan));
+                        var cchannel = (message.Channel as SocketGuildChannel)?.Guild;
+                        var textChannel = (ISocketMessageChannel)cchannel.GetChannel(videoChan);
+                        await textChannel.SendMessageAsync(message + " Posted by: " + message.Author.Mention);
+                    }
+                    else if (!Program.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id == ServerConfig.Load().videoChannel)
+                    {
+                        await message.DeleteAsync();
+                        //await message.Channel.SendMessageAsync("Please only post videos in this channel");
+                        await message.Author.SendMessageAsync("Please only post videos in the video channel");
+                    }
+                }
             }
+            
+            
 
             // This value holds the offset where the prefix ends
             var argPos = 0;
-            if (!message.HasCharPrefix(Configuration.Load().Prefix, ref argPos) && !message.HasMentionPrefix(_discord.CurrentUser, ref argPos)) return;
+            if (!message.HasCharPrefix(Configuration.Load().Prefix, ref argPos) && !message.HasMentionPrefix(_discord.CurrentUser, ref argPos))
+            {
+                if(message.Channel.GetMessageAsync(message.Id) != null)
+                {
+                    lastNotCommand = message;
+                    return;
+                } 
+            }
 
             var context = new SocketCommandContext(_discord, message);
             var result = await _commands.ExecuteAsync(context, argPos, _services);
@@ -78,7 +101,7 @@ namespace MarvBotV3
                     gameRole = null;
                 }
                 gameRole = guild.Roles.Where(input => input.ToString().Equals(afterChangeUser.Game.Value.Name)).FirstOrDefault();
-                if (gameRole == null)
+                if (gameRole == null) // if role does not exist, create it
                 {
                     gameRole = await guild.CreateRoleAsync(afterChangeUser.Game.Value.Name, permissions: GuildPermissions.None, color: Color.Default, isHoisted: false);
                 }
@@ -89,12 +112,14 @@ namespace MarvBotV3
                     VoiceChannelProperties properties = new VoiceChannelProperties();
                     properties.Bitrate = 96000;
                     altChannel = await guild.CreateVoiceChannelAsync(gameRole.Name);
-                    await altChannel.ModifyAsync(x => x.Bitrate = properties.Bitrate);
-                    await user.ModifyAsync(x => x.Channel = altChannel);
+                    await altChannel.AddPermissionOverwriteAsync(guild.EveryoneRole, new OverwritePermissions(connect: PermValue.Deny));
+                    await altChannel.AddPermissionOverwriteAsync(gameRole, new OverwritePermissions(connect: PermValue.Allow));
+                    await altChannel.ModifyAsync(x => x.Bitrate = properties.Bitrate); 
+                    //await user.ModifyAsync(x => x.Channel = altChannel);
                 }
                 else
                 {
-                    await user.ModifyAsync(x => x.Channel = channel);
+                    //await user.ModifyAsync(x => x.Channel = channel);
                 }
                 await user.AddRoleAsync(gameRole);
             }
@@ -106,11 +131,11 @@ namespace MarvBotV3
                 if (channel == null)
                 {
                     altChannel = await guild.CreateVoiceChannelAsync("General");
-                    await user.ModifyAsync(x => x.Channel = altChannel);
+                    //await user.ModifyAsync(x => x.Channel = altChannel);
                 }
                 else
                 {
-                    await user.ModifyAsync(x => x.Channel = channel);
+                    //await user.ModifyAsync(x => x.Channel = channel);
                 }
                 await user.RemoveRoleAsync(gameRole);
             }

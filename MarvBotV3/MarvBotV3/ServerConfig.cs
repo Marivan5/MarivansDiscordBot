@@ -6,12 +6,13 @@ namespace MarvBotV3
 {
     public class ServerConfig
     {
-        // Your bot's command prefix. Please don't pick `!`. 
         public ulong videoChannel { get; set; }
+        public ulong publicChannel { get; set; }
 
         public ServerConfig()
         {
             videoChannel = 0;
+            publicChannel = 0;
         }
 
         // Save the configuration to the specified file location.
