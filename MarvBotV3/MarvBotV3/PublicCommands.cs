@@ -9,8 +9,6 @@ namespace MarvBotV3
 {
     public class PublicCommands : ModuleBase<SocketCommandContext>
     {
-        
-
         // Get info on a user, or the user who invoked the command if one is not specified
         [Command("userinfo")]
         [Alias("vem", "info")]
@@ -69,64 +67,65 @@ namespace MarvBotV3
             }
         }
 
-        [RequireOwner]
-        public class AdminModules : ModuleBase
+        [Command("fu"), Summary("FU!")]
+        [Alias("fackyou")]
+        public async Task FUReaction()
         {
-            [Command("clear"), Summary("Deletes X amount of messages")]
-            [Alias("delete", "prune", "purge")]
-            public async Task ClearMessages([Summary("Clear X amount of messages")] int amountToClear = 1)
+            await Context.Message.DeleteAsync();
+
+            var msg = CommandHandler.lastNotCommand;
+            if (msg == null)
             {
-                if (amountToClear < 100)
-                {
-                    ++amountToClear;
-                }
-                else if (amountToClear > 100)
-                {
-                    await Context.Channel.SendMessageAsync("Can only delete 100 messages.");
-                }
-                await Context.Channel.DeleteMessagesAsync(await Context.Channel.GetMessagesAsync(amountToClear).Flatten());
+                await Context.Channel.SendMessageAsync("I dont have a message cached.");
+                return;
             }
 
-            [Command("fu"), Summary("FU!")]
-            public async Task FUReaction()
-            {
-                await Context.Message.DeleteAsync();
+            const int delay = 1010; // Keep it just above a second so that i dont get hit with a preemtive rate limit
 
-                var msg = CommandHandler.lastNotCommand;
-                if (msg == null)
-                {
-                    await Context.Channel.SendMessageAsync("I dont have a message cached.");
-                    return;
-                }
-                
-                const int delay = 1010; // Keep it just above a second so that i dont get hit with a preemtive rate limit
-
-                Emoji Femoji = new Emoji("🇫");
-                Emoji Aemoji = new Emoji("🇦");
-                Emoji Cemoji = new Emoji("🇨");
-                Emoji Kemoji = new Emoji("🇰");
-                Emoji Yemoji = new Emoji("🇾");
-                Emoji Oemoji = new Emoji("🇴");
-                Emoji Uemoji = new Emoji("🇺");
-                Emoji MFemoji = new Emoji("🖕");
-                await msg.AddReactionAsync(Femoji);
-                await Task.Delay(delay);
-                await msg.AddReactionAsync(Aemoji);
-                await Task.Delay(delay);
-                await msg.AddReactionAsync(Cemoji);
-                await Task.Delay(delay);
-                await msg.AddReactionAsync(Kemoji);
-                await Task.Delay(delay);
-                await msg.AddReactionAsync(MFemoji);
-                await Task.Delay(delay);
-                await msg.AddReactionAsync(Yemoji);
-                await Task.Delay(delay);
-                await msg.AddReactionAsync(Oemoji);
-                await Task.Delay(delay);
-                await msg.AddReactionAsync(Uemoji);
-            }
+            Emoji Femoji = new Emoji("🇫");
+            Emoji Aemoji = new Emoji("🇦");
+            Emoji Cemoji = new Emoji("🇨");
+            Emoji Kemoji = new Emoji("🇰");
+            Emoji Yemoji = new Emoji("🇾");
+            Emoji Oemoji = new Emoji("🇴");
+            Emoji Uemoji = new Emoji("🇺");
+            Emoji MFemoji = new Emoji("🖕");
+            await msg.AddReactionAsync(Femoji);
+            await Task.Delay(delay);
+            await msg.AddReactionAsync(Aemoji);
+            await Task.Delay(delay);
+            await msg.AddReactionAsync(Cemoji);
+            await Task.Delay(delay);
+            await msg.AddReactionAsync(Kemoji);
+            await Task.Delay(delay);
+            await msg.AddReactionAsync(MFemoji);
+            await Task.Delay(delay);
+            await msg.AddReactionAsync(Yemoji);
+            await Task.Delay(delay);
+            await msg.AddReactionAsync(Oemoji);
+            await Task.Delay(delay);
+            await msg.AddReactionAsync(Uemoji);
         }
+    }
 
+    [RequireOwner]
+    public class AdminModules : ModuleBase
+    {
+        [Command("clear"), Summary("Deletes X amount of messages")]
+        [Alias("delete", "prune", "purge")]
+        public async Task ClearMessages([Summary("Clear X amount of messages")] int amountToClear = 1)
+        {
+            if (amountToClear < 100)
+            {
+                ++amountToClear;
+            }
+            else if (amountToClear > 100)
+            {
+                await Context.Channel.SendMessageAsync("Can only delete 100 messages.");
+            }
+            await Context.Channel.DeleteMessagesAsync(await Context.Channel.GetMessagesAsync(amountToClear).Flatten());
+        }
+  
         //// Ban a user
         //[Command("ban")]
         //[RequireContext(ContextType.Guild)]

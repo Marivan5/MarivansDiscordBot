@@ -8,11 +8,13 @@ namespace MarvBotV3
     {
         public ulong videoChannel { get; set; }
         public ulong publicChannel { get; set; }
+        public ulong serverOwner { get; set; }
 
         public ServerConfig()
         {
             videoChannel = 0;
             publicChannel = 0;
+            serverOwner = 117628335516942343;
         }
 
         // Save the configuration to the specified file location.

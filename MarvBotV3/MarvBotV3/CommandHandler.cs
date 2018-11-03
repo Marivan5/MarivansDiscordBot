@@ -38,29 +38,30 @@ namespace MarvBotV3
             if (!(rawMessage is SocketUserMessage message)) return;
             if (message.Source != MessageSource.User) return;
 
-            if(ServerConfig.Load().publicChannel != message.Channel.Id) // Special channel that does not follow the normal rules
+            if(message.Author.Id != ServerConfig.Load().serverOwner)
             {
-                if (ServerConfig.Load().videoChannel != 0)
+                if (ServerConfig.Load().publicChannel != message.Channel.Id) // Special channel that does not follow the normal rules
                 {
-                    if (Program.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id != ServerConfig.Load().videoChannel)
+                    if (ServerConfig.Load().videoChannel != 0)
                     {
-                        ulong videoChan = ServerConfig.Load().videoChannel;
-                        await message.DeleteAsync();
-                        await message.Channel.SendMessageAsync("Please don't post videos in this channel. I have posted it for you in " + MentionUtils.MentionChannel(videoChan));
-                        var cchannel = (message.Channel as SocketGuildChannel)?.Guild;
-                        var textChannel = (ISocketMessageChannel)cchannel.GetChannel(videoChan);
-                        await textChannel.SendMessageAsync(message + " Posted by: " + message.Author.Mention);
-                    }
-                    else if (!Program.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id == ServerConfig.Load().videoChannel)
-                    {
-                        await message.DeleteAsync();
-                        //await message.Channel.SendMessageAsync("Please only post videos in this channel");
-                        await message.Author.SendMessageAsync("Please only post videos in the video channel");
+                        if (Program.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id != ServerConfig.Load().videoChannel)
+                        {
+                            ulong videoChan = ServerConfig.Load().videoChannel;
+                            await message.DeleteAsync();
+                            await message.Channel.SendMessageAsync("Please don't post videos in this channel. I have posted it for you in " + MentionUtils.MentionChannel(videoChan));
+                            var cchannel = (message.Channel as SocketGuildChannel)?.Guild;
+                            var textChannel = (ISocketMessageChannel)cchannel.GetChannel(videoChan);
+                            await textChannel.SendMessageAsync(message + " Posted by: " + message.Author.Mention);
+                        }
+                        else if (!Program.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id == ServerConfig.Load().videoChannel)
+                        {
+                            await message.DeleteAsync();
+                            //await message.Channel.SendMessageAsync("Please only post videos in this channel");
+                            await message.Author.SendMessageAsync("Please only post videos in the video channel");
+                        }
                     }
                 }
             }
-            
-            
 
             // This value holds the offset where the prefix ends
             var argPos = 0;
@@ -76,11 +77,8 @@ namespace MarvBotV3
             var context = new SocketCommandContext(_discord, message);
             var result = await _commands.ExecuteAsync(context, argPos, _services);
 
-
             if (result.Error.HasValue)
                 await context.Channel.SendMessageAsync(result.ToString());
-
-
         }
 
         public async Task ChangeGameAndRole(SocketGuildUser beforeChangeUser, SocketGuildUser afterChangeUser)

@@ -8,14 +8,14 @@ namespace MarvBotV3
         // Your bot's command prefix. Please don't pick `!`. 
         public char Prefix { get; set; }
         // Ids of users who will have owner access to the bot.
-        public ulong[] Owners { get; set; }
+        public ulong Owner { get; set; }
         // Your bot's login token.
         public string Token { get; set; }
 
         public Configuration()
         {
             Prefix = ' ';
-            Owners = new ulong[] { 0 };
+            Owner = 117628335516942343;
             Token = "";
         }
 
