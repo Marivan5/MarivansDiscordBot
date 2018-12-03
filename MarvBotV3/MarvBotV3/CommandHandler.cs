@@ -110,8 +110,8 @@ namespace MarvBotV3
                     VoiceChannelProperties properties = new VoiceChannelProperties();
                     properties.Bitrate = 96000;
                     altChannel = await guild.CreateVoiceChannelAsync(gameRole.Name);
-                    await altChannel.AddPermissionOverwriteAsync(guild.EveryoneRole, new OverwritePermissions(connect: PermValue.Deny));
-                    await altChannel.AddPermissionOverwriteAsync(gameRole, new OverwritePermissions(connect: PermValue.Allow));
+                    await altChannel.AddPermissionOverwriteAsync(guild.EveryoneRole, new OverwritePermissions(connect: PermValue.Deny, readMessages: PermValue.Deny));
+                    await altChannel.AddPermissionOverwriteAsync(gameRole, new OverwritePermissions(connect: PermValue.Allow, readMessages: PermValue.Allow));
                     await altChannel.ModifyAsync(x => x.Bitrate = properties.Bitrate); 
                     //await user.ModifyAsync(x => x.Channel = altChannel);
                 }
