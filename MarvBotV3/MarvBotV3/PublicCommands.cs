@@ -125,7 +125,33 @@ namespace MarvBotV3
             }
             await Context.Channel.DeleteMessagesAsync(await Context.Channel.GetMessagesAsync(amountToClear).Flatten());
         }
-  
+
+        [Command("clearcon"), Summary("Deletes X amount of messages containing the param")]
+        [Alias("deletecon")]
+        public async Task ClearMessagesContaining(string param, int amountToClear = 1)
+        {
+            if (amountToClear < 100)
+            {
+                ++amountToClear;
+            }
+            else if (amountToClear > 100)
+            {
+                await Context.Channel.SendMessageAsync("Can only delete 100 messages.");
+            }
+
+            var toCheck = await Context.Channel.GetMessagesAsync(amountToClear).Flatten();
+            List<IMessage> toDelete = new List<IMessage>();
+
+            foreach (var msg in toCheck)
+            {
+                if(msg.Content.ToString().Contains(param))
+                {
+                    toDelete.Add(msg);
+                }
+            }
+            await Context.Channel.DeleteMessagesAsync(toDelete);
+        }
+
         //// Ban a user
         //[Command("ban")]
         //[RequireContext(ContextType.Guild)]

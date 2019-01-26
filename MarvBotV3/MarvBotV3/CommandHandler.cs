@@ -6,6 +6,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace MarvBotV3
 {
@@ -16,6 +17,8 @@ namespace MarvBotV3
         private readonly IServiceProvider _services;
 
         public static IUserMessage lastNotCommand = null;
+        public static List<SocketUser> freeMsgList = new List<SocketUser>();
+
 
         public CommandHandler(IServiceProvider services)
         {
@@ -44,8 +47,21 @@ namespace MarvBotV3
                 {
                     if (ServerConfig.Load().videoChannel != 0)
                     {
-                        if (Program.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id != ServerConfig.Load().videoChannel)
+                        if(Program.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id == ServerConfig.Load().videoChannel)
                         {
+                            if(!freeMsgList.Contains(message.Author))
+                            {
+                                freeMsgList.Add(message.Author);
+                            }
+                            Emoji thumbsUp = new Emoji("👍");
+                            await message.AddReactionAsync(thumbsUp);
+                        }
+                        else if (Program.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id != ServerConfig.Load().videoChannel)
+                        {
+                            if (!freeMsgList.Contains(message.Author))
+                            {
+                                freeMsgList.Add(message.Author);
+                            }
                             ulong videoChan = ServerConfig.Load().videoChannel;
                             await message.DeleteAsync();
                             await message.Channel.SendMessageAsync("Please don't post videos in this channel. I have posted it for you in " + MentionUtils.MentionChannel(videoChan));
@@ -55,9 +71,16 @@ namespace MarvBotV3
                         }
                         else if (!Program.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id == ServerConfig.Load().videoChannel)
                         {
-                            await message.DeleteAsync();
-                            //await message.Channel.SendMessageAsync("Please only post videos in this channel");
-                            await message.Author.SendMessageAsync("Please only post videos in the video channel");
+                            if (freeMsgList.Contains(message.Author))
+                            {
+                                freeMsgList.Remove(message.Author);
+                            }
+                            else
+                            {
+                                await message.DeleteAsync();
+                                //await message.Channel.SendMessageAsync("Please only post videos in this channel");
+                                await message.Author.SendMessageAsync("Please only post videos in the video channel");
+                            }
                         }
                     }
                 }
@@ -113,11 +136,11 @@ namespace MarvBotV3
                     await altChannel.AddPermissionOverwriteAsync(guild.EveryoneRole, new OverwritePermissions(connect: PermValue.Deny, readMessages: PermValue.Deny));
                     await altChannel.AddPermissionOverwriteAsync(gameRole, new OverwritePermissions(connect: PermValue.Allow, readMessages: PermValue.Allow));
                     await altChannel.ModifyAsync(x => x.Bitrate = properties.Bitrate); 
-                    //await user.ModifyAsync(x => x.Channel = altChannel);
+                    //await user.ModifyAsync(x => x.Channel = altChannel); // Flyttar användaren
                 }
                 else
                 {
-                    //await user.ModifyAsync(x => x.Channel = channel);
+                    //await user.ModifyAsync(x => x.Channel = channel); // Flyttar användaren
                 }
                 await user.AddRoleAsync(gameRole);
             }

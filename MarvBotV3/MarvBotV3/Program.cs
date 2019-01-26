@@ -16,6 +16,7 @@ namespace MarvBotV3
         private DiscordSocketClient client;
         public static List<string> videoList = new List<string>() { "youtube.com", "vimeo.com", "liveleak.com", "youtu.be" };
 
+
         public static void Main(string[] args) =>
             new Program().Start().GetAwaiter().GetResult();
 
