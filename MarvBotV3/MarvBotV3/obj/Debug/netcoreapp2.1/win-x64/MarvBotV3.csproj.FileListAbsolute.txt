@@ -1,0 +1,14 @@
+F:\Repos\MarivansDiscordBot\MarvBotV3\MarvBotV3\bin\Debug\netcoreapp2.1\win-x64\hostpolicy.dll
+F:\Repos\MarivansDiscordBot\MarvBotV3\MarvBotV3\bin\Debug\netcoreapp2.1\win-x64\hostfxr.dll
+F:\Repos\MarivansDiscordBot\MarvBotV3\MarvBotV3\bin\Debug\netcoreapp2.1\win-x64\MarvBotV3.exe
+F:\Repos\MarivansDiscordBot\MarvBotV3\MarvBotV3\bin\Debug\netcoreapp2.1\win-x64\MarvBotV3.deps.json
+F:\Repos\MarivansDiscordBot\MarvBotV3\MarvBotV3\bin\Debug\netcoreapp2.1\win-x64\MarvBotV3.runtimeconfig.json
+F:\Repos\MarivansDiscordBot\MarvBotV3\MarvBotV3\bin\Debug\netcoreapp2.1\win-x64\MarvBotV3.runtimeconfig.dev.json
+F:\Repos\MarivansDiscordBot\MarvBotV3\MarvBotV3\bin\Debug\netcoreapp2.1\win-x64\MarvBotV3.dll
+F:\Repos\MarivansDiscordBot\MarvBotV3\MarvBotV3\bin\Debug\netcoreapp2.1\win-x64\MarvBotV3.pdb
+F:\Repos\MarivansDiscordBot\MarvBotV3\MarvBotV3\obj\Debug\netcoreapp2.1\win-x64\MarvBotV3.csprojAssemblyReference.cache
+F:\Repos\MarivansDiscordBot\MarvBotV3\MarvBotV3\obj\Debug\netcoreapp2.1\win-x64\MarvBotV3.csproj.CoreCompileInputs.cache
+F:\Repos\MarivansDiscordBot\MarvBotV3\MarvBotV3\obj\Debug\netcoreapp2.1\win-x64\MarvBotV3.AssemblyInfoInputs.cache
+F:\Repos\MarivansDiscordBot\MarvBotV3\MarvBotV3\obj\Debug\netcoreapp2.1\win-x64\MarvBotV3.AssemblyInfo.cs
+F:\Repos\MarivansDiscordBot\MarvBotV3\MarvBotV3\obj\Debug\netcoreapp2.1\win-x64\MarvBotV3.dll
+F:\Repos\MarivansDiscordBot\MarvBotV3\MarvBotV3\obj\Debug\netcoreapp2.1\win-x64\MarvBotV3.pdb

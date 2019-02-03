@@ -39,6 +39,16 @@ namespace MarvBotV3
             await ReplyAsync(_channel + " was succefully added.");
         }
 
+        [Command("SetAFKChat")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [RequireBotPermission(GuildPermission.ManageMessages)]
+        public async Task SetAFKChannel([Remainder] SocketGuildChannel _channel)
+        {
+            Program.EnsureServerConfigExists(_channel, "AFK");
+            await ReplyAsync(_channel + " was succefully added.");
+        }
+
         [Command("VideoChat")]
         [Alias("video")]
         public async Task VideoChannelInfo()
@@ -50,6 +60,20 @@ namespace MarvBotV3
             else
             {
                 await ReplyAsync("Video channel is set to: " + MentionUtils.MentionChannel(ServerConfig.Load().videoChannel));
+            }
+        }
+
+        [Command("AFKChat")]
+        [Alias("AFK")]
+        public async Task AfkChannelInfo()
+        {
+            if (ServerConfig.Load().videoChannel == 0)
+            {
+                await ReplyAsync("AFK channel is not set.");
+            }
+            else
+            {
+                await ReplyAsync("AFK channel is set to: " + MentionUtils.MentionChannel(ServerConfig.Load().afkChannel));
             }
         }
 

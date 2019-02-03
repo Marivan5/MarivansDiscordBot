@@ -7,6 +7,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace MarvBotV3
 {
@@ -28,6 +29,7 @@ namespace MarvBotV3
 
             _discord.MessageReceived += MessageReceivedAsync;
             _discord.GuildMemberUpdated += ChangeGameAndRole;
+            _discord.UserVoiceStateUpdated += ChangeVoiceChannel;
         }
 
         public async Task InitializeAsync()
@@ -147,18 +149,34 @@ namespace MarvBotV3
             else if (beforeChangeUser.Game != null && afterChangeUser.Game == null)
             {
                 gameRole = guild.Roles.Where(input => input.ToString().Equals(beforeChangeUser.Game.Value.Name)).FirstOrDefault();
-                Discord.Rest.RestVoiceChannel altChannel = null;
-                SocketVoiceChannel channel = guild.VoiceChannels.Where(input => input.ToString().Equals("General")).FirstOrDefault();
-                if (channel == null)
-                {
-                    altChannel = await guild.CreateVoiceChannelAsync("General");
-                    //await user.ModifyAsync(x => x.Channel = altChannel);
-                }
-                else
-                {
-                    //await user.ModifyAsync(x => x.Channel = channel);
-                }
+                //Discord.Rest.RestVoiceChannel altChannel = null;
+                //SocketVoiceChannel channel = guild.VoiceChannels.Where(input => input.ToString().Equals("General")).FirstOrDefault();
+                //if (channel == null)
+                //{
+                //    altChannel = await guild.CreateVoiceChannelAsync("General");
+                //    await user.ModifyAsync(x => x.Channel = altChannel);
+                //}
+                //else
+                //{
+                //    await user.ModifyAsync(x => x.Channel = channel);
+                //}
                 await user.RemoveRoleAsync(gameRole);
+            }
+        }
+
+        public async Task ChangeVoiceChannel(SocketUser user, SocketVoiceState beforeState, SocketVoiceState afterState)
+        {
+            SocketGuild guild = afterState.VoiceChannel.Guild;
+            SocketGuildUser guildUser = guild.GetUser(user.Id);
+            SocketVoiceChannel channel = guild.GetVoiceChannel(ServerConfig.Load().afkChannel);
+
+            if (guildUser.VoiceState.Value.IsSelfDeafened && user.Id != ServerConfig.Load().serverOwner && !afterState.VoiceChannel.Equals(channel)) // Moves self muted users to afk channel
+            {
+                if (channel != null)
+                {
+                    await guildUser.ModifyAsync(x => x.Channel = channel);
+                    await guildUser.SendMessageAsync("Please undefean yourself before joining a voice channel.");
+                }
             }
         }
     }

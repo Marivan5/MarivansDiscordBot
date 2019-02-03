@@ -62,21 +62,21 @@ namespace MarvBotV3
         }
 
 
-        private async Task Client_Ready()
-        {
-            throw new NotImplementedException();
-        }
+        //private async Task Client_Ready()
+        //{
+        //    throw new NotImplementedException();
+        //}
 
-        private async Task Client_MessageReceived(SocketMessage _message) // Not active due to services
-        {
-            Console.WriteLine($"User: {_message.Author} Sent message: {_message}");
+        //private async Task Client_MessageReceived(SocketMessage _message) // Not active due to services
+        //{
+        //    Console.WriteLine($"User: {_message.Author} Sent message: {_message}");
 
-            SocketUserMessage message = _message as SocketUserMessage;
-            SocketCommandContext context = new SocketCommandContext(client, message);
+        //    SocketUserMessage message = _message as SocketUserMessage;
+        //    SocketCommandContext context = new SocketCommandContext(client, message);
 
-            if (context.Message.Content.Length > 0 || context.User.IsBot)
-                return;
-        }
+        //    if (context.Message.Content.Length > 0 || context.User.IsBot)
+        //        return;
+        //}
 
         public static void EnsureBotConfigExists()
         {
@@ -115,13 +115,17 @@ namespace MarvBotV3
             }
             
 
-            if (chatChannel == "Video")
+            if (chatChannel == "Video") // TODO: change to switch case later
             {
                 config.videoChannel = typingChannel.Id;
             }
             else if (chatChannel == "Public")
             {
                 config.publicChannel = typingChannel.Id;
+            }
+            else if (chatChannel == "AFK")
+            {
+                config.afkChannel = typingChannel.Id;
             }
             else
             {
