@@ -15,51 +15,20 @@ namespace MarvBotV3
         public async Task UserInfoAsync(IUser user = null)
         {
             user = user ?? Context.User;
-
             await ReplyAsync(user.ToString());
-        }
-
-        [Command("SetVideoChat")]
-        [RequireContext(ContextType.Guild)]
-        [RequireUserPermission(GuildPermission.ManageChannels)]
-        [RequireBotPermission(GuildPermission.ManageMessages)]
-        public async Task SetVideoChannel([Remainder] SocketGuildChannel _channel)
-        {
-            Program.EnsureServerConfigExists(_channel, "Video");
-            await ReplyAsync(_channel + " was succefully added.");
-        }
-
-        [Command("SetPublicChat")]
-        [RequireContext(ContextType.Guild)]
-        [RequireUserPermission(GuildPermission.ManageChannels)]
-        [RequireBotPermission(GuildPermission.ManageMessages)]
-        public async Task SetPublicChannel([Remainder] SocketGuildChannel _channel)
-        {
-            Program.EnsureServerConfigExists(_channel, "Public");
-            await ReplyAsync(_channel + " was succefully added.");
-        }
-
-        [Command("SetAFKChat")]
-        [RequireContext(ContextType.Guild)]
-        [RequireUserPermission(GuildPermission.ManageChannels)]
-        [RequireBotPermission(GuildPermission.ManageMessages)]
-        public async Task SetAFKChannel([Remainder] SocketGuildChannel _channel)
-        {
-            Program.EnsureServerConfigExists(_channel, "AFK");
-            await ReplyAsync(_channel + " was succefully added.");
         }
 
         [Command("VideoChat")]
         [Alias("video")]
         public async Task VideoChannelInfo()
         {
-            if(ServerConfig.Load().videoChannel == 0)
+            if(Program.serverConfig.videoChannel == 0)
             {
                 await ReplyAsync("Video channel is not set.");
             }
             else
             {
-                await ReplyAsync("Video channel is set to: " + MentionUtils.MentionChannel(ServerConfig.Load().videoChannel));
+                await ReplyAsync("Video channel is set to: " + MentionUtils.MentionChannel(Program.serverConfig.videoChannel));
             }
         }
 
@@ -67,13 +36,13 @@ namespace MarvBotV3
         [Alias("AFK")]
         public async Task AfkChannelInfo()
         {
-            if (ServerConfig.Load().videoChannel == 0)
+            if (Program.serverConfig.videoChannel == 0)
             {
                 await ReplyAsync("AFK channel is not set.");
             }
             else
             {
-                await ReplyAsync("AFK channel is set to: " + MentionUtils.MentionChannel(ServerConfig.Load().afkChannel));
+                await ReplyAsync("AFK channel is set to: " + MentionUtils.MentionChannel(Program.serverConfig.afkChannel));
             }
         }
 
@@ -81,13 +50,27 @@ namespace MarvBotV3
         [Alias("public")]
         public async Task PublicChannelInfo()
         {
-            if (ServerConfig.Load().publicChannel == 0)
+            if (Program.serverConfig.publicChannel == 0)
             {
                 await ReplyAsync("Public channel is not set.");
             }
             else
             {
-                await ReplyAsync("Public channel is set to: " + MentionUtils.MentionChannel(ServerConfig.Load().publicChannel));
+                await ReplyAsync("Public channel is set to: " + MentionUtils.MentionChannel(Program.serverConfig.publicChannel));
+            }
+        }
+
+        [Command("WhoWhiteList")]
+        [Alias("public")]
+        public async Task WhiteListInfo()
+        {
+            var whitelist = Program.serverConfig.whiteList;
+
+            await ReplyAsync("Whitelist contains:");
+
+            foreach (var user in whitelist)
+            {
+                await ReplyAsync(MentionUtils.MentionUser(user));
             }
         }
 
@@ -176,28 +159,85 @@ namespace MarvBotV3
             await Context.Channel.DeleteMessagesAsync(toDelete);
         }
 
-        //// Ban a user
-        //[Command("ban")]
-        //[RequireContext(ContextType.Guild)]
-        //// make sure the user invoking the command can ban
-        //[RequireUserPermission(GuildPermission.BanMembers)]
-        //// make sure the bot itself can ban
-        //[RequireBotPermission(GuildPermission.BanMembers)]
-        //public async Task BanUserAsync(IGuildUser user, [Remainder] string reason = null)
-        //{
-        //    await user.Guild.AddBanAsync(user, reason: reason);
-        //    await ReplyAsync("ok!");
-        //}
+        [Command("SetVideoChat")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [RequireBotPermission(GuildPermission.ManageMessages)]
+        public async Task SetVideoChannel([Remainder] SocketGuildChannel _channel)
+        {
+            Program.serverConfig.videoChannel = _channel.Id;
+            Program.serverConfig.Save();
+            await ReplyAsync(_channel + " was succefully added.");
+        }
 
-        //// [Remainder] takes the rest of the command's arguments as one argument, rather than splitting every space
-        //[Command("echo")]
-        //public Task EchoAsync([Remainder] string text)
-        //    // Insert a ZWSP before the text to prevent triggering other bots!
-        //    => ReplyAsync('\u200B' + text);
+        [Command("SetPublicChat")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [RequireBotPermission(GuildPermission.ManageMessages)]
+        public async Task SetPublicChannel([Remainder] SocketGuildChannel _channel)
+        {
+            Program.serverConfig.publicChannel = _channel.Id;
+            Program.serverConfig.Save();
+            await ReplyAsync(_channel + " was succefully added.");
+        }
 
-        //// 'params' will parse space-separated elements into a list
-        //[Command("list")]
-        //public Task ListAsync(params string[] objects)
-        //    => ReplyAsync("You listed: " + string.Join("; ", objects));
+        [Command("SetAFKChat")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [RequireBotPermission(GuildPermission.ManageMessages)]
+        public async Task SetAFKChannel([Remainder] SocketGuildChannel _channel)
+        {
+            Program.serverConfig.afkChannel = _channel.Id;
+            Program.serverConfig.Save();
+            await ReplyAsync(_channel + " was succefully added.");
+        }
+
+        [Command("Whitelist")]
+        [Alias("AddToWhitelist")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [RequireBotPermission(GuildPermission.ManageMessages)]
+        public async Task AddToWhiteList([Remainder] SocketGuildUser user)
+        {
+            Program.serverConfig.whiteList.Add(user.Id);
+            Program.serverConfig.Save();
+            await ReplyAsync(MentionUtils.MentionUser(user.Id) + " was succefully added to the whitelist.");
+        }
+
+        [Command("RemoveWhitelist")]
+        [Alias("RemoveFromWhiteList")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [RequireBotPermission(GuildPermission.ManageMessages)]
+        public async Task RemoveFromWhiteList([Remainder] SocketGuildUser user)
+        {
+            Program.serverConfig.whiteList.Remove(user.Id);
+            Program.serverConfig.Save();
+            await ReplyAsync(MentionUtils.MentionUser(user.Id) + " was succefully removed to the whitelist.");
+        }
+
+        [Command("VideoList")]
+        [Alias("AddToVideoList")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [RequireBotPermission(GuildPermission.ManageMessages)]
+        public async Task AddToVideoList([Remainder] string link)
+        {
+            Program.serverConfig.videoList.Add(link);
+            Program.serverConfig.Save();
+            await ReplyAsync(link + " was succefully added to the video channel list.");
+        }
+
+        [Command("RemoveVideoList")]
+        [Alias("RemoveFromVideoList")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [RequireBotPermission(GuildPermission.ManageMessages)]
+        public async Task RemoveFromVideoList([Remainder] string link)
+        {
+            Program.serverConfig.videoList.Remove(link);
+            Program.serverConfig.Save();
+            await ReplyAsync(link + " was succefully removed to the video channel list.");
+        }
     }
 }

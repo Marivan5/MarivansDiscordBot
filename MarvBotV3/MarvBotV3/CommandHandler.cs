@@ -7,7 +7,6 @@ using Discord.Commands;
 using Discord.WebSocket;
 using System.Linq;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace MarvBotV3
 {
@@ -43,35 +42,35 @@ namespace MarvBotV3
             if (!(rawMessage is SocketUserMessage message)) return;
             if (message.Source != MessageSource.User) return;
 
-            if(message.Author.Id != ServerConfig.Load().serverOwner)
+            if (Program.serverConfig.whiteList == null || Program.serverConfig.whiteList.All(x => x != message.Author.Id))
             {
-                if (ServerConfig.Load().publicChannel != message.Channel.Id) // Special channel that does not follow the normal rules
+                if (Program.serverConfig.publicChannel != message.Channel.Id) // Special channel that does not follow the normal rules
                 {
-                    if (ServerConfig.Load().videoChannel != 0)
+                    if (Program.serverConfig.videoChannel != 0)
                     {
-                        if(Program.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id == ServerConfig.Load().videoChannel)
+                        if (Program.serverConfig.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id == Program.serverConfig.videoChannel)
                         {
-                            if(!freeMsgList.Contains(message.Author))
+                            if (!freeMsgList.Contains(message.Author))
                             {
                                 freeMsgList.Add(message.Author);
                             }
                             Emoji thumbsUp = new Emoji("👍");
                             await message.AddReactionAsync(thumbsUp);
                         }
-                        else if (Program.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id != ServerConfig.Load().videoChannel)
+                        else if (Program.serverConfig.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id != Program.serverConfig.videoChannel)
                         {
                             if (!freeMsgList.Contains(message.Author))
                             {
                                 freeMsgList.Add(message.Author);
                             }
-                            ulong videoChan = ServerConfig.Load().videoChannel;
+                            ulong videoChan = Program.serverConfig.videoChannel;
                             await message.DeleteAsync();
                             await message.Channel.SendMessageAsync("Please don't post videos in this channel. I have posted it for you in " + MentionUtils.MentionChannel(videoChan));
                             var cchannel = (message.Channel as SocketGuildChannel)?.Guild;
                             var textChannel = (ISocketMessageChannel)cchannel.GetChannel(videoChan);
                             await textChannel.SendMessageAsync(message + " Posted by: " + message.Author.Mention);
                         }
-                        else if (!Program.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id == ServerConfig.Load().videoChannel)
+                        else if (!Program.serverConfig.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id == Program.serverConfig.videoChannel)
                         {
                             if (freeMsgList.Contains(message.Author))
                             {
@@ -168,9 +167,9 @@ namespace MarvBotV3
         {
             SocketGuild guild = afterState.VoiceChannel.Guild;
             SocketGuildUser guildUser = guild.GetUser(user.Id);
-            SocketVoiceChannel channel = guild.GetVoiceChannel(ServerConfig.Load().afkChannel);
+            SocketVoiceChannel channel = guild.GetVoiceChannel(Program.serverConfig.afkChannel);
 
-            if (guildUser.VoiceState.Value.IsSelfDeafened && user.Id != ServerConfig.Load().serverOwner && !afterState.VoiceChannel.Equals(channel)) // Moves self muted users to afk channel
+            if (guildUser.VoiceState.Value.IsSelfDeafened && Program.serverConfig.whiteList.All(x => x != user.Id) && !afterState.VoiceChannel.Equals(channel)) // Moves self muted users to afk channel
             {
                 if (channel != null)
                 {

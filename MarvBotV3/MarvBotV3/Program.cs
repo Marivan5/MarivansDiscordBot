@@ -1,21 +1,18 @@
 ﻿using System;
-using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace MarvBotV3
 {
     class Program
     {
         private DiscordSocketClient client;
-        public static List<string> videoList = new List<string>() { "youtube.com", "vimeo.com", "liveleak.com", "youtu.be" };
-
+        //public static List<string> videoList = new List<string>() { "youtube.com", "vimeo.com", "liveleak.com", "youtu.be", "clips.twitch.tv" };
+        public static ServerConfig serverConfig; 
 
         public static void Main(string[] args) =>
             new Program().Start().GetAwaiter().GetResult();
@@ -23,6 +20,8 @@ namespace MarvBotV3
         private async Task Start()
         {
             EnsureBotConfigExists();
+            EnsureServerConfigExists();
+            serverConfig = ServerConfig.Load();
             var services = ConfigureServices();
 
             //client = new DiscordSocketClient(new DiscordSocketConfig
@@ -98,41 +97,20 @@ namespace MarvBotV3
             Console.WriteLine("Configuration Loaded...");
         }
 
-        public static void EnsureServerConfigExists(SocketGuildChannel typingChannel, string chatChannel = "")
+        public static void EnsureServerConfigExists()
         {
             if (!Directory.Exists(Path.Combine(AppContext.BaseDirectory, "Data")))
                 Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "Data"));
 
             string loc = Path.Combine(AppContext.BaseDirectory, "Data/serverConfiguration.json");
 
-            var config = ServerConfig.Load();
-
             if (!File.Exists(loc))                              // Check if the configuration file exists.
             {
-                config = new ServerConfig();               // Create a new configuration object.
-                
-                //config.Save();                                  // Save the new configuration object to file.
-            }
-            
+                var config = new ServerConfig();                // Create a new configuration object.
 
-            if (chatChannel == "Video") // TODO: change to switch case later
-            {
-                config.videoChannel = typingChannel.Id;
+                config.Save();                                  // Save Config
             }
-            else if (chatChannel == "Public")
-            {
-                config.publicChannel = typingChannel.Id;
-            }
-            else if (chatChannel == "AFK")
-            {
-                config.afkChannel = typingChannel.Id;
-            }
-            else
-            {
-
-            }
-            config.Save();
-            Console.WriteLine("Configuration Loaded...");
+            Console.WriteLine("Server configuration Loaded...");
         }
 
         private IServiceProvider ConfigureServices()

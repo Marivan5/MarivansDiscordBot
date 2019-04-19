@@ -1,5 +1,7 @@
 ﻿using Discord.WebSocket;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace MarvBotV3
@@ -10,7 +12,8 @@ namespace MarvBotV3
         public ulong publicChannel { get; set; }
         public ulong serverOwner { get; set; }
         public ulong afkChannel { get; set; }
-
+        public List<ulong> whiteList { get; set; }
+        public List<string> videoList { get; set; }
 
         public ServerConfig()
         {
@@ -18,12 +21,22 @@ namespace MarvBotV3
             publicChannel = 0;
             serverOwner = 117628335516942343;
             afkChannel = 0;
+            JsonConvert.SerializeObject(whiteList);
+            JsonConvert.SerializeObject(videoList);
         }
 
         // Save the configuration to the specified file location.
         public void Save(string dir = "Data/serverConfiguration.json")
         {
             File.WriteAllText(dir, ToJson());
+            try
+            {
+                Program.serverConfig = Load();
+            }
+            catch
+            {
+                Console.WriteLine("Cant load config.");
+            }
         }
 
         // Load the configuration from the specified file location.

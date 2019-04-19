@@ -14,7 +14,7 @@ namespace MarvBotV3
 
         public Configuration()
         {
-            Prefix = ' ';
+            Prefix = '!';
             Owner = 117628335516942343;
             Token = "";
         }
