@@ -1,8 +1,8 @@
-﻿using Discord.WebSocket;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 
 namespace MarvBotV3
 {
@@ -15,6 +15,8 @@ namespace MarvBotV3
         public List<ulong> whiteList { get; set; }
         public List<string> videoList { get; set; }
 
+        private static string dir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Data/serverConfiguration.json");
+
         public ServerConfig()
         {
             videoChannel = 0;
@@ -26,7 +28,7 @@ namespace MarvBotV3
         }
 
         // Save the configuration to the specified file location.
-        public void Save(string dir = "Data/serverConfiguration.json")
+        public void Save()
         {
             File.WriteAllText(dir, ToJson());
             try
@@ -40,7 +42,7 @@ namespace MarvBotV3
         }
 
         // Load the configuration from the specified file location.
-        public static ServerConfig Load(string dir = "Data/serverConfiguration.json")
+        public static ServerConfig Load()
             => JsonConvert.DeserializeObject<ServerConfig>(File.ReadAllText(dir));
 
         // Convert the configuration to a json string. 

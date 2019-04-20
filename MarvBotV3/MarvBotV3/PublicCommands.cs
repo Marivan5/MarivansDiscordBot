@@ -159,6 +159,32 @@ namespace MarvBotV3
             await Context.Channel.DeleteMessagesAsync(toDelete);
         }
 
+        [Command("clearfrom"), Summary("Deletes X amount of messages from a user")]
+        [Alias("deletefrom")]
+        public async Task ClearMessagesFrom(SocketUser param, int amountToClear = 1)
+        {
+            if (amountToClear < 100)
+            {
+                ++amountToClear;
+            }
+            else if (amountToClear > 100)
+            {
+                await Context.Channel.SendMessageAsync("Can only delete 100 messages.");
+            }
+
+            var toCheck = await Context.Channel.GetMessagesAsync(amountToClear).Flatten();
+            List<IMessage> toDelete = new List<IMessage>();
+
+            foreach (var msg in toCheck)
+            {
+                if (msg.Author.Id == param.Id)
+                {
+                    toDelete.Add(msg);
+                }
+            }
+            await Context.Channel.DeleteMessagesAsync(toDelete);
+        }
+
         [Command("SetVideoChat")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageChannels)]
@@ -193,7 +219,7 @@ namespace MarvBotV3
         }
 
         [Command("Whitelist")]
-        [Alias("AddToWhitelist")]
+        [Alias("AddToWhitelist", "white")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageChannels)]
         [RequireBotPermission(GuildPermission.ManageMessages)]
@@ -205,7 +231,7 @@ namespace MarvBotV3
         }
 
         [Command("RemoveWhitelist")]
-        [Alias("RemoveFromWhiteList")]
+        [Alias("RemoveFromWhiteList", "black")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageChannels)]
         [RequireBotPermission(GuildPermission.ManageMessages)]

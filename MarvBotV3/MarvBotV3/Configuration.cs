@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System.IO;
+using System.Reflection;
 
 namespace MarvBotV3
 {
@@ -12,6 +13,9 @@ namespace MarvBotV3
         // Your bot's login token.
         public string Token { get; set; }
 
+        private static string dir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Data/configuration.json");
+
+
         public Configuration()
         {
             Prefix = '!';
@@ -20,13 +24,13 @@ namespace MarvBotV3
         }
 
         // Save the configuration to the specified file location.
-        public void Save(string dir = "Data/configuration.json")
+        public void Save()
         {
             File.WriteAllText(dir, ToJson());
         }
 
         // Load the configuration from the specified file location.
-        public static Configuration Load(string dir = "Data/configuration.json")
+        public static Configuration Load()
             => JsonConvert.DeserializeObject<Configuration>(File.ReadAllText(dir));
 
         // Convert the configuration to a json string. 
