@@ -10,7 +10,6 @@ namespace MarvBotV3
 {
     class Program
     {
-        private DiscordSocketClient client;
         //public static List<string> videoList = new List<string>() { "youtube.com", "vimeo.com", "liveleak.com", "youtu.be", "clips.twitch.tv" };
         public static ServerConfig serverConfig; 
 
@@ -19,38 +18,35 @@ namespace MarvBotV3
 
         private async Task Start()
         {
+            var config = new DiscordSocketConfig
+            {
+                TotalShards = 1
+            };
+
             EnsureBotConfigExists();
             EnsureServerConfigExists();
             serverConfig = ServerConfig.Load();
-            var services = ConfigureServices();
 
-            //client = new DiscordSocketClient(new DiscordSocketConfig
-            //{
-            //    LogLevel = LogSeverity.Debug
-            //});
+            using (var services = ConfigureServices(config))
+            {
+                var client = services.GetRequiredService<DiscordShardedClient>();
 
-            client = services.GetRequiredService<DiscordSocketClient>();
-            client.Log += LogAsync;
+                client.ShardReady += ReadyAsync;
+                client.Log += LogAsync;
 
-            services.GetRequiredService<CommandService>().Log += LogAsync;
+                await services.GetRequiredService<CommandHandler>().InitializeAsync();
 
-            //commands = new CommandService(new CommandServiceConfig
-            //{
-            //    CaseSensitiveCommands = true,
-            //    DefaultRunMode = RunMode.Async,
-            //    LogLevel = LogSeverity.Debug
-            //});
+                await client.LoginAsync(TokenType.Bot, Configuration.Load().Token);
+                await client.StartAsync();
 
-            //client.MessageReceived += Client_MessageReceived;
-            //await commands.AddModulesAsync(Assembly.GetEntryAssembly());
+                await Task.Delay(-1);
+            }
+        }
 
-            //client.Ready += Client_Ready;
-
-            await client.LoginAsync(TokenType.Bot, Configuration.Load().Token);
-            await client.StartAsync();
-            await services.GetRequiredService<CommandHandler>().InitializeAsync();
-
-            await Task.Delay(-1);
+        private Task ReadyAsync(DiscordSocketClient shard)
+        {
+            Console.WriteLine($"Shard Number {shard.ShardId} is connected and ready!");
+            return Task.CompletedTask;
         }
 
         private Task LogAsync(LogMessage log)
@@ -59,23 +55,6 @@ namespace MarvBotV3
 
             return Task.CompletedTask;
         }
-
-
-        //private async Task Client_Ready()
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //private async Task Client_MessageReceived(SocketMessage _message) // Not active due to services
-        //{
-        //    Console.WriteLine($"User: {_message.Author} Sent message: {_message}");
-
-        //    SocketUserMessage message = _message as SocketUserMessage;
-        //    SocketCommandContext context = new SocketCommandContext(client, message);
-
-        //    if (context.Message.Content.Length > 0 || context.User.IsBot)
-        //        return;
-        //}
 
         public static void EnsureBotConfigExists()
         {
@@ -113,10 +92,10 @@ namespace MarvBotV3
             Console.WriteLine("Server configuration Loaded...");
         }
 
-        private IServiceProvider ConfigureServices()
+        private ServiceProvider ConfigureServices(DiscordSocketConfig config)
         {
             return new ServiceCollection()
-                .AddSingleton<DiscordSocketClient>()
+                .AddSingleton(new DiscordShardedClient(config))
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandler>()
                 //.AddSingleton<Program>()

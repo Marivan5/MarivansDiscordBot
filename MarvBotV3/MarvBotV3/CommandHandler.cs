@@ -13,19 +13,19 @@ namespace MarvBotV3
     public class CommandHandler
     {
         private readonly CommandService _commands;
-        private readonly DiscordSocketClient _discord;
+        private readonly DiscordShardedClient _discord;
         private readonly IServiceProvider _services;
 
-        public static IUserMessage lastNotCommand = null;
         public static List<SocketUser> freeMsgList = new List<SocketUser>();
-
+        private char prefix = Configuration.Load().Prefix;
 
         public CommandHandler(IServiceProvider services)
         {
             _commands = services.GetRequiredService<CommandService>();
-            _discord = services.GetRequiredService<DiscordSocketClient>();
+            _discord = services.GetRequiredService<DiscordShardedClient>();
             _services = services;
 
+            _commands.CommandExecuted += CommandExecutedAsync;
             _discord.MessageReceived += MessageReceivedAsync;
             _discord.GuildMemberUpdated += ChangeGameAndRole;
             _discord.UserVoiceStateUpdated += ChangeVoiceChannel;
@@ -33,7 +33,7 @@ namespace MarvBotV3
 
         public async Task InitializeAsync()
         {
-            await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
+            await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
         }
 
         public async Task MessageReceivedAsync(SocketMessage rawMessage)
@@ -90,15 +90,8 @@ namespace MarvBotV3
             // This value holds the offset where the prefix ends
             var argPos = 0;
             if (!message.HasCharPrefix(Configuration.Load().Prefix, ref argPos) && !message.HasMentionPrefix(_discord.CurrentUser, ref argPos))
-            {
-                if(message.Channel.GetMessageAsync(message.Id) != null)
-                {
-                    lastNotCommand = message;
-                    return;
-                } 
-            }
-
-            var context = new SocketCommandContext(_discord, message);
+                return;
+            var context = new ShardedCommandContext(_discord, message);
             var result = await _commands.ExecuteAsync(context, argPos, _services);
 
             if (result.Error.HasValue)
@@ -110,22 +103,22 @@ namespace MarvBotV3
             SocketGuildUser user = afterChangeUser;
             IRole gameRole = null;
             SocketGuild guild = user.Guild;
-            if(afterChangeUser.Game != null)
+            if(afterChangeUser.Activity != null)
             {
-                if(beforeChangeUser.Game != null)
+                if(beforeChangeUser.Activity != null)
                 {
-                    if(beforeChangeUser.Game.Value.Name == afterChangeUser.Game.Value.Name)
+                    if(beforeChangeUser.Activity.Name == afterChangeUser.Activity.Name)
                     {
                         return;
                     }
-                    gameRole = guild.Roles.Where(input => input.ToString().Equals(beforeChangeUser.Game.Value.Name)).FirstOrDefault();
+                    gameRole = guild.Roles.Where(input => input.ToString().Equals(beforeChangeUser.Activity.Name)).FirstOrDefault();
                     await user.RemoveRoleAsync(gameRole);
                     gameRole = null;
                 }
-                gameRole = guild.Roles.Where(input => input.ToString().Equals(afterChangeUser.Game.Value.Name)).FirstOrDefault();
+                gameRole = guild.Roles.Where(input => input.ToString().Equals(afterChangeUser.Activity.Name)).FirstOrDefault();
                 if (gameRole == null) // if role does not exist, create it
                 {
-                    gameRole = await guild.CreateRoleAsync(afterChangeUser.Game.Value.Name, permissions: GuildPermissions.None, color: Color.Default, isHoisted: false);
+                    gameRole = await guild.CreateRoleAsync(afterChangeUser.Activity.Name, permissions: GuildPermissions.None, color: Color.Default, isHoisted: false);
                 }
                 Discord.Rest.RestVoiceChannel altChannel = null;
                 var channel = guild.VoiceChannels.Where(input => input.ToString().Equals(gameRole.Name)).FirstOrDefault();
@@ -134,8 +127,8 @@ namespace MarvBotV3
                     VoiceChannelProperties properties = new VoiceChannelProperties();
                     properties.Bitrate = 96000;
                     altChannel = await guild.CreateVoiceChannelAsync(gameRole.Name);
-                    await altChannel.AddPermissionOverwriteAsync(guild.EveryoneRole, new OverwritePermissions(connect: PermValue.Deny, readMessages: PermValue.Deny));
-                    await altChannel.AddPermissionOverwriteAsync(gameRole, new OverwritePermissions(connect: PermValue.Allow, readMessages: PermValue.Allow));
+                    await altChannel.AddPermissionOverwriteAsync(guild.EveryoneRole, new OverwritePermissions(connect: PermValue.Deny, viewChannel: PermValue.Deny));
+                    await altChannel.AddPermissionOverwriteAsync(gameRole, new OverwritePermissions(connect: PermValue.Allow, viewChannel: PermValue.Allow));
                     await altChannel.ModifyAsync(x => x.Bitrate = properties.Bitrate); 
                     //await user.ModifyAsync(x => x.Channel = altChannel); // Flyttar användaren
                 }
@@ -145,9 +138,9 @@ namespace MarvBotV3
                 }
                 await user.AddRoleAsync(gameRole);
             }
-            else if (beforeChangeUser.Game != null && afterChangeUser.Game == null)
+            else if (beforeChangeUser.Activity != null && afterChangeUser.Activity == null)
             {
-                gameRole = guild.Roles.Where(input => input.ToString().Equals(beforeChangeUser.Game.Value.Name)).FirstOrDefault();
+                gameRole = guild.Roles.Where(input => input.ToString().Equals(beforeChangeUser.Activity.Name)).FirstOrDefault();
                 //Discord.Rest.RestVoiceChannel altChannel = null;
                 //SocketVoiceChannel channel = guild.VoiceChannels.Where(input => input.ToString().Equals("General")).FirstOrDefault();
                 //if (channel == null)
@@ -161,6 +154,20 @@ namespace MarvBotV3
                 //}
                 await user.RemoveRoleAsync(gameRole);
             }
+        }
+
+        public async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
+        {
+            // command is unspecified when there was a search failure (command not found); we don't care about these errors
+            if (!command.IsSpecified)
+                return;
+
+            // the command was succesful, we don't care about this result, unless we want to log that a command succeeded.
+            if (result.IsSuccess)
+                return;
+
+            // the command failed, let's notify the user that something happened.
+            await context.Channel.SendMessageAsync($"error: {result.ToString()}");
         }
 
         public async Task ChangeVoiceChannel(SocketUser user, SocketVoiceState beforeState, SocketVoiceState afterState)

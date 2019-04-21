@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -7,7 +7,7 @@ using Discord.WebSocket;
 
 namespace MarvBotV3
 {
-    public class PublicCommands : ModuleBase<SocketCommandContext>
+    public class PublicCommands : ModuleBase<ShardedCommandContext>
     {
         // Get info on a user, or the user who invoked the command if one is not specified
         [Command("userinfo")]
@@ -78,12 +78,12 @@ namespace MarvBotV3
         [Alias("fackyou")]
         public async Task FUReaction()
         {
+            var msg = ((await Context.Channel.GetMessagesAsync(Context.Message, Direction.Before, 1).FlattenAsync()).FirstOrDefault() as IUserMessage);
             await Context.Message.DeleteAsync();
 
-            var msg = CommandHandler.lastNotCommand;
             if (msg == null)
             {
-                await Context.Channel.SendMessageAsync("I dont have a message cached.");
+                await Context.Channel.SendMessageAsync("Cant find a message.");
                 return;
             }
 
@@ -116,7 +116,7 @@ namespace MarvBotV3
     }
 
     [RequireOwner]
-    public class AdminModules : ModuleBase
+    public class AdminModules : ModuleBase<ShardedCommandContext>
     {
         [Command("clear"), Summary("Deletes X amount of messages")]
         [Alias("delete", "prune", "purge")]
@@ -130,7 +130,10 @@ namespace MarvBotV3
             {
                 await Context.Channel.SendMessageAsync("Can only delete 100 messages.");
             }
-            await Context.Channel.DeleteMessagesAsync(await Context.Channel.GetMessagesAsync(amountToClear).Flatten());
+
+            var messages = await Context.Channel.GetMessagesAsync(Context.Message, Direction.Before, amountToClear).FlattenAsync();
+            await (Context.Channel as ITextChannel).DeleteMessagesAsync(messages);
+            await Context.Channel.DeleteMessageAsync(Context.Message);
         }
 
         [Command("clearcon"), Summary("Deletes X amount of messages containing the param")]
@@ -146,7 +149,7 @@ namespace MarvBotV3
                 await Context.Channel.SendMessageAsync("Can only delete 100 messages.");
             }
 
-            var toCheck = await Context.Channel.GetMessagesAsync(amountToClear).Flatten();
+            var toCheck = await (Context.Channel as ITextChannel).GetMessagesAsync(amountToClear).FlattenAsync();
             List<IMessage> toDelete = new List<IMessage>();
 
             foreach (var msg in toCheck)
@@ -156,7 +159,7 @@ namespace MarvBotV3
                     toDelete.Add(msg);
                 }
             }
-            await Context.Channel.DeleteMessagesAsync(toDelete);
+            await (Context.Channel as ITextChannel).DeleteMessagesAsync(toDelete);
         }
 
         [Command("clearfrom"), Summary("Deletes X amount of messages from a user")]
@@ -172,7 +175,7 @@ namespace MarvBotV3
                 await Context.Channel.SendMessageAsync("Can only delete 100 messages.");
             }
 
-            var toCheck = await Context.Channel.GetMessagesAsync(amountToClear).Flatten();
+            var toCheck = await (Context.Channel as ITextChannel).GetMessagesAsync(amountToClear).FlattenAsync();
             List<IMessage> toDelete = new List<IMessage>();
 
             foreach (var msg in toCheck)
@@ -182,7 +185,7 @@ namespace MarvBotV3
                     toDelete.Add(msg);
                 }
             }
-            await Context.Channel.DeleteMessagesAsync(toDelete);
+            await (Context.Channel as ITextChannel).DeleteMessagesAsync(toDelete);
         }
 
         [Command("SetVideoChat")]
