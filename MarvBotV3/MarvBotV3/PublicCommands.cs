@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -61,7 +62,7 @@ namespace MarvBotV3
         }
 
         [Command("WhoWhiteList")]
-        [Alias("public")]
+        [Alias("whosSafe")]
         public async Task WhiteListInfo()
         {
             var whitelist = Program.serverConfig.whiteList;
@@ -113,6 +114,35 @@ namespace MarvBotV3
             await Task.Delay(delay);
             await msg.AddReactionAsync(Uemoji);
         }
+
+        [Command("Dice")]
+        [Alias("roll")]
+        public async Task DiceRoll(int lowValue = 1, int highValue = 6, int amount = 1)
+        {
+            if(amount > 20)
+            {
+                await ReplyAsync("Amount cant be more than 20");
+                amount = 20;
+            }
+
+            if (lowValue > highValue)
+            {
+                var tempValue = highValue;
+                highValue = lowValue;
+                lowValue = tempValue;
+            }
+
+            highValue = highValue + 1;
+            var rng = new Random();
+            string reply = "";
+
+            for (int i = 0; i < amount; i++)
+            {
+                reply += "Roll " + (i+1).ToString() + ": " + rng.Next(lowValue, highValue) + Environment.NewLine;
+            }
+
+            await ReplyAsync(reply);
+        }
     }
 
     [RequireOwner]
@@ -122,13 +152,9 @@ namespace MarvBotV3
         [Alias("delete", "prune", "purge")]
         public async Task ClearMessages([Summary("Clear X amount of messages")] int amountToClear = 1)
         {
-            if (amountToClear < 100)
+            if (amountToClear > 100)
             {
-                ++amountToClear;
-            }
-            else if (amountToClear > 100)
-            {
-                await Context.Channel.SendMessageAsync("Can only delete 100 messages.");
+                amountToClear = 100;
             }
 
             var messages = await Context.Channel.GetMessagesAsync(Context.Message, Direction.Before, amountToClear).FlattenAsync();
@@ -140,13 +166,9 @@ namespace MarvBotV3
         [Alias("deletecon")]
         public async Task ClearMessagesContaining(string param, int amountToClear = 1)
         {
-            if (amountToClear < 100)
+            if (amountToClear > 100)
             {
-                ++amountToClear;
-            }
-            else if (amountToClear > 100)
-            {
-                await Context.Channel.SendMessageAsync("Can only delete 100 messages.");
+                amountToClear = 100;
             }
 
             var toCheck = await (Context.Channel as ITextChannel).GetMessagesAsync(amountToClear).FlattenAsync();
@@ -166,13 +188,9 @@ namespace MarvBotV3
         [Alias("deletefrom")]
         public async Task ClearMessagesFrom(SocketUser param, int amountToClear = 1)
         {
-            if (amountToClear < 100)
+            if (amountToClear > 100)
             {
-                ++amountToClear;
-            }
-            else if (amountToClear > 100)
-            {
-                await Context.Channel.SendMessageAsync("Can only delete 100 messages.");
+                amountToClear = 100;
             }
 
             var toCheck = await (Context.Channel as ITextChannel).GetMessagesAsync(amountToClear).FlattenAsync();

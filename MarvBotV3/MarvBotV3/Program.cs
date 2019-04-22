@@ -10,7 +10,6 @@ namespace MarvBotV3
 {
     class Program
     {
-        //public static List<string> videoList = new List<string>() { "youtube.com", "vimeo.com", "liveleak.com", "youtu.be", "clips.twitch.tv" };
         public static ServerConfig serverConfig; 
 
         public static void Main(string[] args) =>

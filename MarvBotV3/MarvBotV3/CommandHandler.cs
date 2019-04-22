@@ -174,13 +174,13 @@ namespace MarvBotV3
         {
             SocketGuild guild = afterState.VoiceChannel.Guild;
             SocketGuildUser guildUser = guild.GetUser(user.Id);
-            SocketVoiceChannel channel = guild.GetVoiceChannel(Program.serverConfig.afkChannel);
+            SocketVoiceChannel afkChannel = guild.GetVoiceChannel(Program.serverConfig.afkChannel);
 
-            if (guildUser.VoiceState.Value.IsSelfDeafened && Program.serverConfig.whiteList.All(x => x != user.Id) && !afterState.VoiceChannel.Equals(channel)) // Moves self muted users to afk channel
+            if (guildUser.VoiceState.Value.IsSelfDeafened && Program.serverConfig.whiteList.All(x => x != user.Id) && !afterState.VoiceChannel.Equals(afkChannel)) // Moves self muted users to afk channel
             {
-                if (channel != null)
+                if (afkChannel != null)
                 {
-                    await guildUser.ModifyAsync(x => x.Channel = channel);
+                    await guildUser.ModifyAsync(x => x.Channel = afkChannel);
                     await guildUser.SendMessageAsync("Please undefean yourself before joining a voice channel.");
                 }
             }
