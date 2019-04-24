@@ -11,11 +11,12 @@ namespace MarvBotV3.Database
         {
             using (var db = new DatabaseContext())
             {
-                if(db.tbCurrencies.Where(x => x.UserID == userID).Count() < 1)
+                if(!db.tbCurrencies.Any(x => x.UserID == userID))
                 {
                     return 0;
                 }
-                return Convert.ToInt32(db.tbCurrencies.Where(x => x.UserID == userID).Select(x => x.GoldAmount));
+                var value = db.tbCurrencies.Where(x => x.UserID == userID).Select(x => x.GoldAmount).FirstOrDefault();
+                return Convert.ToInt32(value);
             }
         }
 
@@ -23,7 +24,7 @@ namespace MarvBotV3.Database
         {
             using (var db = new DatabaseContext())
             {
-                if (db.tbCurrencies.Where(x => x.UserID == userID).Count() < 1)
+                if (!db.tbCurrencies.Any(x => x.UserID == userID))
                 {
                     db.tbCurrencies.Add(new TbCurrency
                     {

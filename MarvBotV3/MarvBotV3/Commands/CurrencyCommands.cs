@@ -8,7 +8,7 @@ namespace MarvBotV3.Commands
     [Group("Gold")]
     [Alias("cash", "dinero", "money", "currency")]
     [Summary("Currency group")]
-    public class CurrencyCommands : ModuleBase<ShardedCommandContext>
+    public class CurrencyCommands : ModuleBase<SocketCommandContext>
     {
         [Command("Me")]
         [Alias("my", "stash")]
