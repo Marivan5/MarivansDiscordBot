@@ -7,6 +7,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using System.Linq;
 using System.Collections.Generic;
+using MarvBotV3.Database;
 
 namespace MarvBotV3
 {
@@ -29,6 +30,7 @@ namespace MarvBotV3
             _discord.MessageReceived += MessageReceivedAsync;
             _discord.GuildMemberUpdated += ChangeGameAndRole;
             _discord.UserVoiceStateUpdated += ChangeVoiceChannel;
+            GiveGoldToEveryone();
         }
 
         public async Task InitializeAsync()
@@ -89,7 +91,7 @@ namespace MarvBotV3
 
             // This value holds the offset where the prefix ends
             var argPos = 0;
-            if (!message.HasCharPrefix(Configuration.Load().Prefix, ref argPos) && !message.HasMentionPrefix(_discord.CurrentUser, ref argPos))
+            if (!message.HasCharPrefix(prefix, ref argPos) && !message.HasMentionPrefix(_discord.CurrentUser, ref argPos))
                 return;
             var context = new ShardedCommandContext(_discord, message);
             var result = await _commands.ExecuteAsync(context, argPos, _services);
@@ -183,6 +185,23 @@ namespace MarvBotV3
                     await guildUser.ModifyAsync(x => x.Channel = afkChannel);
                     await guildUser.SendMessageAsync("Please undefean yourself before joining a voice channel.");
                 }
+            }
+        }
+
+        public async Task GiveGoldToEveryone()
+        {
+            var millisecs = Convert.ToInt32(TimeSpan.FromMinutes(10).TotalMilliseconds);
+            while(true)
+            {
+                var guilds = _discord.Guilds;
+                List<SocketGuildUser> users = new List<SocketGuildUser>();
+                foreach (var guild in guilds)
+                {
+                    users = users.Concat(guild.Users).ToList();
+                }
+                var usersOnline = users.Where(x => x.Status != UserStatus.Offline).ToList();
+                await DataAccess.GiveGoldEveryone(usersOnline, 10);
+                await Task.Delay(Convert.ToInt32(millisecs));
             }
         }
     }

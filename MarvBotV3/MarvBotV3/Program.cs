@@ -5,6 +5,9 @@ using Discord.WebSocket;
 using Discord.Commands;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Generic;
+using MarvBotV3.Database;
+using System.Linq;
 
 namespace MarvBotV3
 {

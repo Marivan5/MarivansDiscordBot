@@ -6,6 +6,7 @@ namespace MarvBotV3.Database.Tables
     {
         [Key]
         public ulong UserID { get; set; }
+        public string Username { get; set; }
         public long GoldAmount { get; set; }
     }
 }

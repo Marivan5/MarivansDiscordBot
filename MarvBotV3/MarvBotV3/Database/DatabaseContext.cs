@@ -10,7 +10,9 @@ namespace MarvBotV3
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            string dbLocation = @"/share/Database/MarvBot.sqlite"; // \\RASPBERRYPI\share\Database\MarvBot.sqlite WINDOWS adress
+            // pi: /share/Database/MarvBot.sqlite
+            // windows: \\RASPBERRYPI\share\Database\MarvBot.sqlite
+            string dbLocation = @"/share/Database/MarvBot.sqlite"; 
             options.UseSqlite($"Data Source={dbLocation}");
         }
     }

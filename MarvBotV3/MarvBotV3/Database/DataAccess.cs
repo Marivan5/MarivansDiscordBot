@@ -1,5 +1,8 @@
-﻿using MarvBotV3.Database.Tables;
+﻿using Discord;
+using Discord.WebSocket;
+using MarvBotV3.Database.Tables;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -20,23 +23,52 @@ namespace MarvBotV3.Database
             }
         }
 
-        public static async Task SaveGold(ulong userID, int amount)
+        public static async Task SaveGold(IUser user, int amount)
         {
             using (var db = new DatabaseContext())
             {
-                if (!db.tbCurrencies.Any(x => x.UserID == userID))
+                if (!db.tbCurrencies.Any(x => x.UserID == user.Id))
                 {
                     db.tbCurrencies.Add(new TbCurrency
                     {
-                        UserID = userID,
+                        UserID = user.Id,
+                        Username = user.Username,
                         GoldAmount = amount,
                     });
                 }
                 else
                 {
-                    TbCurrency user = db.tbCurrencies.Where(x => x.UserID == userID).FirstOrDefault();
-                    user.GoldAmount += amount;
-                    db.tbCurrencies.Update(user);
+                    TbCurrency tbUser = db.tbCurrencies.Where(x => x.UserID == user.Id).FirstOrDefault();
+                    tbUser.GoldAmount += amount;
+                    tbUser.Username = user.Username;
+                    db.tbCurrencies.Update(tbUser);
+                }
+                await db.SaveChangesAsync();
+            }
+        }
+
+        public static async Task GiveGoldEveryone(List<SocketGuildUser> users, int amount)
+        {
+            using (var db = new DatabaseContext())
+            {
+                foreach (var user in users)
+                {
+                    if (!db.tbCurrencies.Any(x => x.UserID == user.Id))
+                    {
+                        db.tbCurrencies.Add(new TbCurrency
+                        {
+                            UserID = user.Id,
+                            Username = user.Username,
+                            GoldAmount = amount,
+                        });
+                    }
+                    else
+                    {
+                        TbCurrency tbUser = db.tbCurrencies.Where(x => x.UserID == user.Id).FirstOrDefault();
+                        tbUser.GoldAmount += amount;
+                        tbUser.Username = user.Username;
+                        db.tbCurrencies.Update(tbUser);
+                    }
                 }
                 await db.SaveChangesAsync();
             }
