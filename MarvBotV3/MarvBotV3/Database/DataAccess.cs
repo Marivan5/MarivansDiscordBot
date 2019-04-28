@@ -23,7 +23,16 @@ namespace MarvBotV3.Database
             }
         }
 
-        public static async Task SaveGold(IUser user, int amount)
+        public static List<TbCurrency> GetAllGold(ulong guildID, int amount = 10)
+        {
+            using (var db = new DatabaseContext())
+            {
+                var value = db.tbCurrencies.OrderByDescending(x => x.GoldAmount).Take(amount).ToList();
+                return value;
+            }
+        }
+
+        public static async Task SaveGold(IUser user, ulong guildID, int amount)
         {
             using (var db = new DatabaseContext())
             {
@@ -34,6 +43,7 @@ namespace MarvBotV3.Database
                         UserID = user.Id,
                         Username = user.Username,
                         GoldAmount = amount,
+                        GuildID = guildID,
                     });
                 }
                 else

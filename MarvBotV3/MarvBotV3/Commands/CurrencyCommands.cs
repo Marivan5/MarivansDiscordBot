@@ -45,12 +45,12 @@ namespace MarvBotV3.Commands
             if(result == 1)
             {
                 await ReplyAsync($"{reply}You **WIN**, **{amount}** gold has been added to your bank.");
-                await DataAccess.SaveGold(Context.User, amount);
+                await DataAccess.SaveGold(Context.User, Context.Guild.Id, amount);
             }
             else
             {
                 await ReplyAsync($"{reply}You lose, **{amount}** gold has been removed from your bank.");
-                await DataAccess.SaveGold(Context.User, -amount);
+                await DataAccess.SaveGold(Context.User, Context.Guild.Id, -amount);
             }
         }
 
@@ -80,13 +80,13 @@ namespace MarvBotV3.Commands
                 }
                 else
                 {
-                    await DataAccess.SaveGold(Context.User, -amount);
+                    await DataAccess.SaveGold(Context.User, Context.Guild.Id, -amount);
                 }
             }
 
             await ReplyAsync($"{Context.User.Mention} has just given {user.Mention} **{amount}** gold.");
 
-            await DataAccess.SaveGold(user, amount);
+            await DataAccess.SaveGold(user, Context.Guild.Id, amount);
         }
 
         [Command("giveEveryone")]
@@ -95,6 +95,19 @@ namespace MarvBotV3.Commands
             var users = Context.Guild.Users;
             await DataAccess.GiveGoldEveryone(users.Where(x => x.Status != UserStatus.Offline).ToList(), amount);
             await ReplyAsync($"You have given @everyone who is online, **{amount}** gold");
+        }
+
+        [Command("Toplist")]
+        [Alias("top", "richest")]
+        public async Task TopGold(int amount = 10)
+        {
+            var topList = DataAccess.GetAllGold(Context.Guild.Id, amount);
+            var reply = "";
+            foreach (var top in topList)
+            {
+                reply += $"{MentionUtils.MentionUser(top.UserID)} has **{top.GoldAmount}** gold" + Environment.NewLine;
+            }
+            await ReplyAsync(reply);
         }
     }
 }
