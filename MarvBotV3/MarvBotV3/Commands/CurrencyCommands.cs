@@ -8,10 +8,12 @@ using System.Threading.Tasks;
 namespace MarvBotV3.Commands
 {
     [Group("Gold")]
-    [Alias("cash", "dinero", "money", "currency")]
+    [Alias("cash", "dinero", "money", "currency", "bank", "ducates")]
     [Summary("Currency group")]
     public class CurrencyCommands : ModuleBase<SocketCommandContext>
     {
+        int jackpotBorder = 150;
+
         [Command("Me")]
         [Alias("", "my", "stash")]
         public async Task MeGold()
@@ -28,7 +30,7 @@ namespace MarvBotV3.Commands
 
         [Command("Gamble")]
         [Alias("roll", "dice")]
-        public async Task GambleGold(int amount)
+        public async Task GambleGold(int amount = 10)
         {
             var currentGold = DataAccess.GetGold(Context.User.Id);
             if (currentGold < amount)
@@ -36,14 +38,32 @@ namespace MarvBotV3.Commands
                 await ReplyAsync($"You only have {currentGold}. Can't gamble more.");
                 return;
             }
+            if (amount <= 0)
+            {
+                await ReplyAsync($"You can't gamble 0 gold.");
+                return;
+            }
 
             var rng = new Random();
-            var result = rng.Next(0, 2);
+            var result = rng.Next(0, 101);
+
+            //if(Context.User.Id == Program.serverConfig.serverOwner)
+            //{
+            //    result = rng.Next(51, 100);
+            //}
 
             var reply = $"You rolled {result}." + Environment.NewLine;
 
-            if(result == 1)
+            if(result >= 50)
             {
+                int jackpot = DataAccess.GetGold(276456075559960576);
+                if (result == 100 && amount < jackpot && amount > jackpotBorder)
+                {
+                    await ReplyAsync($"{reply}:tada: You **WIN THE JACKPOT**, **{jackpot.ToString()}** gold has been added to your bank. :tada:");
+                    await DataAccess.SaveGold(Context.User, Context.Guild.Id, jackpot);
+                    await DataAccess.SaveGoldToBot(-jackpot + jackpotBorder);
+
+                }
                 await ReplyAsync($"{reply}You **WIN**, **{amount}** gold has been added to your bank.");
                 await DataAccess.SaveGold(Context.User, Context.Guild.Id, amount);
             }
@@ -51,6 +71,7 @@ namespace MarvBotV3.Commands
             {
                 await ReplyAsync($"{reply}You lose, **{amount}** gold has been removed from your bank.");
                 await DataAccess.SaveGold(Context.User, Context.Guild.Id, -amount);
+                await DataAccess.SaveGoldToBot(amount);
             }
         }
 
@@ -89,6 +110,28 @@ namespace MarvBotV3.Commands
             await DataAccess.SaveGold(user, Context.Guild.Id, amount);
         }
 
+        [RequireOwner]
+        [Command("Take")]
+        [Alias("steal", "ta")]
+        public async Task TakeGold(IUser user, int amount = 1)
+        {
+            if (user.IsBot)
+            {
+                await ReplyAsync("Can't take money from a bot.");
+                return;
+            }
+            else if (user.Id == Context.User.Id)
+            {
+                await ReplyAsync("Can't take money from yourself.");
+                return;
+            }
+
+            await ReplyAsync($"{Context.User.Mention} has just taken **{amount}** gold from {user.Mention}.");
+
+            await DataAccess.SaveGold(user, Context.Guild.Id, -amount);
+        }
+
+        [RequireOwner]
         [Command("giveEveryone")]
         public async Task GiveGoldEveryone(int amount)
         {
@@ -108,6 +151,12 @@ namespace MarvBotV3.Commands
                 reply += $"{MentionUtils.MentionUser(top.UserID)} has **{top.GoldAmount}** gold" + Environment.NewLine;
             }
             await ReplyAsync(reply);
+        }
+        
+        [Command("Jackpot")]
+        public async Task JackpotStash()
+        {
+            await ReplyAsync($"**{DataAccess.GetGold(276456075559960576).ToString()}** gold is currently in the jackpot. To win the jackpot you have to bet **{jackpotBorder}** gold or more and roll a **100** in a regular gamble.");
         }
     }
 }

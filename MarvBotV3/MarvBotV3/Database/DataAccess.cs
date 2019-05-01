@@ -57,6 +57,17 @@ namespace MarvBotV3.Database
             }
         }
 
+        public static async Task SaveGoldToBot(int amount)
+        {
+            using (var db = new DatabaseContext())
+            {
+                TbCurrency tbUser = db.tbCurrencies.Where(x => x.UserID == 276456075559960576).FirstOrDefault();
+                tbUser.GoldAmount += amount;
+                db.tbCurrencies.Update(tbUser);
+                await db.SaveChangesAsync();
+            }
+        }
+
         public static async Task GiveGoldEveryone(List<SocketGuildUser> users, int amount)
         {
             using (var db = new DatabaseContext())

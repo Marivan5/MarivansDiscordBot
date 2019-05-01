@@ -14,7 +14,7 @@ namespace MarvBotV3
     public class CommandHandler
     {
         private readonly CommandService _commands;
-        private readonly DiscordShardedClient _discord;
+        public readonly DiscordShardedClient _discord;
         private readonly IServiceProvider _services;
 
         public static List<SocketUser> freeMsgList = new List<SocketUser>();
@@ -26,7 +26,7 @@ namespace MarvBotV3
             _discord = services.GetRequiredService<DiscordShardedClient>();
             _services = services;
 
-            _commands.CommandExecuted += CommandExecutedAsync;
+            //_commands.CommandExecuted += CommandExecutedAsync;
             _discord.MessageReceived += MessageReceivedAsync;
             _discord.GuildMemberUpdated += ChangeGameAndRole;
             _discord.UserVoiceStateUpdated += ChangeVoiceChannel;
@@ -158,19 +158,19 @@ namespace MarvBotV3
             }
         }
 
-        public async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
-        {
-            // command is unspecified when there was a search failure (command not found); we don't care about these errors
-            if (!command.IsSpecified)
-                return;
+        //public async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
+        //{
+        //    // command is unspecified when there was a search failure (command not found); we don't care about these errors
+        //    if (!command.IsSpecified)
+        //        return;
 
-            // the command was succesful, we don't care about this result, unless we want to log that a command succeeded.
-            if (result.IsSuccess)
-                return;
+        //    // the command was succesful, we don't care about this result, unless we want to log that a command succeeded.
+        //    if (result.IsSuccess)
+        //        return;
 
-            // the command failed, let's notify the user that something happened.
-            await context.Channel.SendMessageAsync($"error: {result.ToString()}");
-        }
+        //    // the command failed, let's notify the user that something happened.
+        //    await context.Channel.SendMessageAsync($"error: {result.ToString()}");
+        //}
 
         public async Task ChangeVoiceChannel(SocketUser user, SocketVoiceState beforeState, SocketVoiceState afterState)
         {
