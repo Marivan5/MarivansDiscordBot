@@ -9,5 +9,6 @@ namespace MarvBotV3.Database.Tables
         public string Username { get; set; }
         public long GoldAmount { get; set; }
         public ulong GuildID { get; set; }
+        public int AmountOfGambles { get; set; }
     }
 }

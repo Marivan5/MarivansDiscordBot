@@ -57,6 +57,30 @@ namespace MarvBotV3.Database
             }
         }
 
+        public static int GetGambleAmount(IUser user)
+        {
+            using (var db = new DatabaseContext())
+            {
+                if (!db.tbCurrencies.Any(x => x.UserID == user.Id))
+                {
+                    return 0;
+                }
+                var value = db.tbCurrencies.Where(x => x.UserID == user.Id).Select(x => x.AmountOfGambles).FirstOrDefault();
+                return Convert.ToInt32(value);
+            }
+        }
+
+        public static async Task UpdateGambleAmount(IUser user)
+        {
+            using (var db = new DatabaseContext())
+            {
+                TbCurrency tbUser = db.tbCurrencies.Where(x => x.UserID == user.Id).FirstOrDefault();
+                tbUser.AmountOfGambles++;
+                db.tbCurrencies.Update(tbUser);
+                await db.SaveChangesAsync();
+            }
+        }
+
         public static async Task SaveGoldToBot(int amount)
         {
             using (var db = new DatabaseContext())
@@ -81,6 +105,7 @@ namespace MarvBotV3.Database
                             UserID = user.Id,
                             Username = user.Username,
                             GoldAmount = amount,
+                            AmountOfGambles = 0,
                         });
                     }
                     else
@@ -88,6 +113,7 @@ namespace MarvBotV3.Database
                         TbCurrency tbUser = db.tbCurrencies.Where(x => x.UserID == user.Id).FirstOrDefault();
                         tbUser.GoldAmount += amount;
                         tbUser.Username = user.Username;
+                        tbUser.AmountOfGambles = 0;
                         db.tbCurrencies.Update(tbUser);
                     }
                 }

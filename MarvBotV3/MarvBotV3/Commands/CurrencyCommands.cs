@@ -8,11 +8,12 @@ using System.Threading.Tasks;
 namespace MarvBotV3.Commands
 {
     [Group("Gold")]
-    [Alias("cash", "dinero", "money", "currency", "bank", "ducates")]
+    [Alias("cash", "dinero", "money", "currency", "bank", "ducates", "euro", "dollar", "dollaroos")]
     [Summary("Currency group")]
     public class CurrencyCommands : ModuleBase<SocketCommandContext>
     {
         int jackpotBorder = 150;
+        int maxGamblesPer10Min = 2;
 
         [Command("Me")]
         [Alias("", "my", "stash")]
@@ -33,6 +34,12 @@ namespace MarvBotV3.Commands
         public async Task GambleGold(int amount = 10)
         {
             var currentGold = DataAccess.GetGold(Context.User.Id);
+            var amountOfGambles = DataAccess.GetGambleAmount(Context.User);
+            if(amountOfGambles >= maxGamblesPer10Min)
+            {
+                await ReplyAsync("You have reach your max gambles. Wait 10 minutes and then gamble again.");
+                return;
+            }
             if (currentGold < amount)
             {
                 await ReplyAsync($"You only have {currentGold}. Can't gamble more.");
@@ -73,8 +80,8 @@ namespace MarvBotV3.Commands
                 await DataAccess.SaveGold(Context.User, Context.Guild.Id, -amount);
                 await DataAccess.SaveGoldToBot(amount);
             }
+            await DataAccess.UpdateGambleAmount(Context.User);
         }
-
 
         [Command("Give")]
         [Alias("gift", "ge")]

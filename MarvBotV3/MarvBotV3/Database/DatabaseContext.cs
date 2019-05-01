@@ -12,6 +12,7 @@ namespace MarvBotV3
         {
             // pi: /share/Database/MarvBot.sqlite
             // windows: \\RASPBERRYPI\share\Database\MarvBot.sqlite
+            //string dbLocation = @"\\RASPBERRYPI\share\Database\MarvBot.sqlite";
             string dbLocation = @"/share/Database/MarvBot.sqlite"; 
             options.UseSqlite($"Data Source={dbLocation}");
         }
