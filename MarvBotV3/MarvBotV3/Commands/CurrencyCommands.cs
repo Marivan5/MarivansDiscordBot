@@ -12,7 +12,7 @@ namespace MarvBotV3.Commands
     [Summary("Currency group")]
     public class CurrencyCommands : ModuleBase<SocketCommandContext>
     {
-        int jackpotBorder = 150;
+        int jackpotBorder = 250;
         int maxGamblesPer10Min = 2;
 
         [Command("Me")]
@@ -61,10 +61,10 @@ namespace MarvBotV3.Commands
 
             var reply = $"You rolled {result}." + Environment.NewLine;
 
-            if(result >= 50)
+            if(result >= 60)
             {
                 int jackpot = DataAccess.GetGold(276456075559960576);
-                if (result == 100 && amount < jackpot && amount > jackpotBorder)
+                if (result == 100 && amount < jackpot && amount >= jackpotBorder)
                 {
                     await ReplyAsync($"{reply}:tada: You **WIN THE JACKPOT**, **{jackpot.ToString()}** gold has been added to your bank. :tada:");
                     await DataAccess.SaveGold(Context.User, Context.Guild.Id, jackpot);
