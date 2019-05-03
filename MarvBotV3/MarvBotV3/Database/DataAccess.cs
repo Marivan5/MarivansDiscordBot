@@ -23,6 +23,20 @@ namespace MarvBotV3.Database
             }
         }
 
+        public static async Task DeleteUser(ulong userID)
+        {
+            using (var db = new DatabaseContext())
+            {
+                if (!db.tbCurrencies.Any(x => x.UserID == userID))
+                {
+                    return;
+                }
+                var user = db.tbCurrencies.Where(x => x.UserID == userID).FirstOrDefault();
+                db.tbCurrencies.Remove(user);
+                await db.SaveChangesAsync();
+            }
+        }
+
         public static List<TbCurrency> GetAllGold(ulong guildID, int amount = 10)
         {
             using (var db = new DatabaseContext())

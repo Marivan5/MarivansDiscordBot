@@ -29,6 +29,15 @@ namespace MarvBotV3.Commands
             await ReplyAsync($"{user.Mention} has **{DataAccess.GetGold(user.Id).ToString()}** gold.");
         }
 
+        [RequireOwner]
+        [Command("delete")]
+        [Alias("remove", "kill")]
+        public async Task DeleteUser(ulong userID)
+        {
+            await DataAccess.DeleteUser(userID);
+            await ReplyAsync($"Removed all of {MentionUtils.MentionUser(userID)}'s gold");
+        }
+
         [Command("Gamble")]
         [Alias("roll", "dice")]
         public async Task GambleGold(int amount = 10)
