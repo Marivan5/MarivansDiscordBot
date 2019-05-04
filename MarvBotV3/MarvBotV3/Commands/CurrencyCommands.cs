@@ -76,7 +76,10 @@ namespace MarvBotV3.Commands
                     await DataAccess.SaveGoldToBot(-jackpot + jackpotBorder);
 
                 }
-                await ReplyAsync($"{reply}You **WIN**, **{amount}** gold has been added to your bank.");
+                else
+                {
+                    await ReplyAsync($"{reply}You **WIN**, **{amount}** gold has been added to your bank.");
+                }
                 await DataAccess.SaveGold(Context.User, Context.Guild.Id, amount);
             }
             else
@@ -184,7 +187,7 @@ namespace MarvBotV3.Commands
 
             if(stats == null)
             {
-                await ReplyAsync("Can't find any stats on you.");
+                await ReplyAsync($"Can't find any stats on {user.Mention}.");
                 return;
             }
 
