@@ -177,6 +177,13 @@ namespace MarvBotV3.Commands
         {
             var reply = "";
             var stats = DataAccess.GetStats(Context.User.Id);
+
+            if(stats == null)
+            {
+                await ReplyAsync("Can't find any stats on you.");
+                return;
+            }
+
             float winPercent = ((float)stats.Where(x => x.Won == true).Count() / (float)stats.Count()) * 100;
             reply += ($"You have **won** {winPercent}% of your gambles.") + Environment.NewLine;
             var amountWon = stats.Where(x => x.Won == true).Select(x => x.Amount).ToList();

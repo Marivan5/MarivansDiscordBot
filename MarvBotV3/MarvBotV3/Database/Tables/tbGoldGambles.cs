@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace MarvBotV3.Database.Tables
 {
@@ -11,5 +12,7 @@ namespace MarvBotV3.Database.Tables
         public bool Won { get; set; }
         public long Amount { get; set; }
         public int Roll { get; set; }
+
+        public DateTime TimeStamp { get; set; }
     }
 }

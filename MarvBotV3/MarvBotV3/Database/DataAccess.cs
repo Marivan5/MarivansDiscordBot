@@ -146,6 +146,7 @@ namespace MarvBotV3.Database
                     Won = won,
                     Amount = (long)amount,
                     Roll = roll,
+                    TimeStamp = DateTime.Now,
                 });
                 await db.SaveChangesAsync();
             }
