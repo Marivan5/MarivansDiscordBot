@@ -134,5 +134,21 @@ namespace MarvBotV3.Database
                 await db.SaveChangesAsync();
             }
         }
+
+        public static async Task SaveStats(IUser user, bool won, int amount, int roll)
+        {
+            using (var db = new DatabaseContext())
+            {
+                db.tbGoldGambles.Add(new tbGoldGambles
+                {
+                    UserID = user.Id,
+                    Username = user.Username,
+                    Won = won,
+                    Amount = (ulong)amount,
+                    Roll = roll,
+                });
+                await db.SaveChangesAsync();
+            }
+        }
     }
 }

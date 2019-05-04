@@ -62,21 +62,17 @@ namespace MarvBotV3.Commands
 
             var rng = new Random();
             var result = rng.Next(0, 101);
-
-            //if(Context.User.Id == Program.serverConfig.serverOwner)
-            //{
-            //    result = rng.Next(51, 100);
-            //}
-
             var reply = $"You rolled {result}." + Environment.NewLine;
+            var won = false;
 
             if(result >= 60)
             {
                 int jackpot = DataAccess.GetGold(276456075559960576);
+                won = true;
                 if (result == 100 && amount < jackpot && amount >= jackpotBorder)
                 {
+                    amount = jackpot;
                     await ReplyAsync($"{reply}:tada: You **WIN THE JACKPOT**, **{jackpot.ToString()}** gold has been added to your bank. :tada:");
-                    await DataAccess.SaveGold(Context.User, Context.Guild.Id, jackpot);
                     await DataAccess.SaveGoldToBot(-jackpot + jackpotBorder);
 
                 }
@@ -85,11 +81,13 @@ namespace MarvBotV3.Commands
             }
             else
             {
+                won = false;
                 await ReplyAsync($"{reply}You lose, **{amount}** gold has been removed from your bank.");
                 await DataAccess.SaveGold(Context.User, Context.Guild.Id, -amount);
                 await DataAccess.SaveGoldToBot(amount);
             }
             await DataAccess.UpdateGambleAmount(Context.User);
+            await DataAccess.SaveStats(Context.User, won, amount, result);
         }
 
         [Command("Give")]
@@ -122,7 +120,6 @@ namespace MarvBotV3.Commands
             }
 
             await ReplyAsync($"{Context.User.Mention} has just given {user.Mention} **{amount}** gold.");
-
             await DataAccess.SaveGold(user, Context.Guild.Id, amount);
         }
 
@@ -143,7 +140,6 @@ namespace MarvBotV3.Commands
             }
 
             await ReplyAsync($"{Context.User.Mention} has just taken **{amount}** gold from {user.Mention}.");
-
             await DataAccess.SaveGold(user, Context.Guild.Id, -amount);
         }
 

@@ -37,7 +37,6 @@ namespace MarvBotV3
                 client.Log += LogAsync;
 
                 await services.GetRequiredService<CommandHandler>().InitializeAsync();
-
                 await client.LoginAsync(TokenType.Bot, Configuration.Load().Token);
                 await client.StartAsync();
 
