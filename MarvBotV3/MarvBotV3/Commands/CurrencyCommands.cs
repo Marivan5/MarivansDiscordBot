@@ -173,10 +173,14 @@ namespace MarvBotV3.Commands
 
         [Command("Stats")]
         [Alias("info", "stat")]
-        public async Task GetStats()
+        public async Task GetStats(IUser user = null)
         {
+            if(user == null)
+            {
+                user = Context.User;
+            }
             var reply = "";
-            var stats = DataAccess.GetStats(Context.User.Id);
+            var stats = DataAccess.GetStats(user.Id);
 
             if(stats == null)
             {
@@ -185,11 +189,11 @@ namespace MarvBotV3.Commands
             }
 
             float winPercent = ((float)stats.Where(x => x.Won == true).Count() / (float)stats.Count()) * 100;
-            reply += ($"You have **won** {winPercent}% of your gambles.") + Environment.NewLine;
+            reply += ($"{user.Mention} has **won** {winPercent}% of their gambles.") + Environment.NewLine;
             var amountWon = stats.Where(x => x.Won == true).Select(x => x.Amount).ToList();
-            reply += ($"You have **won** a total amount of **{amountWon.Sum()}** gold") + Environment.NewLine;
+            reply += ($"{user.Mention} has **won** a total amount of **{amountWon.Sum()}** gold") + Environment.NewLine;
             var amountLost = stats.Where(x => x.Won == false).Select(x => x.Amount).ToList();
-            reply += ($"You have **lost** a total amount of **{amountLost.Sum()}** gold") + Environment.NewLine;
+            reply += ($"{user.Mention} has **lost** a total amount of **{amountLost.Sum()}** gold") + Environment.NewLine;
             await ReplyAsync(reply);
         }
     }
