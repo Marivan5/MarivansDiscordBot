@@ -13,7 +13,6 @@ namespace MarvBotV3.Commands
     public class CurrencyCommands : ModuleBase<SocketCommandContext>
     {
         int jackpotBorder = 250;
-        int maxGamblesPer10Min = 2;
 
         [Command("Me")]
         [Alias("", "my", "stash")]
@@ -42,9 +41,29 @@ namespace MarvBotV3.Commands
         [Alias("roll", "dice")]
         public async Task GambleGold(int amount = 10)
         {
+            await Gamble(amount);
+        }
+
+        [Command("Gamble")]
+        [Alias("roll", "dice")]
+        public async Task GambleGold(string input)
+        {
+            if(input.ToLower() == "all" || input.ToLower() == "all in")
+            {
+                var amount = DataAccess.GetGold(Context.User.Id);
+                await Gamble(amount);
+            }
+            else
+            {
+                await ReplyAsync("Type **!gold roll all** if you want to gamble it all");
+            }
+        }
+
+        private async Task Gamble(int amount)
+        {
             var currentGold = DataAccess.GetGold(Context.User.Id);
             var amountOfGambles = DataAccess.GetGambleAmount(Context.User);
-            if(amountOfGambles >= maxGamblesPer10Min)
+            if (amountOfGambles >= Program.maxGambles)
             {
                 await ReplyAsync("You have reach your max gambles. Wait 10 minutes and then gamble again.");
                 return;
@@ -65,7 +84,7 @@ namespace MarvBotV3.Commands
             var reply = $"You rolled {result}." + Environment.NewLine;
             var won = false;
 
-            if(result >= 60)
+            if (result >= 60)
             {
                 int jackpot = DataAccess.GetGold(276456075559960576);
                 won = true;
@@ -198,6 +217,14 @@ namespace MarvBotV3.Commands
             var amountLost = stats.Where(x => x.Won == false).Select(x => x.Amount).ToList();
             reply += ($"{user.Mention} has **lost** a total amount of **{amountLost.Sum()}** gold") + Environment.NewLine;
             await ReplyAsync(reply);
+        }
+
+        [RequireOwner]
+        [Command("MaxGambles")]
+        public async Task SetMaxGambles(int amount)
+        {
+            Program.maxGambles = amount;
+            await ReplyAsync($"Max gambles have been set to {amount}.");
         }
     }
 }

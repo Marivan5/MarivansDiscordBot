@@ -13,7 +13,8 @@ namespace MarvBotV3
 {
     class Program
     {
-        public static ServerConfig serverConfig; 
+        public static ServerConfig serverConfig;
+        public static int maxGambles = 2;
 
         public static void Main(string[] args) =>
             new Program().Start().GetAwaiter().GetResult();
