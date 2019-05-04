@@ -144,10 +144,23 @@ namespace MarvBotV3.Database
                     UserID = user.Id,
                     Username = user.Username,
                     Won = won,
-                    Amount = (ulong)amount,
+                    Amount = (long)amount,
                     Roll = roll,
                 });
                 await db.SaveChangesAsync();
+            }
+        }
+
+        public static List<tbGoldGambles> GetStats(ulong userID)
+        {
+            using (var db = new DatabaseContext())
+            {
+                if (!db.tbGoldGambles.Any(x => x.UserID == userID))
+                {
+                    return null;
+                }
+                var value = db.tbGoldGambles.Where(x => x.UserID == userID).ToList();
+                return value;
             }
         }
     }

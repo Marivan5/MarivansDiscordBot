@@ -170,5 +170,20 @@ namespace MarvBotV3.Commands
         {
             await ReplyAsync($"**{DataAccess.GetGold(276456075559960576).ToString()}** gold is currently in the jackpot. To win the jackpot you have to bet **{jackpotBorder}** gold or more and roll a **100** in a regular gamble.");
         }
+
+        [Command("Stats")]
+        [Alias("info", "stat")]
+        public async Task GetStats()
+        {
+            var reply = "";
+            var stats = DataAccess.GetStats(Context.User.Id);
+            float winPercent = ((float)stats.Where(x => x.Won == true).Count() / (float)stats.Count()) * 100;
+            reply += ($"You have **won** {winPercent}% of your gambles.") + Environment.NewLine;
+            var amountWon = stats.Where(x => x.Won == true).Select(x => x.Amount).ToList();
+            reply += ($"You have **won** a total amount of **{amountWon.Sum()}** gold") + Environment.NewLine;
+            var amountLost = stats.Where(x => x.Won == false).Select(x => x.Amount).ToList();
+            reply += ($"You have **lost** a total amount of **{amountLost.Sum()}** gold") + Environment.NewLine;
+            await ReplyAsync(reply);
+        }
     }
 }

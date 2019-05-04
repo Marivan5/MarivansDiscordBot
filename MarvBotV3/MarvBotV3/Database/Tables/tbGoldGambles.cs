@@ -9,7 +9,7 @@ namespace MarvBotV3.Database.Tables
         public ulong UserID { get; set; }
         public string Username { get; set; }
         public bool Won { get; set; }
-        public ulong Amount { get; set; }
+        public long Amount { get; set; }
         public int Roll { get; set; }
     }
 }
