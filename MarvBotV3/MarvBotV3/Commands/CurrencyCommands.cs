@@ -106,7 +106,10 @@ namespace MarvBotV3.Commands
                 won = false;
                 await ReplyAsync($"{reply}You lose, **{amount}** gold has been removed from your bank.");
                 await DataAccess.SaveGold(Context.User, Context.Guild.Id, -amount);
-                await DataAccess.SaveGoldToBot(amount);
+                if(amount > 1)
+                {
+                    await DataAccess.SaveGoldToBot(amount/2);
+                }
             }
             await DataAccess.UpdateGambleAmount(Context.User);
             await DataAccess.SaveStats(Context.User, won, amount, result);
