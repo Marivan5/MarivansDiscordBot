@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
+using MarvBotV3.Database;
 
 namespace MarvBotV3
 {
@@ -17,6 +16,22 @@ namespace MarvBotV3
         {
             user = user ?? Context.User;
             await ReplyAsync(user.ToString());
+        }
+
+        [Command("temp")]
+        [Alias("temperature", "grader")]
+        public async Task GetTempData()
+        {
+            var tempData = DataAccess.GetTempData();
+            foreach (var data in tempData)
+            {
+                var reply = $"At {data.Time} it was {data.Temperature}C at {data.Room}";
+                if(data.Humidity != 0)
+                {
+                    reply += $" with a humidity of {data.Humidity}%";
+                }
+                await ReplyAsync(reply);
+            }
         }
 
         [Command("VideoChat")]

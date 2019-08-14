@@ -164,5 +164,19 @@ namespace MarvBotV3.Database
                 return value;
             }
         }
+
+        public static List<TbTempData> GetTempData()
+        {
+            using (var db = new DatabaseContext())
+            {
+                var value = 
+                    (from x in db.tbTempData
+                    group x by x.Room into g
+                    select g.OrderByDescending(x => x.Time).FirstOrDefault()).ToList();
+
+                //var value = db.tbTempData.OrderByDescending(x => x.Time).Take(10).GroupBy(x => x.Room).FirstOrDefault().ToList();
+                return value;
+            }
+        }
     }
 }

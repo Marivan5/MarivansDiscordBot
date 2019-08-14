@@ -8,6 +8,8 @@
   <ItemGroup>
     <Compile Remove="Migrations\20190424194030_tbUsers.cs" />
     <Compile Remove="Migrations\20190424194030_tbUsers.Designer.cs" />
+    <Compile Remove="Migrations\20190814205945_TbtempdataUpdate.cs" />
+    <Compile Remove="Migrations\20190814205945_TbtempdataUpdate.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>

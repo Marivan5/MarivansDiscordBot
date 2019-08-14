@@ -93,7 +93,6 @@ namespace MarvBotV3.Commands
                     amount = jackpot;
                     await ReplyAsync($"{reply}:tada: You **WIN THE JACKPOT**, **{jackpot.ToString()}** gold has been added to your bank. :tada:");
                     await DataAccess.SaveGoldToBot(-jackpot + jackpotBorder);
-
                 }
                 else
                 {
