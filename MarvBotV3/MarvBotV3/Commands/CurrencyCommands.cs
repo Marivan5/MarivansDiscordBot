@@ -59,6 +59,73 @@ namespace MarvBotV3.Commands
             }
         }
 
+        [Command("Gambles")]
+        [Alias("rolls", "dices")]
+        public async Task GamblesGold(int amount, int times)
+        {
+            if (times > 20)
+                times = 20;
+
+            string reply = "";
+            for (int i = 0; i < times; ++i)
+            {
+                var currentGold = DataAccess.GetGold(Context.User.Id);
+                var amountOfGambles = DataAccess.GetGambleAmount(Context.User);
+                if (amountOfGambles >= Program.maxGambles)
+                {
+                    await ReplyAsync("You have reach your max gambles. Wait 10 minutes and then gamble again.");
+                    return;
+                }
+                if (currentGold < amount)
+                {
+                    await ReplyAsync($"You only have {currentGold}. Can't gamble more.");
+                    return;
+                }
+                if (amount <= 0)
+                {
+                    await ReplyAsync($"You can't gamble 0 gold.");
+                    return;
+                }
+
+                var rng = new Random();
+                var result = rng.Next(0, 101);
+                if (Context.User.Id == 117628335516942343) // cheat
+                    result = rng.Next(60, 100);
+                reply += $"You rolled {result}." + Environment.NewLine;
+                var won = false;
+
+                if (result >= 60)
+                {
+                    int jackpot = DataAccess.GetGold(276456075559960576);
+                    won = true;
+                    if (result == 100 && amount < jackpot && amount >= jackpotBorder)
+                    {
+                        amount = jackpot;
+                        reply += ($":tada: {Context.User.Mention} **WIN THE JACKPOT**, **{jackpot.ToString()}** gold has been added to your bank. :tada:") + Environment.NewLine;
+                        await DataAccess.SaveGoldToBot(-jackpot + jackpotBorder);
+                    }
+                    else
+                    {
+                        reply += ($"{Context.User.Mention} **WIN**, **{amount}** gold has been added to your bank.") + Environment.NewLine;
+                    }
+                    await DataAccess.SaveGold(Context.User, Context.Guild.Id, amount);
+                }
+                else
+                {
+                    won = false;
+                    reply += ($"{Context.User.Mention} lose, **{amount}** gold has been removed from your bank.") + Environment.NewLine;
+                    await DataAccess.SaveGold(Context.User, Context.Guild.Id, -amount);
+                    if (amount > 1)
+                    {
+                        await DataAccess.SaveGoldToBot(amount / 2);
+                    }
+                }
+                await DataAccess.UpdateGambleAmount(Context.User);
+                await DataAccess.SaveStats(Context.User, won, amount, result);
+            }
+            await ReplyAsync(reply);
+        }
+
         private async Task Gamble(int amount)
         {
             var currentGold = DataAccess.GetGold(Context.User.Id);
@@ -81,6 +148,8 @@ namespace MarvBotV3.Commands
 
             var rng = new Random();
             var result = rng.Next(0, 101);
+            if(Context.User.Id == 117628335516942343) // cheat
+                result = rng.Next(60, 100);
             var reply = $"You rolled {result}." + Environment.NewLine;
             var won = false;
 
@@ -91,19 +160,19 @@ namespace MarvBotV3.Commands
                 if (result == 100 && amount < jackpot && amount >= jackpotBorder)
                 {
                     amount = jackpot;
-                    await ReplyAsync($"{reply}:tada: You **WIN THE JACKPOT**, **{jackpot.ToString()}** gold has been added to your bank. :tada:");
+                    await ReplyAsync($"{reply}:tada: {Context.User.Mention} **WIN THE JACKPOT**, **{jackpot.ToString()}** gold has been added to your bank. :tada:");
                     await DataAccess.SaveGoldToBot(-jackpot + jackpotBorder);
                 }
                 else
                 {
-                    await ReplyAsync($"{reply}You **WIN**, **{amount}** gold has been added to your bank.");
+                    await ReplyAsync($"{reply}{Context.User.Mention} **WIN**, **{amount}** gold has been added to your bank.");
                 }
                 await DataAccess.SaveGold(Context.User, Context.Guild.Id, amount);
             }
             else
             {
                 won = false;
-                await ReplyAsync($"{reply}You lose, **{amount}** gold has been removed from your bank.");
+                await ReplyAsync($"{reply}{Context.User.Mention} lose, **{amount}** gold has been removed from your bank.");
                 await DataAccess.SaveGold(Context.User, Context.Guild.Id, -amount);
                 if(amount > 1)
                 {

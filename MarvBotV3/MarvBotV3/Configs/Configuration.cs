@@ -14,8 +14,6 @@ namespace MarvBotV3
         public string Token { get; set; }
 
         private static string dir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Data/configuration.json");
-
-
         public Configuration()
         {
             Prefix = '!';
