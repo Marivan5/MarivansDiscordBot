@@ -172,6 +172,10 @@ namespace MarvBotV3
         //    await context.Channel.SendMessageAsync($"error: {result.ToString()}");
         //}
 
+        List<string> msges = new List<string>() { "Please undefean yourself before joining a voice channel.", "To join a voice channel you have to undeafen yourself." };
+        List<string> rareMsges = new List<string>() { "Bög", "I love you! <3", "Please don't hate me",
+            "I'm not a bot, I am a chinese worker living in Shenzen and I have been forced to work by the Chinese goverment. They have a deal with Marivan to force us to work for nothing. Please send help!" };
+
         public async Task ChangeVoiceChannel(SocketUser user, SocketVoiceState beforeState, SocketVoiceState afterState)
         {
             SocketGuild guild = afterState.VoiceChannel.Guild;
@@ -183,7 +187,17 @@ namespace MarvBotV3
                 if (afkChannel != null)
                 {
                     await guildUser.ModifyAsync(x => x.Channel = afkChannel);
-                    await guildUser.SendMessageAsync("Please undefean yourself before joining a voice channel.");
+                    var rnd = new Random().Next(0, 101);
+                    if(rnd > 99)
+                    {
+                        var rng = new Random().Next(0, rareMsges.Count());
+                        await guildUser.SendMessageAsync(rareMsges[rng]);
+                    }
+                    else
+                    {
+                        var rng = new Random().Next(0, msges.Count());
+                        await guildUser.SendMessageAsync(msges[rng]);
+                    }
                 }
             }
         }
