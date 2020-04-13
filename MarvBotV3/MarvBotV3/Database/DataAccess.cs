@@ -194,5 +194,18 @@ namespace MarvBotV3.Database
                 await db.SaveChangesAsync();
             }
         }
+
+        public static List<TbDuels> GetDuelStats(ulong userID)
+        {
+            using (var db = new DatabaseContext())
+            {
+                if (!db.tbDuels.Any(x => x.Challenger == userID || x.Challenge == userID))
+                {
+                    return null;
+                }
+                var value = db.tbDuels.Where(x => x.Challenger == userID || x.Challenge == userID).ToList();
+                return value;
+            }
+        }
     }
 }

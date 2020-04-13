@@ -104,7 +104,7 @@ namespace MarvBotV3
             {
                 var duel = Program.awaitingDuels.Last(x => x.Challenge == rawMessage.Author.Id);
                 var challenger = duel.Challenger;
-                await context.Channel.SendMessageAsync($"{rawMessage.Author.Mention} has accepted {MentionUtils.MentionUser(challenger)}s call to duel");
+                await context.Channel.SendMessageAsync($"{rawMessage.Author.Mention} has accepted {MentionUtils.MentionUser(challenger)}s call to duel. Be ready to shoot (🔫).");
                 Program.awaitingDuels.Remove(duel);
                 _ = CountDownInChat(context.Channel, challenger, rawMessage.Author.Id, duel.BetAmount);
             }

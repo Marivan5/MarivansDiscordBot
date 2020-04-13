@@ -161,57 +161,5 @@ namespace MarvBotV3
 
             await ReplyAsync(reply);
         }
-
-        [Command("Duel")]
-        [Alias("Fight")]
-        public async Task Duel(IUser challenge, int amount = 0)
-        {
-            if(challenge.Id == 276456075559960576)
-            {
-                await ReplyAsync($"yes{Environment.NewLine}3{Environment.NewLine}2{Environment.NewLine}1{Environment.NewLine}Shoot!{Environment.NewLine}🔫{Environment.NewLine}I WIN!");
-                return;
-            }
-
-            var challengerGold = DataAccess.GetGold(Context.User.Id);
-            var challengeGold = DataAccess.GetGold(challenge.Id);
-
-            if(challengerGold < amount)
-            {
-                await ReplyAsync($"You only have {challengerGold.ToString("n0", nfi)} gold.");
-                return;
-            }
-            else if (challengeGold < amount)
-            {
-                await ReplyAsync($"{challenge.Mention} only has {challengeGold.ToString("n0", nfi)} gold.");
-                return;
-            }
-            if (challenge == Context.User)
-            {
-                await ReplyAsync("You can't duel yourself.");
-                return;
-            }
-            await ReplyAsync($"{Context.User.Mention} has challenged {challenge.Mention} for a price of {amount.ToString("n0", nfi)} gold{Environment.NewLine}{challenge.Mention} do you accept? (type **Yes** to accept)");
-            Program.awaitingDuels.Add(new DTO.Duel { Challenger = Context.User.Id, Challenge = challenge.Id, BetAmount = amount, TimeStamp = DateTime.Now });
-        }
-        
-        [Command("Duels")]
-        [Alias("Fights")]
-        public async Task Duels()
-        {
-            int i = 1;
-            if(Program.activeDuels.Count <= 0)
-            {
-                await ReplyAsync("There are no active duels :(");
-                return;
-            }
-
-            await ReplyAsync("Current active duels:");
-
-            foreach(var duel in Program.activeDuels)
-            {
-                await ReplyAsync($"{i}. {MentionUtils.MentionUser(duel.Challenger)} vs {MentionUtils.MentionUser(duel.Challenge)}");
-                i++;
-            }
-        }
     }
 }
