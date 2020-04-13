@@ -178,5 +178,21 @@ namespace MarvBotV3.Database
                 return value;
             }
         }
+
+        public static async Task SetDuel(ulong challenger, ulong challenge, ulong winner, int betAmount)
+        {
+            using (var db = new DatabaseContext())
+            {
+                db.tbDuels.Add(new TbDuels
+                {
+                    Challenger = challenger,
+                    Challenge =  challenge,
+                    Winner = winner,
+                    BetAmount = betAmount,
+                    TimeStamp = DateTime.Now,
+                });
+                await db.SaveChangesAsync();
+            }
+        }
     }
 }

@@ -9,6 +9,7 @@ namespace MarvBotV3
         public DbSet<TbCurrency> tbCurrencies { get; set; }
         public DbSet<tbGoldGambles> tbGoldGambles { get; set; }
         public DbSet<TbTempData> tbTempData { get; set; }
+        public DbSet<TbDuels> tbDuels { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {

@@ -2,30 +2,34 @@
 using Discord.Commands;
 using MarvBotV3.Database;
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace MarvBotV3.Commands
 {
+   
+
     [Group("Gold")]
     [Alias("cash", "dinero", "money", "currency", "bank", "ducates", "euro", "dollar", "dollaroos")]
     [Summary("Currency group")]
     public class CurrencyCommands : ModuleBase<SocketCommandContext>
     {
+        private NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " " };
         int jackpotBorder = 250;
 
         [Command("Me")]
         [Alias("", "my", "stash")]
         public async Task MeGold()
         {
-            await ReplyAsync($"You have **{DataAccess.GetGold(Context.User.Id).ToString()}** gold.");
+            await ReplyAsync($"You have **{DataAccess.GetGold(Context.User.Id).ToString("n0", nfi)}** gold.");
         }
 
         [Command("info")]
         [Alias("howmuch", "bank", "stash")]
         public async Task InfoGold(IUser user)
         {
-            await ReplyAsync($"{user.Mention} has **{DataAccess.GetGold(user.Id).ToString()}** gold.");
+            await ReplyAsync($"{user.Mention} has **{DataAccess.GetGold(user.Id).ToString("n0", nfi)}** gold.");
         }
 
         [RequireOwner]
@@ -78,7 +82,7 @@ namespace MarvBotV3.Commands
                 }
                 if (currentGold < amount)
                 {
-                    await ReplyAsync($"You only have {currentGold}. Can't gamble more.");
+                    await ReplyAsync($"You only have {currentGold.ToString("n0", nfi)}. Can't gamble more.");
                     return;
                 }
                 if (amount <= 0)
@@ -101,19 +105,19 @@ namespace MarvBotV3.Commands
                     if (result == 100 && amount < jackpot && amount >= jackpotBorder)
                     {
                         amount = jackpot;
-                        reply += ($":tada: {Context.User.Mention} **WIN THE JACKPOT**, **{jackpot.ToString()}** gold has been added to your bank. :tada:") + Environment.NewLine;
+                        reply += ($":tada: {Context.User.Mention} **WIN THE JACKPOT**, **{jackpot.ToString("n0", nfi)}** gold has been added to your bank. :tada:") + Environment.NewLine;
                         await DataAccess.SaveGoldToBot(-jackpot + jackpotBorder);
                     }
                     else
                     {
-                        reply += ($"{Context.User.Mention} **WIN**, **{amount}** gold has been added to your bank.") + Environment.NewLine;
+                        reply += ($"{Context.User.Mention} **WIN**, **{amount.ToString("n0", nfi)}** gold has been added to your bank.") + Environment.NewLine;
                     }
                     await DataAccess.SaveGold(Context.User, Context.Guild.Id, amount);
                 }
                 else
                 {
                     won = false;
-                    reply += ($"{Context.User.Mention} lose, **{amount}** gold has been removed from your bank.") + Environment.NewLine;
+                    reply += ($"{Context.User.Mention} lose, **{amount.ToString("n0", nfi)}** gold has been removed from your bank.") + Environment.NewLine;
                     await DataAccess.SaveGold(Context.User, Context.Guild.Id, -amount);
                     if (amount > 1)
                     {
@@ -137,7 +141,7 @@ namespace MarvBotV3.Commands
             }
             if (currentGold < amount)
             {
-                await ReplyAsync($"You only have {currentGold}. Can't gamble more.");
+                await ReplyAsync($"You only have {currentGold.ToString("n0", nfi)}. Can't gamble more.");
                 return;
             }
             if (amount <= 0)
@@ -160,19 +164,19 @@ namespace MarvBotV3.Commands
                 if (result == 100 && amount < jackpot && amount >= jackpotBorder)
                 {
                     amount = jackpot;
-                    await ReplyAsync($"{reply}:tada: {Context.User.Mention} **WIN THE JACKPOT**, **{jackpot.ToString()}** gold has been added to your bank. :tada:");
+                    await ReplyAsync($"{reply}:tada: {Context.User.Mention} **WIN THE JACKPOT**, **{jackpot.ToString("n0", nfi)}** gold has been added to your bank. :tada:");
                     await DataAccess.SaveGoldToBot(-jackpot + jackpotBorder);
                 }
                 else
                 {
-                    await ReplyAsync($"{reply}{Context.User.Mention} **WIN**, **{amount}** gold has been added to your bank.");
+                    await ReplyAsync($"{reply}{Context.User.Mention} **WIN**, **{amount.ToString("n0", nfi)}** gold has been added to your bank.");
                 }
                 await DataAccess.SaveGold(Context.User, Context.Guild.Id, amount);
             }
             else
             {
                 won = false;
-                await ReplyAsync($"{reply}{Context.User.Mention} lose, **{amount}** gold has been removed from your bank.");
+                await ReplyAsync($"{reply}{Context.User.Mention} lose, **{amount.ToString("n0", nfi)}** gold has been removed from your bank.");
                 await DataAccess.SaveGold(Context.User, Context.Guild.Id, -amount);
                 if(amount > 1)
                 {
@@ -203,7 +207,7 @@ namespace MarvBotV3.Commands
                 var currentGold = DataAccess.GetGold(Context.User.Id);
                 if(currentGold < amount)
                 {
-                    await ReplyAsync($"You only have {currentGold}. Can't give more than you have.");
+                    await ReplyAsync($"You only have {currentGold.ToString("n0", nfi)}. Can't give more than you have.");
                     return;
                 }
                 else
@@ -212,7 +216,7 @@ namespace MarvBotV3.Commands
                 }
             }
 
-            await ReplyAsync($"{Context.User.Mention} has just given {user.Mention} **{amount}** gold.");
+            await ReplyAsync($"{Context.User.Mention} has just given {user.Mention} **{amount.ToString("n0", nfi)}** gold.");
             await DataAccess.SaveGold(user, Context.Guild.Id, amount);
         }
 
@@ -232,7 +236,7 @@ namespace MarvBotV3.Commands
                 return;
             }
 
-            await ReplyAsync($"{Context.User.Mention} has just taken **{amount}** gold from {user.Mention}.");
+            await ReplyAsync($"{Context.User.Mention} has just taken **{amount.ToString("n0", nfi)}** gold from {user.Mention}.");
             await DataAccess.SaveGold(user, Context.Guild.Id, -amount);
         }
 
@@ -242,7 +246,7 @@ namespace MarvBotV3.Commands
         {
             var users = Context.Guild.Users;
             await DataAccess.GiveGoldEveryone(users.Where(x => x.Status != UserStatus.Offline).ToList(), amount);
-            await ReplyAsync($"You have given @everyone who is online, **{amount}** gold");
+            await ReplyAsync($"You have given @everyone who is online, **{amount.ToString("n0", nfi)}** gold");
         }
 
         [Command("Toplist")]
@@ -253,7 +257,7 @@ namespace MarvBotV3.Commands
             var reply = "";
             foreach (var top in topList)
             {
-                reply += $"{MentionUtils.MentionUser(top.UserID)} has **{top.GoldAmount}** gold" + Environment.NewLine;
+                reply += $"{MentionUtils.MentionUser(top.UserID)} has **{top.GoldAmount.ToString("n0", nfi)}** gold" + Environment.NewLine;
             }
             await ReplyAsync(reply);
         }
@@ -284,9 +288,9 @@ namespace MarvBotV3.Commands
             float winPercent = ((float)stats.Where(x => x.Won == true).Count() / (float)stats.Count()) * 100;
             reply += ($"{user.Mention} has **won** {winPercent}% of their gambles.") + Environment.NewLine;
             var amountWon = stats.Where(x => x.Won == true).Select(x => x.Amount).ToList();
-            reply += ($"{user.Mention} has **won** a total amount of **{amountWon.Sum()}** gold") + Environment.NewLine;
+            reply += ($"{user.Mention} has **won** a total amount of **{amountWon.Sum().ToString("n0", nfi)}** gold") + Environment.NewLine;
             var amountLost = stats.Where(x => x.Won == false).Select(x => x.Amount).ToList();
-            reply += ($"{user.Mention} has **lost** a total amount of **{amountLost.Sum()}** gold") + Environment.NewLine;
+            reply += ($"{user.Mention} has **lost** a total amount of **{amountLost.Sum().ToString("n0", nfi)}** gold") + Environment.NewLine;
             await ReplyAsync(reply);
         }
 
@@ -295,7 +299,7 @@ namespace MarvBotV3.Commands
         public async Task SetMaxGambles(int amount)
         {
             Program.maxGambles = amount;
-            await ReplyAsync($"Max gambles have been set to {amount}.");
+            await ReplyAsync($"Max gambles have been set to {amount.ToString("n0", nfi)}.");
         }
     }
 }

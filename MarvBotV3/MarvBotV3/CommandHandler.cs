@@ -8,11 +8,14 @@ using Discord.WebSocket;
 using System.Linq;
 using System.Collections.Generic;
 using MarvBotV3.Database;
+using MarvBotV3.DTO;
+using System.Globalization;
 
 namespace MarvBotV3
 {
     public class CommandHandler
     {
+        private NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " " };
         private readonly CommandService _commands;
         public readonly DiscordShardedClient _discord;
         private readonly IServiceProvider _services;
@@ -30,7 +33,7 @@ namespace MarvBotV3
             _discord.MessageReceived += MessageReceivedAsync;
             _discord.GuildMemberUpdated += ChangeGameAndRole;
             _discord.UserVoiceStateUpdated += ChangeVoiceChannel;
-            GiveGoldToEveryone();
+            _ = GiveGoldToEveryone();
         }
 
         public async Task InitializeAsync()
@@ -89,15 +92,55 @@ namespace MarvBotV3
                 }
             }
 
+            var context = new ShardedCommandContext(_discord, message);
+
+            foreach (var duel in Program.awaitingDuels)
+            {
+                if (duel.TimeStamp < DateTime.Now.AddMinutes(-10))
+                    Program.awaitingDuels.Remove(duel);
+            }
+
+            if (Program.awaitingDuels.Select(x => x.Challenge).Contains(rawMessage.Author.Id) && rawMessage.Content.ToLower().Split(" ").Contains("yes"))
+            {
+                var duel = Program.awaitingDuels.Last(x => x.Challenge == rawMessage.Author.Id);
+                var challenger = duel.Challenger;
+                await context.Channel.SendMessageAsync($"{rawMessage.Author.Mention} has accepted {MentionUtils.MentionUser(challenger)}s call to duel");
+                Program.awaitingDuels.Remove(duel);
+                _ = CountDownInChat(context.Channel, challenger, rawMessage.Author.Id, duel.BetAmount);
+            }
+
+            if ((Program.activeDuels.Select(x => x.Challenge).Contains(rawMessage.Author.Id) || Program.activeDuels.Select(x => x.Challenger).Contains(rawMessage.Author.Id)) && rawMessage.Content.ToLower().Split(" ").Contains("🔫"))
+            {
+                var duel = Program.activeDuels.Last(x => x.Challenge == rawMessage.Author.Id || x.Challenger == rawMessage.Author.Id);
+                var loser = duel.Challenge == rawMessage.Author.Id ? duel.Challenger : duel.Challenge;
+                await context.Channel.SendMessageAsync($"{rawMessage.Author.Mention} has won {duel.BetAmount.ToString("n0", nfi)} of {MentionUtils.MentionUser(loser)} gold");
+                Program.activeDuels.Remove(duel);
+                await DataAccess.SaveGold(rawMessage.Author, context.Guild.Id, duel.BetAmount);
+                await DataAccess.SaveGold(context.Guild.GetUser(loser), context.Guild.Id, -duel.BetAmount);
+                await DataAccess.SetDuel(duel.Challenger, duel.Challenge, rawMessage.Author.Id, duel.BetAmount);
+            }
+
             // This value holds the offset where the prefix ends
             var argPos = 0;
             if (!message.HasCharPrefix(prefix, ref argPos) && !message.HasMentionPrefix(_discord.CurrentUser, ref argPos))
                 return;
-            var context = new ShardedCommandContext(_discord, message);
+            
             var result = await _commands.ExecuteAsync(context, argPos, _services);
 
             if (result.Error.HasValue)
                 await context.Channel.SendMessageAsync(result.ToString());
+        }
+
+        private async Task CountDownInChat(ISocketMessageChannel textChat, ulong challenger, ulong challenge, int betAmount)
+        {
+            var rnd = new Random();
+            for(int i = 3; i > 0; i--)
+            {
+                await textChat.SendMessageAsync(i.ToString());
+                await Task.Delay(rnd.Next(1001, 1500));
+            }
+            await textChat.SendMessageAsync("Shoot! (🔫)");
+            Program.activeDuels.Add(new Duel { Challenger = challenger, Challenge = challenge, BetAmount = betAmount, TimeStamp = DateTime.Now });
         }
 
         public async Task ChangeGameAndRole(SocketGuildUser beforeChangeUser, SocketGuildUser afterChangeUser)
@@ -157,20 +200,6 @@ namespace MarvBotV3
                 await user.RemoveRoleAsync(gameRole);
             }
         }
-
-        //public async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
-        //{
-        //    // command is unspecified when there was a search failure (command not found); we don't care about these errors
-        //    if (!command.IsSpecified)
-        //        return;
-
-        //    // the command was succesful, we don't care about this result, unless we want to log that a command succeeded.
-        //    if (result.IsSuccess)
-        //        return;
-
-        //    // the command failed, let's notify the user that something happened.
-        //    await context.Channel.SendMessageAsync($"error: {result.ToString()}");
-        //}
 
         List<string> msges = new List<string>() { "Please undefean yourself before joining a voice channel.", "To join a voice channel you have to undeafen yourself." };
         List<string> rareMsges = new List<string>() { "Bög", "I love you! <3", "Please don't hate me",

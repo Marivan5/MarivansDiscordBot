@@ -1,13 +1,12 @@
-﻿using System;
-using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
+﻿using Discord;
 using Discord.Commands;
-using System.IO;
+using Discord.WebSocket;
+using MarvBotV3.DTO;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
-using MarvBotV3.Database;
-using System.Linq;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace MarvBotV3
 {
@@ -15,6 +14,8 @@ namespace MarvBotV3
     {
         public static ServerConfig serverConfig;
         public static int maxGambles = 10;
+        public static List<Duel> awaitingDuels = new List<Duel>();
+        public static List<Duel> activeDuels = new List<Duel>();
 
         public static void Main(string[] args) =>
             new Program().Start().GetAwaiter().GetResult();
