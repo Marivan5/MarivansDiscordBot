@@ -14,6 +14,7 @@ namespace MarvBotV3
         public ulong afkChannel { get; set; }
         public List<ulong> whiteList { get; set; }
         public List<string> videoList { get; set; }
+        public int maxGambles { get; set; }
 
         private static string dir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Data/serverConfiguration.json");
 
@@ -23,6 +24,7 @@ namespace MarvBotV3
             publicChannel = 0;
             serverOwner = 117628335516942343;
             afkChannel = 0;
+            maxGambles = 10;
             JsonConvert.SerializeObject(whiteList);
             JsonConvert.SerializeObject(videoList);
         }

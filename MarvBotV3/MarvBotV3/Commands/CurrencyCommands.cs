@@ -91,7 +91,8 @@ namespace MarvBotV3.Commands
 
                 var rng = new Random();
                 var result = rng.Next(0, 101);
-                if (Context.User.Id == 117628335516942343) // cheat
+                var cheatList = Program.serverConfig.whiteList;
+                if (cheatList.Contains(Context.User.Id)) // cheat
                     result = rng.Next(60, 100);
                 reply += $"You rolled {result}." + Environment.NewLine;
                 var won = false;
@@ -150,7 +151,8 @@ namespace MarvBotV3.Commands
 
             var rng = new Random();
             var result = rng.Next(0, 101);
-            if(Context.User.Id == 117628335516942343) // cheat
+            var cheatList = Program.serverConfig.whiteList;
+            if (cheatList.Contains(Context.User.Id)) // cheat
                 result = rng.Next(60, 100);
             var reply = $"You rolled {result}." + Environment.NewLine;
             var won = false;
@@ -296,7 +298,9 @@ namespace MarvBotV3.Commands
         [Command("MaxGambles")]
         public async Task SetMaxGambles(int amount)
         {
+            Program.serverConfig.maxGambles = amount;
             Program.maxGambles = amount;
+            Program.serverConfig.Save();
             await ReplyAsync($"Max gambles have been set to {amount.ToString("n0", nfi)}.");
         }
     }

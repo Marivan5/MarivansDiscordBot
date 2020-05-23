@@ -13,7 +13,7 @@ namespace MarvBotV3
     class Program
     {
         public static ServerConfig serverConfig;
-        public static int maxGambles = 10;
+        public static int maxGambles = 0;
         public static List<Duel> awaitingDuels = new List<Duel>();
         public static List<Duel> activeDuels = new List<Duel>();
 
@@ -30,6 +30,7 @@ namespace MarvBotV3
             EnsureBotConfigExists();
             EnsureServerConfigExists();
             serverConfig = ServerConfig.Load();
+            maxGambles = serverConfig.maxGambles;
 
             using (var services = ConfigureServices(config))
             {

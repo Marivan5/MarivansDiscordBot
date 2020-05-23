@@ -243,7 +243,7 @@ namespace MarvBotV3
                     users = users.Concat(guild.Users).ToList();
                 }
                 var usersOnline = users.Where(x => x.Status != UserStatus.Offline && !x.IsBot).ToList();
-                await DataAccess.GiveGoldEveryone(usersOnline, 10);
+                await DataAccess.GiveGoldEveryone(usersOnline, 1);
                 await Task.Delay(Convert.ToInt32(millisecs));
             }
         }
