@@ -14,11 +14,11 @@ namespace MarvBotV3.Database
         {
             using (var db = new DatabaseContext())
             {
-                if(!db.tbCurrencies.Any(x => x.UserID == userID))
+                if (!db.TbCurrencies.Any(x => x.UserID == userID))
                 {
                     return 0;
                 }
-                var value = db.tbCurrencies.Where(x => x.UserID == userID).Select(x => x.GoldAmount).FirstOrDefault();
+                var value = db.TbCurrencies.AsQueryable().Where(x => x.UserID == userID).Select(x => x.GoldAmount).FirstOrDefault();
                 return Convert.ToInt32(value);
             }
         }
@@ -27,12 +27,12 @@ namespace MarvBotV3.Database
         {
             using (var db = new DatabaseContext())
             {
-                if (!db.tbCurrencies.Any(x => x.UserID == userID))
+                if (!db.TbCurrencies.Any(x => x.UserID == userID))
                 {
                     return;
                 }
-                var user = db.tbCurrencies.Where(x => x.UserID == userID).FirstOrDefault();
-                db.tbCurrencies.Remove(user);
+                var user = db.TbCurrencies.AsQueryable().Where(x => x.UserID == userID).FirstOrDefault();
+                db.TbCurrencies.Remove(user);
                 await db.SaveChangesAsync();
             }
         }
@@ -41,7 +41,7 @@ namespace MarvBotV3.Database
         {
             using (var db = new DatabaseContext())
             {
-                var value = db.tbCurrencies.OrderByDescending(x => x.GoldAmount).Take(amount).ToList();
+                var value = db.TbCurrencies.AsQueryable().OrderByDescending(x => x.GoldAmount).Take(amount).ToList();
                 return value;
             }
         }
@@ -50,9 +50,9 @@ namespace MarvBotV3.Database
         {
             using (var db = new DatabaseContext())
             {
-                if (!db.tbCurrencies.Any(x => x.UserID == user.Id))
+                if (!db.TbCurrencies.Any(x => x.UserID == user.Id))
                 {
-                    db.tbCurrencies.Add(new TbCurrency
+                    db.TbCurrencies.Add(new TbCurrency
                     {
                         UserID = user.Id,
                         Username = user.Username,
@@ -62,10 +62,10 @@ namespace MarvBotV3.Database
                 }
                 else
                 {
-                    TbCurrency tbUser = db.tbCurrencies.Where(x => x.UserID == user.Id).FirstOrDefault();
+                    TbCurrency tbUser = db.TbCurrencies.AsQueryable().Where(x => x.UserID == user.Id).FirstOrDefault();
                     tbUser.GoldAmount += amount;
                     tbUser.Username = user.Username;
-                    db.tbCurrencies.Update(tbUser);
+                    db.TbCurrencies.Update(tbUser);
                 }
                 await db.SaveChangesAsync();
             }
@@ -75,11 +75,11 @@ namespace MarvBotV3.Database
         {
             using (var db = new DatabaseContext())
             {
-                if (!db.tbCurrencies.Any(x => x.UserID == user.Id))
+                if (!db.TbCurrencies.Any(x => x.UserID == user.Id))
                 {
                     return 0;
                 }
-                var value = db.tbCurrencies.Where(x => x.UserID == user.Id).Select(x => x.AmountOfGambles).FirstOrDefault();
+                var value = db.TbCurrencies.AsQueryable().Where(x => x.UserID == user.Id).Select(x => x.AmountOfGambles).FirstOrDefault();
                 return Convert.ToInt32(value);
             }
         }
@@ -88,9 +88,9 @@ namespace MarvBotV3.Database
         {
             using (var db = new DatabaseContext())
             {
-                TbCurrency tbUser = db.tbCurrencies.Where(x => x.UserID == user.Id).FirstOrDefault();
+                TbCurrency tbUser = db.TbCurrencies.AsQueryable().Where(x => x.UserID == user.Id).FirstOrDefault();
                 tbUser.AmountOfGambles++;
-                db.tbCurrencies.Update(tbUser);
+                db.TbCurrencies.Update(tbUser);
                 await db.SaveChangesAsync();
             }
         }
@@ -99,9 +99,9 @@ namespace MarvBotV3.Database
         {
             using (var db = new DatabaseContext())
             {
-                TbCurrency tbUser = db.tbCurrencies.Where(x => x.UserID == 276456075559960576).FirstOrDefault();
+                TbCurrency tbUser = db.TbCurrencies.AsQueryable().Where(x => x.UserID == 276456075559960576).FirstOrDefault();
                 tbUser.GoldAmount += amount;
-                db.tbCurrencies.Update(tbUser);
+                db.TbCurrencies.Update(tbUser);
                 await db.SaveChangesAsync();
             }
         }
@@ -112,9 +112,9 @@ namespace MarvBotV3.Database
             {
                 foreach (var user in users)
                 {
-                    if (!db.tbCurrencies.Any(x => x.UserID == user.Id))
+                    if (!db.TbCurrencies.Any(x => x.UserID == user.Id))
                     {
-                        db.tbCurrencies.Add(new TbCurrency
+                        db.TbCurrencies.Add(new TbCurrency
                         {
                             UserID = user.Id,
                             Username = user.Username,
@@ -124,11 +124,11 @@ namespace MarvBotV3.Database
                     }
                     else
                     {
-                        TbCurrency tbUser = db.tbCurrencies.Where(x => x.UserID == user.Id).FirstOrDefault();
+                        TbCurrency tbUser = db.TbCurrencies.AsQueryable().Where(x => x.UserID == user.Id).FirstOrDefault();
                         tbUser.GoldAmount += amount;
                         tbUser.Username = user.Username;
                         tbUser.AmountOfGambles = 0;
-                        db.tbCurrencies.Update(tbUser);
+                        db.TbCurrencies.Update(tbUser);
                     }
                 }
                 await db.SaveChangesAsync();
@@ -139,7 +139,7 @@ namespace MarvBotV3.Database
         {
             using (var db = new DatabaseContext())
             {
-                db.tbGoldGambles.Add(new tbGoldGambles
+                db.TbGoldGambles.Add(new tbGoldGambles
                 {
                     UserID = user.Id,
                     Username = user.Username,
@@ -156,11 +156,11 @@ namespace MarvBotV3.Database
         {
             using (var db = new DatabaseContext())
             {
-                if (!db.tbGoldGambles.Any(x => x.UserID == userID))
+                if (!db.TbGoldGambles.Any(x => x.UserID == userID))
                 {
                     return null;
                 }
-                var value = db.tbGoldGambles.Where(x => x.UserID == userID).ToList();
+                var value = db.TbGoldGambles.AsQueryable().Where(x => x.UserID == userID).ToList();
                 return value;
             }
         }
@@ -169,10 +169,10 @@ namespace MarvBotV3.Database
         {
             using (var db = new DatabaseContext())
             {
-                var value = 
-                    (from x in db.tbTempData
-                    group x by x.Room into g
-                    select g.OrderByDescending(x => x.Time).FirstOrDefault()).ToList();
+                var value =
+                    (from x in db.TbTempData.AsQueryable()
+                     group x by x.Room into g
+                     select g.OrderByDescending(x => x.Time).FirstOrDefault()).ToList();
 
                 //var value = db.tbTempData.OrderByDescending(x => x.Time).Take(10).GroupBy(x => x.Room).FirstOrDefault().ToList();
                 return value;
@@ -183,10 +183,10 @@ namespace MarvBotV3.Database
         {
             using (var db = new DatabaseContext())
             {
-                db.tbDuels.Add(new TbDuels
+                db.TbDuels.Add(new TbDuels
                 {
                     Challenger = challenger,
-                    Challenge =  challenge,
+                    Challenge = challenge,
                     Winner = winner,
                     BetAmount = betAmount,
                     TimeStamp = DateTime.Now,
@@ -199,11 +199,11 @@ namespace MarvBotV3.Database
         {
             using (var db = new DatabaseContext())
             {
-                if (!db.tbDuels.Any(x => x.Challenger == userID || x.Challenge == userID))
+                if (!db.TbDuels.Any(x => x.Challenger == userID || x.Challenge == userID))
                 {
                     return null;
                 }
-                var value = db.tbDuels.Where(x => x.Challenger == userID || x.Challenge == userID).ToList();
+                var value = db.TbDuels.AsQueryable().Where(x => x.Challenger == userID || x.Challenge == userID).ToList();
                 return value;
             }
         }

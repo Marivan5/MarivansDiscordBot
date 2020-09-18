@@ -163,7 +163,7 @@ namespace MarvBotV3
                 gameRole = guild.Roles.Where(input => input.ToString().Equals(afterChangeUser.Activity.Name)).FirstOrDefault();
                 if (gameRole == null) // if role does not exist, create it
                 {
-                    gameRole = await guild.CreateRoleAsync(afterChangeUser.Activity.Name, permissions: GuildPermissions.None, color: Color.Default, isHoisted: false);
+                    gameRole = await guild.CreateRoleAsync(afterChangeUser.Activity.Name, permissions: GuildPermissions.None, color: Color.Default, isHoisted: false, false);
                 }
                 Discord.Rest.RestVoiceChannel altChannel = null;
                 var channel = guild.VoiceChannels.Where(input => input.ToString().Equals(gameRole.Name)).FirstOrDefault();
