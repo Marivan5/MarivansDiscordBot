@@ -150,7 +150,7 @@ namespace MarvBotV3
                 lowValue = tempValue;
             }
 
-            highValue = highValue + 1;
+            highValue += 1;
             var rng = new Random();
             string reply = "";
 

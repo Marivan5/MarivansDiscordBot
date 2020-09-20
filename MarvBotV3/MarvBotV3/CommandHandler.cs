@@ -240,9 +240,9 @@ namespace MarvBotV3
                 List<SocketGuildUser> users = new List<SocketGuildUser>();
                 foreach (var guild in guilds)
                 {
-                    users = users.Concat(guild.Users).ToList();
+                    users = users.Concat(guild.Users.Where(x => !x.IsSelfDeafened).ToList()).ToList();
                 }
-                var usersOnline = users.Where(x => x.Status != UserStatus.Offline && !x.IsBot).ToList();
+                var usersOnline = users.Where(x => x.Status == UserStatus.Online && !x.IsBot).ToList();
                 await DataAccess.GiveGoldEveryone(usersOnline, 1);
                 await Task.Delay(Convert.ToInt32(millisecs));
             }
