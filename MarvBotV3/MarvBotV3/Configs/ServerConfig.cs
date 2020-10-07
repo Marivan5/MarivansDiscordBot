@@ -12,6 +12,7 @@ namespace MarvBotV3
         public ulong publicChannel { get; set; }
         public ulong serverOwner { get; set; }
         public ulong afkChannel { get; set; }
+        public ulong richRole { get; set; }
         public List<ulong> whiteList { get; set; }
         public List<string> videoList { get; set; }
         public int maxGambles { get; set; }
@@ -24,6 +25,7 @@ namespace MarvBotV3
             publicChannel = 0;
             serverOwner = 117628335516942343;
             afkChannel = 0;
+            richRole = 0;
             maxGambles = 10;
             JsonConvert.SerializeObject(whiteList);
             JsonConvert.SerializeObject(videoList);

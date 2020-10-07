@@ -37,11 +37,11 @@ namespace MarvBotV3.Database
             }
         }
 
-        public static List<TbCurrency> GetAllGold(ulong guildID, int amount = 10)
+        public static List<TbCurrency> GetTopXGold(int amount = 10)
         {
             using (var db = new DatabaseContext())
             {
-                var value = db.TbCurrencies.AsQueryable().OrderByDescending(x => x.GoldAmount).Take(amount).ToList();
+                var value = db.TbCurrencies.AsQueryable().Where(x => x.UserID != 276456075559960576).OrderByDescending(x => x.GoldAmount).Take(amount).ToList();
                 return value;
             }
         }

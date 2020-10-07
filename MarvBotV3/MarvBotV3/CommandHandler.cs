@@ -115,8 +115,8 @@ namespace MarvBotV3
                 var loser = duel.Challenge == rawMessage.Author.Id ? duel.Challenger : duel.Challenge;
                 await context.Channel.SendMessageAsync($"{rawMessage.Author.Mention} has won {duel.BetAmount.ToString("n0", nfi)} of {MentionUtils.MentionUser(loser)} gold");
                 Program.activeDuels.Remove(duel);
-                await DataAccess.SaveGold(rawMessage.Author, context.Guild.Id, duel.BetAmount);
-                await DataAccess.SaveGold(context.Guild.GetUser(loser), context.Guild.Id, -duel.BetAmount);
+                await BusinessLayer.SaveGold(rawMessage.Author, context.Guild, duel.BetAmount);
+                await BusinessLayer.SaveGold(context.Guild.GetUser(loser), context.Guild, -duel.BetAmount);
                 await DataAccess.SetDuel(duel.Challenger, duel.Challenge, rawMessage.Author.Id, duel.BetAmount);
             }
 

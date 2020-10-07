@@ -100,6 +100,17 @@ namespace MarvBotV3.Commands
             Program.serverConfig.Save();
             await ReplyAsync(_channel + " was succefully added.");
         }
+        
+        [Command("SetRichRole")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [RequireBotPermission(GuildPermission.ManageMessages)]
+        public async Task SetRichRole([Remainder] SocketRole _role)
+        {
+            Program.serverConfig.richRole = _role.Id;
+            Program.serverConfig.Save();
+            await ReplyAsync(_role + " was succefully added.");
+        }
 
         [Command("Whitelist")]
         [Alias("AddToWhitelist", "white")]

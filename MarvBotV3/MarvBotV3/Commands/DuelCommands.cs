@@ -69,7 +69,7 @@ namespace MarvBotV3.Commands
                 await ReplyAsync("You can't duel yourself.");
                 return;
             }
-            await ReplyAsync($"{Context.User.Mention} has challenged {challenge.Mention} for a price of {amount.ToString("n0", nfi)} gold{Environment.NewLine}{challenge.Mention} do you accept? (type **Yes** to accept)");
+            await ReplyAsync($"{Context.User.Mention} has challenged {challenge.Mention} for {amount.ToString("n0", nfi)} gold{Environment.NewLine}{challenge.Mention} do you accept? (type **Yes** to accept)");
             Program.awaitingDuels.Add(new DTO.Duel { Challenger = Context.User.Id, Challenge = challenge.Id, BetAmount = amount, TimeStamp = DateTime.Now });
         }
 
@@ -87,6 +87,26 @@ namespace MarvBotV3.Commands
             await ReplyAsync("Current active duels:");
 
             foreach (var duel in Program.activeDuels)
+            {
+                await ReplyAsync($"{i}. {MentionUtils.MentionUser(duel.Challenger)} vs {MentionUtils.MentionUser(duel.Challenge)}");
+                i++;
+            }
+        }
+        
+        [Command("Waiting")]
+        [Alias("awaiting", "idle")]
+        public async Task Waiting()
+        {
+            int i = 1;
+            if (Program.awaitingDuels.Count <= 0)
+            {
+                await ReplyAsync("There are no active challanges :(");
+                return;
+            }
+
+            await ReplyAsync("Current challenges:");
+
+            foreach (var duel in Program.awaitingDuels)
             {
                 await ReplyAsync($"{i}. {MentionUtils.MentionUser(duel.Challenger)} vs {MentionUtils.MentionUser(duel.Challenge)}");
                 i++;

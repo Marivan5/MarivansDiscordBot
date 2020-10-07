@@ -111,13 +111,13 @@ namespace MarvBotV3.Commands
                     {
                         reply += ($"{Context.User.Mention} **WIN**, **{amount.ToString("n0", nfi)}** gold has been added to your bank.") + Environment.NewLine;
                     }
-                    await DataAccess.SaveGold(Context.User, Context.Guild.Id, amount);
+                    await BusinessLayer.SaveGold(Context.User, Context.Guild, amount);
                 }
                 else
                 {
                     won = false;
                     reply += ($"{Context.User.Mention} lose, **{amount.ToString("n0", nfi)}** gold has been removed from your bank.") + Environment.NewLine;
-                    await DataAccess.SaveGold(Context.User, Context.Guild.Id, -amount);
+                    await BusinessLayer.SaveGold(Context.User, Context.Guild, -amount);
                     if (amount > 1)
                     {
                         await DataAccess.SaveGoldToBot(amount / 2);
@@ -171,13 +171,13 @@ namespace MarvBotV3.Commands
                 {
                     await ReplyAsync($"{reply}{Context.User.Mention} **WIN**, **{amount.ToString("n0", nfi)}** gold has been added to your bank.");
                 }
-                await DataAccess.SaveGold(Context.User, Context.Guild.Id, amount);
+                await BusinessLayer.SaveGold(Context.User, Context.Guild, amount);
             }
             else
             {
                 won = false;
                 await ReplyAsync($"{reply}{Context.User.Mention} lose, **{amount.ToString("n0", nfi)}** gold has been removed from your bank.");
-                await DataAccess.SaveGold(Context.User, Context.Guild.Id, -amount);
+                await BusinessLayer.SaveGold(Context.User, Context.Guild, -amount);
                 if (amount > 1)
                 {
                     await DataAccess.SaveGoldToBot(amount / 2);
@@ -212,12 +212,12 @@ namespace MarvBotV3.Commands
                 }
                 else
                 {
-                    await DataAccess.SaveGold(Context.User, Context.Guild.Id, -amount);
+                    await BusinessLayer.SaveGold(Context.User, Context.Guild, -amount);
                 }
             }
 
             await ReplyAsync($"{Context.User.Mention} has just given {user.Mention} **{amount.ToString("n0", nfi)}** gold.");
-            await DataAccess.SaveGold(user, Context.Guild.Id, amount);
+            await BusinessLayer.SaveGold(user, Context.Guild, amount);
         }
 
         [RequireOwner]
@@ -225,19 +225,8 @@ namespace MarvBotV3.Commands
         [Alias("steal", "ta")]
         public async Task TakeGold(IUser user, int amount = 1)
         {
-            if (user.IsBot)
-            {
-                await ReplyAsync("Can't take money from a bot.");
-                return;
-            }
-            else if (user.Id == Context.User.Id)
-            {
-                await ReplyAsync("Can't take money from yourself.");
-                return;
-            }
-
             await ReplyAsync($"{Context.User.Mention} has just taken **{amount.ToString("n0", nfi)}** gold from {user.Mention}.");
-            await DataAccess.SaveGold(user, Context.Guild.Id, -amount);
+            await BusinessLayer.SaveGold(user, Context.Guild, -amount);
         }
 
         [RequireOwner]
@@ -246,14 +235,14 @@ namespace MarvBotV3.Commands
         {
             var users = Context.Guild.Users;
             await DataAccess.GiveGoldEveryone(users.Where(x => x.Status != UserStatus.Offline).ToList(), amount);
-            await ReplyAsync($"You have given @everyone who is online, **{amount.ToString("n0", nfi)}** gold");
+            await ReplyAsync($"You have given everyone who is online, **{amount.ToString("n0", nfi)}** gold");
         }
 
         [Command("Toplist")]
         [Alias("top", "richest")]
         public async Task TopGold(int amount = 10)
         {
-            var topList = DataAccess.GetAllGold(Context.Guild.Id, amount);
+            var topList = DataAccess.GetTopXGold(amount);
             var reply = "";
             foreach (var top in topList)
             {
