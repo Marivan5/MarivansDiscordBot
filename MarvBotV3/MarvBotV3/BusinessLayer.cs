@@ -30,7 +30,7 @@ namespace MarvBotV3
         
         private static SocketGuildUser GetCurrentRichestPerson(SocketGuild guild)
         {
-            return guild.Users.FirstOrDefault(x => !x.Roles.Any(y => y.Id == ServerConfig.Load().richRole));
+            return guild.Users.FirstOrDefault(x => x.Roles.Any(y => y.Id == ServerConfig.Load().richRole));
         }
     }
 }
