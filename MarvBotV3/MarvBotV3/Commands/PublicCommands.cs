@@ -10,7 +10,7 @@ namespace MarvBotV3
 {
     public class PublicCommands : ModuleBase<ShardedCommandContext>
     {
-        private NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " " };
+        private NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " ", CurrencyDecimalSeparator = "." };
 
         // Get info on a user, or the user who invoked the command if one is not specified
         [Command("userinfo")]
@@ -25,13 +25,13 @@ namespace MarvBotV3
         [Alias("temperature", "grader")]
         public async Task GetTempData()
         {
-            var tempData = DataAccess.GetTempData();
+            var tempData = DataAccess.GetTempDataAsync();
             foreach (var data in tempData)
             {
-                var reply = $"At {data.Time} it was {data.Temperature}C at {data.Room}";
+                var reply = $"At {data.Time} it was {data.Temperature.ToString("0.00", nfi)}C at {data.Room}";
                 if(data.Humidity != 0)
                 {
-                    reply += $" with a humidity of {data.Humidity}%";
+                    reply += $" with a humidity of {data.Humidity.ToString("0.00", nfi)}%";
                 }
                 await ReplyAsync(reply);
             }

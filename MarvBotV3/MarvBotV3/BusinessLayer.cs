@@ -17,6 +17,10 @@ namespace MarvBotV3
         private static async Task CheckRichestPerson(SocketGuild guild)
         {
             var newRichestPerson = DataAccess.GetTopXGold(1).FirstOrDefault()?.UserID ?? 0;
+
+            if (newRichestPerson == 0)
+                return;
+
             var currentRichestPerson = GetCurrentRichestPerson(guild);
             if(currentRichestPerson == null || newRichestPerson != currentRichestPerson.Id)
             {

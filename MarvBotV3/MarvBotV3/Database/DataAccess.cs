@@ -1,6 +1,8 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using MarvBotV3.Database.Tables;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -165,16 +167,16 @@ namespace MarvBotV3.Database
             }
         }
 
-        public static List<TbTempData> GetTempData()
+        public static List<TbTempData> GetTempDataAsync()
         {
             using (var db = new DatabaseContext())
             {
                 var value =
-                    (from x in db.TbTempData.AsQueryable()
+                     (from x in db.TbTempData.AsEnumerable()
                      group x by x.Room into g
-                     select g.OrderByDescending(x => x.Time).FirstOrDefault()).ToList();
+                     select g.OrderByDescending(x => x.Time).First()).ToList();
 
-                //var value = db.tbTempData.OrderByDescending(x => x.Time).Take(10).GroupBy(x => x.Room).FirstOrDefault().ToList();
+                //var value = db.TbTempData.AsQueryable().GroupBy(x => x.Room).ForEach(x => x.OrderByDescending(z => z.Time).FirstOrDefault());
                 return value;
             }
         }

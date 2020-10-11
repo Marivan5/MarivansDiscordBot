@@ -69,7 +69,7 @@ namespace MarvBotV3.Commands
                 await ReplyAsync("You can't duel yourself.");
                 return;
             }
-            await ReplyAsync($"{Context.User.Mention} has challenged {challenge.Mention} for {amount.ToString("n0", nfi)} gold{Environment.NewLine}{challenge.Mention} do you accept? (type **Yes** to accept)");
+            await ReplyAsync($"{Context.User.Mention} has challenged {challenge.Mention} for {amount.ToString("n0", nfi)} gold{Environment.NewLine}{challenge.Mention} do you accept? (type **Yes** to accept) (Expires in 1 minute)");
             Program.awaitingDuels.Add(new DTO.Duel { Challenger = Context.User.Id, Challenge = challenge.Id, BetAmount = amount, TimeStamp = DateTime.Now });
         }
 

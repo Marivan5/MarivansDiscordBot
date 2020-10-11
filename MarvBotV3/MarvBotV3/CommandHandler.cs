@@ -96,7 +96,7 @@ namespace MarvBotV3
 
             foreach (var duel in Program.awaitingDuels)
             {
-                if (duel.TimeStamp < DateTime.Now.AddMinutes(-10))
+                if (duel.TimeStamp < DateTime.Now.AddMinutes(-1))
                     Program.awaitingDuels.Remove(duel);
             }
 
@@ -169,8 +169,10 @@ namespace MarvBotV3
                 var channel = guild.VoiceChannels.Where(input => input.ToString().Equals(gameRole.Name)).FirstOrDefault();
                 if (channel == null)
                 {
-                    VoiceChannelProperties properties = new VoiceChannelProperties();
-                    properties.Bitrate = 96000;
+                    var properties = new VoiceChannelProperties
+                    {
+                        Bitrate = 96000
+                    };
                     altChannel = await guild.CreateVoiceChannelAsync(gameRole.Name);
                     await altChannel.AddPermissionOverwriteAsync(guild.EveryoneRole, new OverwritePermissions(connect: PermValue.Deny, viewChannel: PermValue.Deny));
                     await altChannel.AddPermissionOverwriteAsync(gameRole, new OverwritePermissions(connect: PermValue.Allow, viewChannel: PermValue.Allow));
@@ -186,6 +188,18 @@ namespace MarvBotV3
             else if (beforeChangeUser.Activity != null && afterChangeUser.Activity == null)
             {
                 gameRole = guild.Roles.Where(input => input.ToString().Equals(beforeChangeUser.Activity.Name)).FirstOrDefault();
+
+                if (gameRole == null)
+                    return;
+
+                await user.RemoveRoleAsync(gameRole);
+
+                if(!guild.Users.Where(x => x != user).Any(x => x.Roles.Contains(gameRole))) // raderar
+                {
+                    SocketVoiceChannel channel = guild.VoiceChannels.Where(input => input.ToString().Equals(gameRole.Name)).FirstOrDefault();
+                    await gameRole.DeleteAsync();
+                    await channel.DeleteAsync();
+                }
                 //Discord.Rest.RestVoiceChannel altChannel = null;
                 //SocketVoiceChannel channel = guild.VoiceChannels.Where(input => input.ToString().Equals("General")).FirstOrDefault();
                 //if (channel == null)
@@ -197,7 +211,6 @@ namespace MarvBotV3
                 //{
                 //    await user.ModifyAsync(x => x.Channel = channel);
                 //}
-                await user.RemoveRoleAsync(gameRole);
             }
         }
 
@@ -207,9 +220,15 @@ namespace MarvBotV3
 
         public async Task ChangeVoiceChannel(SocketUser user, SocketVoiceState beforeState, SocketVoiceState afterState)
         {
-            SocketGuild guild = afterState.VoiceChannel.Guild;
+            SocketGuild guild = afterState.VoiceChannel?.Guild;
+            if(guild == null)
+                guild = beforeState.VoiceChannel.Guild;
+
             SocketGuildUser guildUser = guild.GetUser(user.Id);
             SocketVoiceChannel afkChannel = guild.GetVoiceChannel(Program.serverConfig.afkChannel);
+
+            if (guildUser.VoiceState == null)
+                return;
 
             if (guildUser.VoiceState.Value.IsSelfDeafened && Program.serverConfig.whiteList.All(x => x != user.Id) && !afterState.VoiceChannel.Equals(afkChannel)) // Moves self muted users to afk channel
             {
