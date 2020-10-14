@@ -102,7 +102,7 @@ namespace MarvBotV3
 
             if (msg == null)
             {
-                await Context.Channel.SendMessageAsync("Cant find a message.");
+                await ReplyAsync("Cant find a message.");
                 return;
             }
 
@@ -116,21 +116,28 @@ namespace MarvBotV3
             Emoji Oemoji = new Emoji("🇴");
             Emoji Uemoji = new Emoji("🇺");
             Emoji MFemoji = new Emoji("🖕");
-            await msg.AddReactionAsync(Femoji);
-            await Task.Delay(delay);
-            await msg.AddReactionAsync(Aemoji);
-            await Task.Delay(delay);
-            await msg.AddReactionAsync(Cemoji);
-            await Task.Delay(delay);
-            await msg.AddReactionAsync(Kemoji);
-            await Task.Delay(delay);
-            await msg.AddReactionAsync(MFemoji);
-            await Task.Delay(delay);
-            await msg.AddReactionAsync(Yemoji);
-            await Task.Delay(delay);
-            await msg.AddReactionAsync(Oemoji);
-            await Task.Delay(delay);
-            await msg.AddReactionAsync(Uemoji);
+            try
+            {
+                await msg.AddReactionAsync(Femoji);
+                await Task.Delay(delay);
+                await msg.AddReactionAsync(Aemoji);
+                await Task.Delay(delay);
+                await msg.AddReactionAsync(Cemoji);
+                await Task.Delay(delay);
+                await msg.AddReactionAsync(Kemoji);
+                await Task.Delay(delay);
+                await msg.AddReactionAsync(MFemoji);
+                await Task.Delay(delay);
+                await msg.AddReactionAsync(Yemoji);
+                await Task.Delay(delay);
+                await msg.AddReactionAsync(Oemoji);
+                await Task.Delay(delay);
+                await msg.AddReactionAsync(Uemoji);
+            }
+            catch
+            {
+                await ReplyAsync("Something went wrong.");
+            }
         }
 
         [Command("Dice")]

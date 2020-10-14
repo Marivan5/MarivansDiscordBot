@@ -156,17 +156,17 @@ namespace MarvBotV3
                     {
                         return;
                     }
-                    gameRole = guild.Roles.Where(input => input.ToString().Equals(beforeChangeUser.Activity.Name)).FirstOrDefault();
+                    gameRole = guild.Roles.Where(x => x.ToString().Equals(beforeChangeUser.Activity.Name) && !x.IsMentionable).FirstOrDefault();
                     await user.RemoveRoleAsync(gameRole);
                     gameRole = null;
                 }
-                gameRole = guild.Roles.Where(input => input.ToString().Equals(afterChangeUser.Activity.Name)).FirstOrDefault();
+                gameRole = guild.Roles.Where(x => x.ToString().Equals(afterChangeUser.Activity.Name) && !x.IsMentionable).FirstOrDefault();
                 if (gameRole == null) // if role does not exist, create it
                 {
                     gameRole = await guild.CreateRoleAsync(afterChangeUser.Activity.Name, permissions: GuildPermissions.None, color: Color.Default, isHoisted: false, false);
                 }
                 Discord.Rest.RestVoiceChannel altChannel = null;
-                var channel = guild.VoiceChannels.Where(input => input.ToString().Equals(gameRole.Name)).FirstOrDefault();
+                var channel = guild.VoiceChannels.Where(x => x.ToString().Equals(gameRole.Name) && x.Bitrate == 96000).FirstOrDefault();
                 if (channel == null)
                 {
                     var properties = new VoiceChannelProperties
@@ -187,7 +187,7 @@ namespace MarvBotV3
             }
             else if (beforeChangeUser.Activity != null && afterChangeUser.Activity == null)
             {
-                gameRole = guild.Roles.Where(input => input.ToString().Equals(beforeChangeUser.Activity.Name)).FirstOrDefault();
+                gameRole = guild.Roles.Where(x => x.ToString().Equals(beforeChangeUser.Activity.Name) && !x.IsMentionable).FirstOrDefault();
 
                 if (gameRole == null)
                     return;
@@ -196,7 +196,7 @@ namespace MarvBotV3
 
                 if(!guild.Users.Where(x => x != user).Any(x => x.Roles.Contains(gameRole))) // raderar
                 {
-                    SocketVoiceChannel channel = guild.VoiceChannels.Where(input => input.ToString().Equals(gameRole.Name)).FirstOrDefault();
+                    SocketVoiceChannel channel = guild.VoiceChannels.Where(x => x.ToString().Equals(gameRole.Name) && x.Bitrate == 96000).FirstOrDefault();
                     await gameRole.DeleteAsync();
                     await channel.DeleteAsync();
                 }
@@ -256,14 +256,13 @@ namespace MarvBotV3
             while(true)
             {
                 var guilds = _discord.Guilds;
-                List<SocketGuildUser> users = new List<SocketGuildUser>();
+                var users = new List<SocketGuildUser>();
                 foreach (var guild in guilds)
                 {
-                    users = users.Concat(guild.Users.Where(x => !x.IsSelfDeafened).ToList()).ToList();
+                    users = users.Concat(guild.Users.Where(x => !x.IsSelfDeafened && x.Status == UserStatus.Online && !x.IsBot).ToList()).ToList();
                 }
-                var usersOnline = users.Where(x => x.Status == UserStatus.Online && !x.IsBot).ToList();
-                await DataAccess.GiveGoldEveryone(usersOnline, 1);
-                await Task.Delay(Convert.ToInt32(millisecs));
+                await DataAccess.GiveGoldEveryone(users, 1);
+                await Task.Delay(millisecs);
             }
         }
     }

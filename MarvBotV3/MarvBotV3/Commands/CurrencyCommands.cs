@@ -41,13 +41,6 @@ namespace MarvBotV3.Commands
 
         [Command("Gamble")]
         [Alias("roll", "dice")]
-        public async Task GambleGold(int amount = 10)
-        {
-            await Gamble(amount);
-        }
-
-        [Command("Gamble")]
-        [Alias("roll", "dice")]
         public async Task GambleGold(string input)
         {
             if (input.ToLower() == "all" || input.ToLower() == "all in")
@@ -61,14 +54,16 @@ namespace MarvBotV3.Commands
             }
         }
 
-        [Command("Gambles")]
-        [Alias("rolls", "dices")]
-        public async Task GamblesGold(int amount, int times)
+        [Command("Gamble")]
+        [Alias("rolls", "dices", "roll", "dice")]
+        public async Task GamblesGold(int amount = 10, int times = 1)
         {
             if (times > 20)
                 times = 20;
 
             string reply = "";
+            bool tts = false;
+
             for (int i = 0; i < times; ++i)
             {
                 var currentGold = DataAccess.GetGold(Context.User.Id);
@@ -105,6 +100,7 @@ namespace MarvBotV3.Commands
                     {
                         amount = jackpot;
                         reply += ($":tada: {Context.User.Mention} **WIN THE JACKPOT**, **{jackpot.ToString("n0", nfi)}** gold has been added to your bank. :tada:") + Environment.NewLine;
+                        tts = true;
                         await DataAccess.SaveGoldToBot(-jackpot + jackpotBorder);
                     }
                     else
@@ -116,7 +112,7 @@ namespace MarvBotV3.Commands
                 else
                 {
                     won = false;
-                    reply += ($"{Context.User.Mention} lose, **{amount.ToString("n0", nfi)}** gold has been removed from your bank.") + Environment.NewLine;
+                    reply += ($"{Context.User.Mention} has lost, **{amount.ToString("n0", nfi)}** gold has been removed from your bank.") + Environment.NewLine;
                     await BusinessLayer.SaveGold(Context.User, Context.Guild, -amount);
                     if (amount > 1)
                     {
@@ -126,7 +122,7 @@ namespace MarvBotV3.Commands
                 await DataAccess.UpdateGambleAmount(Context.User);
                 await DataAccess.SaveStats(Context.User, won, amount, result);
             }
-            await ReplyAsync(reply);
+            await ReplyAsync(reply, tts);
         }
 
         private async Task Gamble(int amount)
@@ -135,7 +131,7 @@ namespace MarvBotV3.Commands
             var amountOfGambles = DataAccess.GetGambleAmount(Context.User);
             if (amountOfGambles >= Program.maxGambles)
             {
-                await ReplyAsync("You have reach your max gambles. Wait 10 minutes and then gamble again.");
+                await ReplyAsync("You have reach your max gambles. Wait 10 minutes.");
                 return;
             }
             if (currentGold < amount)
@@ -164,7 +160,7 @@ namespace MarvBotV3.Commands
                 if (result == 100 && amount < jackpot && amount >= jackpotBorder)
                 {
                     amount = jackpot;
-                    await ReplyAsync($"{reply}:tada: {Context.User.Mention} **WIN THE JACKPOT**, **{jackpot.ToString("n0", nfi)}** gold has been added to your bank. :tada:");
+                    await ReplyAsync($"{reply}:tada: {Context.User.Mention} **WIN THE JACKPOT**, **{jackpot.ToString("n0", nfi)}** gold has been added to your bank. :tada:", true);
                     await DataAccess.SaveGoldToBot(-jackpot + jackpotBorder);
                 }
                 else
