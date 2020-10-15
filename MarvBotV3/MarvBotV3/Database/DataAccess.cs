@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -173,8 +174,8 @@ namespace MarvBotV3.Database
             {
                 var value =
                      (from x in db.TbTempData.AsEnumerable()
-                     group x by x.Room into g
-                     select g.OrderByDescending(x => x.Time).First()).ToList();
+                      group x by x.Room into g
+                      select g.OrderByDescending(x => x.Time).First()).ToList();
 
                 //var value = db.TbTempData.AsQueryable().GroupBy(x => x.Room).ForEach(x => x.OrderByDescending(z => z.Time).FirstOrDefault());
                 return value;
@@ -207,6 +208,22 @@ namespace MarvBotV3.Database
                 }
                 var value = db.TbDuels.AsQueryable().Where(x => x.Challenger == userID || x.Challenge == userID).ToList();
                 return value;
+            }
+        }
+
+        public static async Task SaveUserAcitivity(IUser user, string beforeActivity, string afterActivity)
+        {
+            using (var db = new DatabaseContext())
+            {
+                db.TbUserActivities.Add(new TbUserActivity
+                {
+                    UserID = user.Id,
+                    Username = user.Username,
+                    BeforeActivity = beforeActivity,
+                    AfterActivity = afterActivity,
+                    TimeStamp = DateTime.Now
+                });
+                await db.SaveChangesAsync();
             }
         }
     }

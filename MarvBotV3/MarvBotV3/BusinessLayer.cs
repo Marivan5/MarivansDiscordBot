@@ -36,5 +36,10 @@ namespace MarvBotV3
         {
             return guild.Users.FirstOrDefault(x => x.Roles.Any(y => y.Id == ServerConfig.Load().richRole));
         }
+
+        public static async Task SaveUserAcitivity(IUser user, string beforeActivity, string afterActivity)
+        {
+            await DataAccess.SaveUserAcitivity(user, beforeActivity, afterActivity);
+        }
     }
 }

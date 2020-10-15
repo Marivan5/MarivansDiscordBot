@@ -3,14 +3,16 @@ using System;
 using MarvBotV3;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace MarvBotV3.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20201015160856_TbUserActivities")]
+    partial class TbUserActivities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -101,11 +103,11 @@ namespace MarvBotV3.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<string>("AfterActivity")
+                    b.Property<string>("Activity")
                         .HasColumnType("longtext CHARACTER SET utf8mb4");
 
-                    b.Property<string>("BeforeActivity")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<bool>("Started")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("TimeStamp")
                         .HasColumnType("datetime(6)");

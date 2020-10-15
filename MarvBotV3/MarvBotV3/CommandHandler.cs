@@ -148,6 +148,11 @@ namespace MarvBotV3
             SocketGuildUser user = afterChangeUser;
             IRole gameRole = null;
             SocketGuild guild = user.Guild;
+
+            if (!string.IsNullOrWhiteSpace(beforeChangeUser.Activity?.Name) || !string.IsNullOrWhiteSpace(afterChangeUser.Activity?.Name))
+                if (beforeChangeUser.Activity?.Name != afterChangeUser.Activity?.Name)
+                    await BusinessLayer.SaveUserAcitivity(user, beforeChangeUser.Activity?.Name ?? "", afterChangeUser.Activity?.Name ?? "");
+
             if(afterChangeUser.Activity != null)
             {
                 if(beforeChangeUser.Activity != null)
