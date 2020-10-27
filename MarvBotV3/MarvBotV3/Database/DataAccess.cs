@@ -1,11 +1,9 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using MarvBotV3.Database.Tables;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 

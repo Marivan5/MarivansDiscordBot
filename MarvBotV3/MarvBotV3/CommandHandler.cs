@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using MarvBotV3.Database;
 using MarvBotV3.DTO;
 using System.Globalization;
+using System.Security.Cryptography.X509Certificates;
 
 namespace MarvBotV3
 {
@@ -158,18 +159,17 @@ namespace MarvBotV3
                 if(beforeChangeUser.Activity != null)
                 {
                     if(beforeChangeUser.Activity.Name == afterChangeUser.Activity.Name)
-                    {
                         return;
-                    }
+
                     gameRole = guild.Roles.Where(x => x.ToString().Equals(beforeChangeUser.Activity.Name) && !x.IsMentionable).FirstOrDefault();
-                    await user.RemoveRoleAsync(gameRole);
+                    await DeleteGameRoleAndVoiceChannel(guild, gameRole, user);
                     gameRole = null;
                 }
                 gameRole = guild.Roles.Where(x => x.ToString().Equals(afterChangeUser.Activity.Name) && !x.IsMentionable).FirstOrDefault();
+
                 if (gameRole == null) // if role does not exist, create it
-                {
                     gameRole = await guild.CreateRoleAsync(afterChangeUser.Activity.Name, permissions: GuildPermissions.None, color: Color.Default, isHoisted: false, false);
-                }
+
                 Discord.Rest.RestVoiceChannel altChannel = null;
                 var channel = guild.VoiceChannels.Where(x => x.ToString().Equals(gameRole.Name) && x.Bitrate == 96000).FirstOrDefault();
                 if (channel == null)
@@ -184,10 +184,10 @@ namespace MarvBotV3
                     await altChannel.ModifyAsync(x => x.Bitrate = properties.Bitrate); 
                     //await user.ModifyAsync(x => x.Channel = altChannel); // Flyttar användaren
                 }
-                else
-                {
-                    //await user.ModifyAsync(x => x.Channel = channel); // Flyttar användaren
-                }
+                //else
+                //{
+                //    await user.ModifyAsync(x => x.Channel = channel); // Flyttar användaren
+                //}
                 await user.AddRoleAsync(gameRole);
             }
             else if (beforeChangeUser.Activity != null && afterChangeUser.Activity == null)
@@ -197,14 +197,7 @@ namespace MarvBotV3
                 if (gameRole == null)
                     return;
 
-                await user.RemoveRoleAsync(gameRole);
-
-                if(!guild.Users.Where(x => x != user).Any(x => x.Roles.Contains(gameRole))) // raderar
-                {
-                    SocketVoiceChannel channel = guild.VoiceChannels.Where(x => x.ToString().Equals(gameRole.Name) && x.Bitrate == 96000).FirstOrDefault();
-                    await gameRole.DeleteAsync();
-                    await channel.DeleteAsync();
-                }
+                await DeleteGameRoleAndVoiceChannel(guild, gameRole, user);
                 //Discord.Rest.RestVoiceChannel altChannel = null;
                 //SocketVoiceChannel channel = guild.VoiceChannels.Where(input => input.ToString().Equals("General")).FirstOrDefault();
                 //if (channel == null)
@@ -216,6 +209,18 @@ namespace MarvBotV3
                 //{
                 //    await user.ModifyAsync(x => x.Channel = channel);
                 //}
+            }
+        }
+
+        private async Task DeleteGameRoleAndVoiceChannel(SocketGuild guild, IRole gameRole, SocketGuildUser user)
+        {
+            await user.RemoveRoleAsync(gameRole);
+
+            if (!guild.Users.Where(x => x != user).Any(x => x.Roles.Contains(gameRole))) // raderar
+            {
+                SocketVoiceChannel channel = guild.VoiceChannels.Where(x => x.ToString().Equals(gameRole.Name) && x.Bitrate == 96000).FirstOrDefault();
+                await gameRole.DeleteAsync();
+                await channel.DeleteAsync();
             }
         }
 
@@ -262,11 +267,18 @@ namespace MarvBotV3
             {
                 var guilds = _discord.Guilds;
                 var users = new List<SocketGuildUser>();
+                var extraGoldUsers = new List<SocketGuildUser>();
                 foreach (var guild in guilds)
                 {
-                    users = users.Concat(guild.Users.Where(x => !x.IsSelfDeafened && x.Status == UserStatus.Online && !x.IsBot).ToList()).ToList();
+                    var onlineUsers = guild.Users.Where(x => !x.IsSelfDeafened && x.Status == UserStatus.Online && !x.IsBot).ToList();
+                    users.AddRange(onlineUsers);
+                    var userActivities = onlineUsers.GroupBy(x => x.Activity?.Name).Where(x => x.Key != null && x.Count() > 1 && x.Key != "Custom Status").Select(x => x.ToList());
+                 
+                    foreach (var act in userActivities)
+                        extraGoldUsers.AddRange(act);
                 }
                 await DataAccess.GiveGoldEveryone(users, 1);
+                await DataAccess.GiveGoldEveryone(extraGoldUsers, 2);
                 await Task.Delay(millisecs);
             }
         }
