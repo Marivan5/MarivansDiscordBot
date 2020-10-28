@@ -121,6 +121,7 @@ namespace MarvBotV3.Database
                             Username = user.Username,
                             GoldAmount = amount,
                             AmountOfGambles = 0,
+                            GuildID = user.Guild.Id
                         });
                     }
                     else
@@ -128,7 +129,6 @@ namespace MarvBotV3.Database
                         TbCurrency tbUser = db.TbCurrencies.AsQueryable().Where(x => x.UserID == user.Id).FirstOrDefault();
                         tbUser.GoldAmount += amount;
                         tbUser.Username = user.Username;
-                        tbUser.AmountOfGambles = 0;
                         db.TbCurrencies.Update(tbUser);
                     }
                 }
@@ -136,16 +136,17 @@ namespace MarvBotV3.Database
             }
         }
 
-        public static async Task SaveStats(IUser user, bool won, int amount, int roll)
+        public static async Task SaveStats(IUser user, bool won, long betAmount, long changeAmount , int roll)
         {
             using (var db = new DatabaseContext())
             {
-                db.TbGoldGambles.Add(new tbGoldGambles
+                db.TbGoldGambles.Add(new TbGoldGambles
                 {
                     UserID = user.Id,
                     Username = user.Username,
                     Won = won,
-                    Amount = (long)amount,
+                    BetAmount = betAmount,
+                    ChangeAmount = changeAmount,
                     Roll = roll,
                     TimeStamp = DateTime.Now,
                 });
@@ -153,7 +154,7 @@ namespace MarvBotV3.Database
             }
         }
 
-        public static List<tbGoldGambles> GetStats(ulong userID)
+        public static List<TbGoldGambles> GetStats(ulong userID)
         {
             using (var db = new DatabaseContext())
             {
@@ -170,13 +171,16 @@ namespace MarvBotV3.Database
         {
             using (var db = new DatabaseContext())
             {
+                var dbValue = db.TbTempData.AsQueryable().OrderByDescending(x => x.Id).Take(100).ToList();
+
                 var value =
-                     (from x in db.TbTempData.AsEnumerable()
-                      group x by x.Room into g
-                      select g.OrderByDescending(x => x.Time).First()).ToList();
+                     from x in dbValue
+                     group x by x.Room into g
+                     select g.OrderByDescending(x => x.Time).First();
 
                 //var value = db.TbTempData.AsQueryable().GroupBy(x => x.Room).ForEach(x => x.OrderByDescending(z => z.Time).FirstOrDefault());
-                return value;
+
+                return value.ToList();
             }
         }
 

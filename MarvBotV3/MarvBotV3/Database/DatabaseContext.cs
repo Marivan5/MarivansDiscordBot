@@ -5,9 +5,8 @@ namespace MarvBotV3
 {
     public class DatabaseContext : DbContext
     {
-        public DbSet<TbUsers> TbUsers { get; set; }
         public DbSet<TbCurrency> TbCurrencies { get; set; }
-        public DbSet<tbGoldGambles> TbGoldGambles { get; set; }
+        public DbSet<TbGoldGambles> TbGoldGambles { get; set; }
         public DbSet<TbTempData> TbTempData { get; set; }
         public DbSet<TbDuels> TbDuels { get; set; }
         public DbSet<TbUserActivity> TbUserActivities { get; set; }

@@ -46,7 +46,8 @@ namespace MarvBotV3.Commands
             if (input.ToLower() == "all" || input.ToLower() == "all in")
             {
                 var amount = DataAccess.GetGold(Context.User.Id);
-                await Gamble(amount);
+                var reply = await Gamble(amount);
+                await ReplyAsync(reply);
             }
             else
             {
@@ -62,87 +63,33 @@ namespace MarvBotV3.Commands
                 times = 20;
 
             string reply = "";
-            bool tts = false;
 
             for (int i = 0; i < times; ++i)
             {
-                var currentGold = DataAccess.GetGold(Context.User.Id);
-                var amountOfGambles = DataAccess.GetGambleAmount(Context.User);
-                if (amountOfGambles >= Program.maxGambles)
-                {
-                    await ReplyAsync("You have reach your max gambles. Wait 10 minutes and then gamble again.");
-                    return;
-                }
-                if (currentGold < amount)
-                {
-                    await ReplyAsync($"You only have {currentGold.ToString("n0", nfi)}. Can't gamble more.");
-                    return;
-                }
-                if (amount <= 0)
-                {
-                    await ReplyAsync($"You can't gamble 0 gold.");
-                    return;
-                }
-
-                var rng = new Random();
-                var result = rng.Next(0, 101);
-                var cheatList = Program.serverConfig.whiteList;
-                if (cheatList.Contains(Context.User.Id)) // cheat
-                    result = rng.Next(60, 100);
-                reply += $"You rolled {result}." + Environment.NewLine;
-                bool won;
-
-                if (result >= 60)
-                {
-                    int jackpot = DataAccess.GetGold(276456075559960576);
-                    won = true;
-                    if (result == 100 && amount < jackpot && amount >= jackpotBorder)
-                    {
-                        amount = jackpot;
-                        reply += ($":tada: {Context.User.Mention} **WIN THE JACKPOT**, **{jackpot.ToString("n0", nfi)}** gold has been added to your bank. :tada:") + Environment.NewLine;
-                        tts = true;
-                        await DataAccess.SaveGoldToBot(-jackpot + jackpotBorder);
-                    }
-                    else
-                    {
-                        reply += ($"{Context.User.Mention} **WIN**, **{amount.ToString("n0", nfi)}** gold has been added to your bank.") + Environment.NewLine;
-                    }
-                    await BusinessLayer.SaveGold(Context.User, Context.Guild, amount);
-                }
-                else
-                {
-                    won = false;
-                    reply += ($"{Context.User.Mention} has lost, **{amount.ToString("n0", nfi)}** gold has been removed from your bank.") + Environment.NewLine;
-                    await BusinessLayer.SaveGold(Context.User, Context.Guild, -amount);
-                    if (amount > 1)
-                    {
-                        await DataAccess.SaveGoldToBot(amount / 2);
-                    }
-                }
-                await DataAccess.UpdateGambleAmount(Context.User);
-                await DataAccess.SaveStats(Context.User, won, amount, result);
+                reply += await Gamble(amount);
             }
-            await ReplyAsync(reply, tts);
+            await ReplyAsync(reply);
         }
 
-        private async Task Gamble(int amount)
+        private async Task<string> Gamble(int betAmount)
         {
+            string reply = "";
             var currentGold = DataAccess.GetGold(Context.User.Id);
-            var amountOfGambles = DataAccess.GetGambleAmount(Context.User);
-            if (amountOfGambles >= Program.maxGambles)
+            //var amountOfGambles = DataAccess.GetGambleAmount(Context.User);
+            //if (amountOfGambles >= Program.maxGambles)
+            //{
+            //    reply += "You have reach your max gambles. Wait 10 minutes and then gamble again.";
+            //    return reply;
+            //}
+            if (currentGold < betAmount)
             {
-                await ReplyAsync("You have reach your max gambles. Wait 10 minutes.");
-                return;
+                reply += $"You only have {currentGold.ToString("n0", nfi)}. Can't gamble more.";
+                return reply;
             }
-            if (currentGold < amount)
+            if (betAmount <= 0)
             {
-                await ReplyAsync($"You only have {currentGold.ToString("n0", nfi)}. Can't gamble more.");
-                return;
-            }
-            if (amount <= 0)
-            {
-                await ReplyAsync($"You can't gamble 0 gold.");
-                return;
+                reply += $"You can't gamble 0 gold.";
+                return reply;
             }
 
             var rng = new Random();
@@ -150,37 +97,40 @@ namespace MarvBotV3.Commands
             var cheatList = Program.serverConfig.whiteList;
             if (cheatList.Contains(Context.User.Id)) // cheat
                 result = rng.Next(60, 100);
-            var reply = $"You rolled {result}." + Environment.NewLine;
+            reply += $"You rolled {result}." + Environment.NewLine;
             bool won;
 
+            var changeAmount = betAmount;
             if (result >= 60)
             {
                 int jackpot = DataAccess.GetGold(276456075559960576);
                 won = true;
-                if (result == 100 && amount < jackpot && amount >= jackpotBorder)
+                if (result == 100 && betAmount < jackpot && betAmount >= jackpotBorder)
                 {
-                    amount = jackpot;
-                    await ReplyAsync($"{reply}:tada: {Context.User.Mention} **WIN THE JACKPOT**, **{jackpot.ToString("n0", nfi)}** gold has been added to your bank. :tada:", true);
+                    changeAmount = jackpot;
+                    reply += ($":tada: {Context.User.Mention} **WIN THE JACKPOT**, **{jackpot.ToString("n0", nfi)}** gold has been added to your bank. :tada:") + Environment.NewLine;
                     await DataAccess.SaveGoldToBot(-jackpot + jackpotBorder);
                 }
                 else
                 {
-                    await ReplyAsync($"{reply}{Context.User.Mention} **WIN**, **{amount.ToString("n0", nfi)}** gold has been added to your bank.");
+                    reply += ($"{Context.User.Mention} **WIN**, **{changeAmount.ToString("n0", nfi)}** gold has been added to your bank.") + Environment.NewLine;
                 }
-                await BusinessLayer.SaveGold(Context.User, Context.Guild, amount);
+                await BusinessLayer.SaveGold(Context.User, Context.Guild, changeAmount);
             }
             else
             {
                 won = false;
-                await ReplyAsync($"{reply}{Context.User.Mention} lose, **{amount.ToString("n0", nfi)}** gold has been removed from your bank.");
-                await BusinessLayer.SaveGold(Context.User, Context.Guild, -amount);
-                if (amount > 1)
+                reply += ($"{Context.User.Mention} has lost, **{betAmount.ToString("n0", nfi)}** gold has been removed from your bank.") + Environment.NewLine;
+                await BusinessLayer.SaveGold(Context.User, Context.Guild, -betAmount);
+                if (betAmount > 1)
                 {
-                    await DataAccess.SaveGoldToBot(amount / 2);
+                    await DataAccess.SaveGoldToBot(betAmount / 2);
                 }
             }
             await DataAccess.UpdateGambleAmount(Context.User);
-            await DataAccess.SaveStats(Context.User, won, amount, result);
+            await DataAccess.SaveStats(Context.User, won, betAmount, changeAmount, result);
+
+            return reply;
         }
 
         [Command("Give")]
@@ -230,7 +180,7 @@ namespace MarvBotV3.Commands
         public async Task GiveGoldEveryone(int amount)
         {
             var users = Context.Guild.Users;
-            await DataAccess.GiveGoldEveryone(users.Where(x => x.Status != UserStatus.Offline).ToList(), amount);
+            await DataAccess.GiveGoldEveryone(users.Where(x => !x.IsSelfDeafened && x.Status == UserStatus.Online && !x.IsBot).ToList(), amount);
             await ReplyAsync($"You have given everyone who is online, **{amount.ToString("n0", nfi)}** gold");
         }
 
@@ -250,7 +200,7 @@ namespace MarvBotV3.Commands
         [Command("Jackpot")]
         public async Task JackpotStash()
         {
-            await ReplyAsync($"**{DataAccess.GetGold(276456075559960576).ToString()}** gold is currently in the jackpot. To win the jackpot you have to bet **{jackpotBorder}** gold or more and roll a **100** in a regular gamble.");
+            await ReplyAsync($"**{DataAccess.GetGold(276456075559960576)}** gold is currently in the jackpot. To win the jackpot you have to bet **{jackpotBorder}** gold or more and roll a **100** in a regular gamble.");
         }
 
         [Command("Stats")]
@@ -272,21 +222,21 @@ namespace MarvBotV3.Commands
 
             float winPercent = ((float)stats.Where(x => x.Won == true).Count() / (float)stats.Count()) * 100;
             reply += ($"{user.Mention} has **won** {winPercent}% of their gambles.") + Environment.NewLine;
-            var amountWon = stats.Where(x => x.Won == true).Select(x => x.Amount).ToList();
+            var amountWon = stats.Where(x => x.Won == true).Select(x => x.ChangeAmount).ToList();
             reply += ($"{user.Mention} has **won** a total amount of **{amountWon.Sum().ToString("n0", nfi)}** gold") + Environment.NewLine;
-            var amountLost = stats.Where(x => x.Won == false).Select(x => x.Amount).ToList();
+            var amountLost = stats.Where(x => x.Won == false).Select(x => x.ChangeAmount).ToList();
             reply += ($"{user.Mention} has **lost** a total amount of **{amountLost.Sum().ToString("n0", nfi)}** gold") + Environment.NewLine;
             await ReplyAsync(reply);
         }
 
-        [RequireOwner]
-        [Command("MaxGambles")]
-        public async Task SetMaxGambles(int amount)
-        {
-            Program.serverConfig.maxGambles = amount;
-            Program.maxGambles = amount;
-            Program.serverConfig.Save();
-            await ReplyAsync($"Max gambles have been set to {amount.ToString("n0", nfi)}.");
-        }
+        //[RequireOwner]
+        //[Command("MaxGambles")]
+        //public async Task SetMaxGambles(int amount)
+        //{
+        //    Program.serverConfig.maxGambles = amount;
+        //    Program.maxGambles = amount;
+        //    Program.serverConfig.Save();
+        //    await ReplyAsync($"Max gambles have been set to {amount.ToString("n0", nfi)}.");
+        //}
     }
 }
