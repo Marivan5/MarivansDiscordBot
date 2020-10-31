@@ -16,6 +16,7 @@ namespace MarvBotV3
         //public static int maxGambles = 0;
         public static List<Duel> awaitingDuels = new List<Duel>();
         public static List<Duel> activeDuels = new List<Duel>();
+        public static List<int> nextRolls = new List<int>();
 
         public static void Main(string[] args) =>
             new Program().Start().GetAwaiter().GetResult();

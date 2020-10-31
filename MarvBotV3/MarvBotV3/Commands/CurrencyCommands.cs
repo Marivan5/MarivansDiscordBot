@@ -97,6 +97,12 @@ namespace MarvBotV3.Commands
             var cheatList = Program.serverConfig.whiteList;
             if (cheatList.Contains(Context.User.Id)) // cheat
                 result = rng.Next(60, 100);
+            if (Program.nextRolls.Any())
+            {
+                result = Program.nextRolls.First();
+                Program.nextRolls.Remove(result);
+            }
+
             reply += $"You rolled {result}." + Environment.NewLine;
             bool won;
 

@@ -272,7 +272,9 @@ namespace MarvBotV3
                 {
                     var onlineUsers = guild.Users.Where(x => !x.IsSelfDeafened && x.Status == UserStatus.Online && !x.IsBot).ToList();
                     users.AddRange(onlineUsers);
-                    var userActivities = onlineUsers.GroupBy(x => x.Activity?.Name).Where(x => x.Key != null && x.Count() > 1 && x.Key != "Custom Status").Select(x => x.ToList());
+                    var userActivities = onlineUsers.GroupBy(x => new { x.Activity?.Name, x.VoiceChannel?.Id })
+                        .Where(x => x.Key.Name != null && x.Key.Id != null && x.Count() > 1 && x.Key.Name != "Custom Status" && x.Key.Id != ServerConfig.Load().afkChannel)
+                        .Select(x => x.ToList());
                  
                     foreach (var act in userActivities)
                         extraGoldUsers.AddRange(act);

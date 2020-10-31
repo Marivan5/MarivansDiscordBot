@@ -68,6 +68,14 @@ namespace MarvBotV3.Commands
             await (Context.Channel as ITextChannel).DeleteMessagesAsync(toDelete);
         }
 
+        [Command("nextroll"), Summary("Set next roll")]
+        [Alias("nextgamble")]
+        public async Task NextRoll(params int[] list)
+        {
+            Program.nextRolls.AddRange(list);
+            await ReplyAsync($"Added {list}");
+        }
+
         [Command("SetVideoChat")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageChannels)]
