@@ -69,7 +69,7 @@ namespace MarvBotV3.Commands
         }
 
         [Command("nextroll"), Summary("Set next roll")]
-        [Alias("nextgamble")]
+        [Alias("nextgamble", "next")]
         public async Task NextRoll(params int[] list)
         {
             Program.nextRolls.AddRange(list);
