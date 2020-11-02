@@ -4,6 +4,7 @@ using MarvBotV3.Database;
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace MarvBotV3.Commands
@@ -196,9 +197,11 @@ namespace MarvBotV3.Commands
         {
             var topList = DataAccess.GetTopXGold(amount);
             var reply = "";
+            var i = 1;
             foreach (var top in topList)
             {
-                reply += $"{MentionUtils.MentionUser(top.UserID)} has **{top.GoldAmount.ToString("n0", nfi)}** gold" + Environment.NewLine;
+                reply += $"{i}: {MentionUtils.MentionUser(top.UserID)} has **{top.GoldAmount.ToString("n0", nfi)}** gold" + Environment.NewLine;
+                i++;
             }
             await ReplyAsync(reply);
         }

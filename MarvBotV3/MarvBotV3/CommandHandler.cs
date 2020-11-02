@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using MarvBotV3.Database;
 using MarvBotV3.DTO;
 using System.Globalization;
-using System.Security.Cryptography.X509Certificates;
 
 namespace MarvBotV3
 {
@@ -33,8 +32,21 @@ namespace MarvBotV3
             //_commands.CommandExecuted += CommandExecutedAsync;
             _discord.MessageReceived += MessageReceivedAsync;
             _discord.GuildMemberUpdated += ChangeGameAndRole;
+            _discord.UserJoined += UserJoined;
+            _discord.UserLeft += UserLeft;
             _discord.UserVoiceStateUpdated += ChangeVoiceChannel;
             _ = GiveGoldToEveryone();
+        }
+
+        private Task UserLeft(SocketGuildUser arg)
+        {
+            return DataAccess.DeleteUser(arg.Id);
+        }
+
+        private Task UserJoined(SocketGuildUser arg)
+        {
+            var role = arg.Guild.GetRole(349580645502025728); // Intruder
+            return arg.AddRoleAsync(role);
         }
 
         public async Task InitializeAsync()
@@ -271,6 +283,7 @@ namespace MarvBotV3
                 foreach (var guild in guilds)
                 {
                     var onlineUsers = guild.Users.Where(x => !x.IsSelfDeafened && x.Status == UserStatus.Online && !x.IsBot).ToList();
+                    onlineUsers.Remove(BusinessLayer.GetCurrentRichestPerson(guild));
                     users.AddRange(onlineUsers);
                     var userActivities = onlineUsers.GroupBy(x => new { x.Activity?.Name, x.VoiceChannel?.Id })
                         .Where(x => x.Key.Name != null && x.Key.Id != null && x.Count() > 1 && x.Key.Name != "Custom Status" && x.Key.Id != ServerConfig.Load().afkChannel)
