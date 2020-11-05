@@ -1,5 +1,6 @@
 ﻿using MarvBotV3.Database.Tables;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography.X509Certificates;
 
 namespace MarvBotV3
 {
@@ -10,6 +11,16 @@ namespace MarvBotV3
         public DbSet<TbTempData> TbTempData { get; set; }
         public DbSet<TbDuels> TbDuels { get; set; }
         public DbSet<TbUserActivity> TbUserActivities { get; set; }
+        public DbSet<TbDonations> TbDonations { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<TbDonations>()
+                .HasIndex(x => x.TimeStamp);
+
+            modelBuilder.Entity<TbTempData>()
+                .HasIndex(x => x.Time);
+        }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {

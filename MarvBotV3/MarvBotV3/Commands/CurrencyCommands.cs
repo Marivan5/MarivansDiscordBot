@@ -217,9 +217,8 @@ namespace MarvBotV3.Commands
         public async Task GetStats(IUser user = null)
         {
             if (user == null)
-            {
                 user = Context.User;
-            }
+
             var reply = "";
             var stats = DataAccess.GetStats(user.Id);
 
@@ -236,6 +235,45 @@ namespace MarvBotV3.Commands
             var amountLost = stats.Where(x => x.Won == false).Select(x => x.ChangeAmount).ToList();
             reply += ($"{user.Mention} has **lost** a total amount of **{amountLost.Sum().ToString("n0", nfi)}** gold") + Environment.NewLine;
             await ReplyAsync(reply);
+        }
+
+        [Command("freeGold")]
+        [Alias("pls", "plsSir", "välfärd")]
+        public async Task DailyFreeGold()
+        {
+            var top3 = DataAccess.GetTopXGold(3).Select(x => x.UserID).ToList();
+            if (top3.Contains(Context.User.Id))
+            {
+                await ReplyAsync("You are too rich to recieve free cash.");
+                return;
+            }
+
+            var lastDonation = DataAccess.GetLatestDonation(Context.Guild.Id);
+
+            if(lastDonation?.TimeStamp.Date >= DateTime.Today)
+            {
+                await ReplyAsync($"Last donations was given to {MentionUtils.MentionUser(lastDonation.UserID)} at {lastDonation.TimeStamp}. I only give out 1 donation per day");
+                return;
+            }
+
+            var botGoldAmount = DataAccess.GetGold(276456075559960576);
+
+            if (botGoldAmount <= 0)
+            {
+                await ReplyAsync("I have no money left to give.");
+                return;
+            }
+
+            var rng = new Random();
+            var donationAmount = rng.Next(1, 101);
+
+            if (donationAmount > botGoldAmount)
+                donationAmount = botGoldAmount;
+
+            await DataAccess.SaveGoldToBot(-donationAmount);
+            await BusinessLayer.SaveGold(Context.User, Context.Guild, donationAmount);
+            await DataAccess.SetDonation(Context.User, Context.Guild.Id, donationAmount);
+            await ReplyAsync($"I have given you **{donationAmount}** gold. Spend with care.");
         }
 
         //[RequireOwner]

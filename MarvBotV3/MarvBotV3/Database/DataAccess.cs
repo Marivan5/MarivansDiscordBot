@@ -228,5 +228,29 @@ namespace MarvBotV3.Database
                 await db.SaveChangesAsync();
             }
         }
+
+        public static TbDonations GetLatestDonation(ulong guildId)
+        {
+            using (var db = new DatabaseContext())
+            {
+                return db.TbDonations.AsQueryable().Where(x => x.GuildID == guildId).OrderByDescending(x => x.TimeStamp).FirstOrDefault();
+            }
+        }
+
+        public static async Task SetDonation(IUser user, ulong guildId, int donationAmount)
+        {
+            using (var db = new DatabaseContext())
+            {
+                db.TbDonations.Add(new TbDonations
+                {
+                    UserID = user.Id,
+                    Username = user.Username,
+                    GuildID = guildId,
+                    DonationAmount = donationAmount,
+                    TimeStamp = DateTime.Now
+                });
+                await db.SaveChangesAsync();
+            }
+        }
     }
 }

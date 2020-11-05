@@ -3,14 +3,16 @@ using System;
 using MarvBotV3;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace MarvBotV3.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20201105205355_AddedTbDonations")]
+    partial class AddedTbDonations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -61,8 +63,6 @@ namespace MarvBotV3.Migrations
                         .HasMaxLength(64);
 
                     b.HasKey("UserID");
-
-                    b.HasIndex("TimeStamp");
 
                     b.ToTable("TbDonations");
                 });
@@ -151,8 +151,6 @@ namespace MarvBotV3.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Time");
 
                     b.ToTable("TbTempData");
                 });
