@@ -249,10 +249,11 @@ namespace MarvBotV3.Commands
             }
 
             var lastDonation = DataAccess.GetLatestDonation(Context.Guild.Id);
+            int waitHours = 12;
 
-            if(lastDonation?.TimeStamp.Date >= DateTime.Today)
+            if(lastDonation != null && (DateTime.Now - lastDonation.TimeStamp).TotalHours < waitHours)
             {
-                await ReplyAsync($"Last donations was given to {MentionUtils.MentionUser(lastDonation.UserID)} at {lastDonation.TimeStamp}. I only give out 1 donation per day");
+                await ReplyAsync($"Last donations was given to {MentionUtils.MentionUser(lastDonation.UserID)} at {lastDonation.TimeStamp}. I only give out 1 donation per {waitHours} hours");
                 return;
             }
 

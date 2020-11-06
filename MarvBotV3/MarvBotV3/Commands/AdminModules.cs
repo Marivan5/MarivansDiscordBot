@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MarvBotV3.Commands
@@ -68,12 +69,21 @@ namespace MarvBotV3.Commands
             await (Context.Channel as ITextChannel).DeleteMessagesAsync(toDelete);
         }
 
-        [Command("nextroll"), Summary("Set next roll")]
+        [Command("nextroll")]
         [Alias("nextgamble", "next")]
         public async Task NextRoll(params int[] list)
         {
-            Program.nextRolls.AddRange(list);
-            await ReplyAsync($"Added {list}");
+            var normalList = new List<int>();
+            foreach(var item in list)
+            {
+                int newItem = item;
+                if (newItem > 100)
+                    newItem = 100;
+
+                normalList.Add(newItem);
+            }
+            Program.nextRolls.AddRange(normalList);
+            await ReplyAsync($"Added {normalList}");
         }
 
         [Command("SetVideoChat")]
