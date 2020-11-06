@@ -85,6 +85,15 @@ namespace MarvBotV3.Commands
             Program.nextRolls.AddRange(normalList);
             await ReplyAsync($"Added {normalList}");
         }
+        
+        [Command("waitHoursForDonation")]
+        [Alias("hoursForDono", "Donation")]
+        public async Task SetWaitHoursForDonation(int hours)
+        {
+            Program.serverConfig.donationWaitHours = hours;
+            Program.serverConfig.Save();
+            await ReplyAsync($"Set to 1 donation per {hours} hours.");
+        }
 
         [Command("SetVideoChat")]
         [RequireContext(ContextType.Guild)]
