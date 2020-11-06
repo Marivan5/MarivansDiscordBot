@@ -178,8 +178,6 @@ namespace MarvBotV3.Database
                      group x by x.Room into g
                      select g.OrderByDescending(x => x.Time).First();
 
-                //var value = db.TbTempData.AsQueryable().GroupBy(x => x.Room).ForEach(x => x.OrderByDescending(z => z.Time).FirstOrDefault());
-
                 return value.ToList();
             }
         }
