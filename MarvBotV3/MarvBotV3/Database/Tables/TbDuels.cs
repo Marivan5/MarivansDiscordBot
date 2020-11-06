@@ -11,7 +11,6 @@ namespace MarvBotV3.Database.Tables
         public ulong Challenge { get; set; }
         public ulong Winner { get; set; }
         public int BetAmount { get; set; }
-
         public DateTime TimeStamp { get; set; }
     }
 }
