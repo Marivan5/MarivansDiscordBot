@@ -1,9 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace MarvBotV3.Commands
@@ -16,9 +14,7 @@ namespace MarvBotV3.Commands
         public async Task ClearMessages([Summary("Clear X amount of messages")] int amountToClear = 1)
         {
             if (amountToClear > 100)
-            {
                 amountToClear = 100;
-            }
 
             var messages = await Context.Channel.GetMessagesAsync(Context.Message, Direction.Before, amountToClear).FlattenAsync();
             await (Context.Channel as ITextChannel).DeleteMessagesAsync(messages);
@@ -30,9 +26,7 @@ namespace MarvBotV3.Commands
         public async Task ClearMessagesContaining(string param, int amountToClear = 1)
         {
             if (amountToClear > 100)
-            {
                 amountToClear = 100;
-            }
 
             var toCheck = await (Context.Channel as ITextChannel).GetMessagesAsync(amountToClear).FlattenAsync();
             List<IMessage> toDelete = new List<IMessage>();
@@ -40,9 +34,7 @@ namespace MarvBotV3.Commands
             foreach (var msg in toCheck)
             {
                 if (msg.Content.ToString().Contains(param))
-                {
                     toDelete.Add(msg);
-                }
             }
             await (Context.Channel as ITextChannel).DeleteMessagesAsync(toDelete);
         }
@@ -52,9 +44,7 @@ namespace MarvBotV3.Commands
         public async Task ClearMessagesFrom(SocketUser param, int amountToClear = 1)
         {
             if (amountToClear > 100)
-            {
                 amountToClear = 100;
-            }
 
             var toCheck = await (Context.Channel as ITextChannel).GetMessagesAsync(amountToClear).FlattenAsync();
             List<IMessage> toDelete = new List<IMessage>();
@@ -62,9 +52,7 @@ namespace MarvBotV3.Commands
             foreach (var msg in toCheck)
             {
                 if (msg.Author.Id == param.Id)
-                {
                     toDelete.Add(msg);
-                }
             }
             await (Context.Channel as ITextChannel).DeleteMessagesAsync(toDelete);
         }
