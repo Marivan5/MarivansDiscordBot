@@ -13,7 +13,6 @@ namespace MarvBotV3
     class Program
     {
         public static ServerConfig serverConfig;
-        //public static int maxGambles = 0;
         public static List<Duel> awaitingDuels = new List<Duel>();
         public static List<Duel> activeDuels = new List<Duel>();
         public static List<int> nextRolls = new List<int>();
@@ -57,7 +56,6 @@ namespace MarvBotV3
         private Task LogAsync(LogMessage log)
         {
             Console.WriteLine(log.ToString());
-
             return Task.CompletedTask;
         }
 
@@ -91,7 +89,6 @@ namespace MarvBotV3
             if (!File.Exists(loc))                              // Check if the configuration file exists.
             {
                 var config = new ServerConfig();                // Create a new configuration object.
-
                 config.Save();                                  // Save Config
             }
             Console.WriteLine("Server configuration Loaded...");
@@ -103,7 +100,6 @@ namespace MarvBotV3
                 .AddSingleton(new DiscordShardedClient(config))
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandler>()
-                //.AddSingleton<Program>()
                 .BuildServiceProvider();
         }
     }

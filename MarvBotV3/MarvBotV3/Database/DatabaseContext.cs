@@ -1,6 +1,5 @@
 ﻿using MarvBotV3.Database.Tables;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography.X509Certificates;
 
 namespace MarvBotV3
 {
