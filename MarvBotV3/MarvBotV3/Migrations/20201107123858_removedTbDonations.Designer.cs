@@ -3,14 +3,16 @@ using System;
 using MarvBotV3;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace MarvBotV3.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20201107123858_removedTbDonations")]
+    partial class removedTbDonations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -39,35 +41,6 @@ namespace MarvBotV3.Migrations
                     b.HasKey("UserID");
 
                     b.ToTable("TbCurrencies");
-                });
-
-            modelBuilder.Entity("MarvBotV3.Database.Tables.TbDonations", b =>
-                {
-                    b.Property<ulong>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint unsigned");
-
-                    b.Property<int>("DonationAmount")
-                        .HasColumnType("int");
-
-                    b.Property<ulong>("GuildID")
-                        .HasColumnType("bigint unsigned");
-
-                    b.Property<DateTime>("TimeStamp")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<ulong>("UserID")
-                        .HasColumnType("bigint unsigned");
-
-                    b.Property<string>("Username")
-                        .HasColumnType("varchar(64) CHARACTER SET utf8mb4")
-                        .HasMaxLength(64);
-
-                    b.HasKey("ID");
-
-                    b.HasIndex("TimeStamp");
-
-                    b.ToTable("TbDonations");
                 });
 
             modelBuilder.Entity("MarvBotV3.Database.Tables.TbDuels", b =>

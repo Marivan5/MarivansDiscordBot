@@ -251,7 +251,7 @@ namespace MarvBotV3.Commands
             var lastDonation = DataAccess.GetLatestDonation(Context.Guild.Id);
             int waitHours = Program.serverConfig.donationWaitHours;
 
-            if(lastDonation != null && (DateTime.Now - lastDonation.TimeStamp).TotalHours < waitHours)
+            if (lastDonation != null && (DateTime.Now - lastDonation.TimeStamp).TotalHours < waitHours)
             {
                 await ReplyAsync($"Last donations was given to {MentionUtils.MentionUser(lastDonation.UserID)} at {lastDonation.TimeStamp}. I only give out 1 donation per {waitHours} hours");
                 return;
@@ -276,15 +276,5 @@ namespace MarvBotV3.Commands
             await DataAccess.SetDonation(Context.User, Context.Guild.Id, donationAmount);
             await ReplyAsync($"I have given you **{donationAmount}** gold. Spend with care.");
         }
-
-        //[RequireOwner]
-        //[Command("MaxGambles")]
-        //public async Task SetMaxGambles(int amount)
-        //{
-        //    Program.serverConfig.maxGambles = amount;
-        //    Program.maxGambles = amount;
-        //    Program.serverConfig.Save();
-        //    await ReplyAsync($"Max gambles have been set to {amount.ToString("n0", nfi)}.");
-        //}
     }
 }
