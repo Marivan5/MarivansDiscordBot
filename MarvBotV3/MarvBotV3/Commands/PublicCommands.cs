@@ -196,5 +196,12 @@ namespace MarvBotV3
             await BusinessLayer.SaveGold(Context.User, Context.Guild, -costToChangeNick);
             await Context.Guild.GetUser(user.Id).ModifyAsync(x => x.Nickname = nickname);
         }
+
+        [Command("Help")]
+        [Alias("hjälp")]
+        public async Task HelpCommand()
+        {
+            await ReplyAsync("Sorry I can't help you.");
+        }
     }
 }
