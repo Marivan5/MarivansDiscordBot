@@ -210,7 +210,7 @@ namespace MarvBotV3
                 // Get the command Summary attribute information
                 //string embedFieldText = command.Summary ?? "No description available\n";
                 if (command.Summary != null)
-                    embedBuilder.AddField($"!{command.Name}", command.Summary);
+                    embedBuilder.AddField($"{command.Name}", command.Summary);
             }
 
             await ReplyAsync("Here's a list of commands and their description: ", false, embedBuilder.Build());

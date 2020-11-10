@@ -4,7 +4,6 @@ using MarvBotV3.Database;
 using System;
 using System.Globalization;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace MarvBotV3.Commands
@@ -40,7 +39,7 @@ namespace MarvBotV3.Commands
             await ReplyAsync($"Removed all of {MentionUtils.MentionUser(userID)}'s gold");
         }
 
-        [Command("Gamble")]
+        [Command("Gamble"), Summary("Rolls a random number between 0 and 100, get above 60 to win the same amount you have")]
         [Alias("roll", "dice")]
         public async Task GambleGold(string input)
         {
@@ -56,8 +55,8 @@ namespace MarvBotV3.Commands
             }
         }
 
-        [Command("Gamble")]
-        [Alias("rolls", "dices", "roll", "dice")]
+        [Command("Roll"), Summary("Rolls a random number between 0 and 100, get above 60 to win the amount you bet")]
+        [Alias("rolls", "dices", "gamble", "dice")]
         public async Task GamblesGold(int amount = 10, int times = 1)
         {
             if (times > 20)
@@ -76,12 +75,7 @@ namespace MarvBotV3.Commands
         {
             string reply = "";
             var currentGold = DataAccess.GetGold(Context.User.Id);
-            //var amountOfGambles = DataAccess.GetGambleAmount(Context.User);
-            //if (amountOfGambles >= Program.maxGambles)
-            //{
-            //    reply += "You have reach your max gambles. Wait 10 minutes and then gamble again.";
-            //    return reply;
-            //}
+
             if (currentGold < betAmount)
             {
                 reply += $"You only have {currentGold.ToString("n0", nfi)}. Can't gamble more.";
@@ -98,6 +92,7 @@ namespace MarvBotV3.Commands
             var cheatList = Program.serverConfig.whiteList;
             if (cheatList.Contains(Context.User.Id)) // cheat
                 result = rng.Next(60, 100);
+
             if (Program.nextRolls.Any())
             {
                 result = Program.nextRolls.First();
@@ -141,7 +136,7 @@ namespace MarvBotV3.Commands
         }
 
         [Command("Give")]
-        [Alias("gift", "ge")]
+        [Alias("gift", "ge"), Summary("Gives **user** an set **amount** of gold")]
         public async Task GiveGold(IUser user, int amount = 1)
         {
             if (user.IsBot)
@@ -192,7 +187,7 @@ namespace MarvBotV3.Commands
         }
 
         [Command("Toplist")]
-        [Alias("top", "richest")]
+        [Alias("top", "richest"), Summary("Lists out the richest users")]
         public async Task TopGold(int amount = 10)
         {
             var topList = DataAccess.GetTopXGold(amount);
@@ -206,14 +201,14 @@ namespace MarvBotV3.Commands
             await ReplyAsync(reply);
         }
 
-        [Command("Jackpot")]
+        [Command("Jackpot"), Summary("Displays what the jackpot is at")]
         public async Task JackpotStash()
         {
             await ReplyAsync($"**{DataAccess.GetGold(276456075559960576)}** gold is currently in the jackpot. To win the jackpot you have to bet **{jackpotBorder}** gold or more and roll a **100** in a regular gamble.");
         }
 
         [Command("Stats")]
-        [Alias("info", "stat")]
+        [Alias("info", "stat"), Summary("Gets stats for **user**")]
         public async Task GetStats(IUser user = null)
         {
             if (user == null)
@@ -238,7 +233,7 @@ namespace MarvBotV3.Commands
         }
 
         [Command("freeGold")]
-        [Alias("pls", "plsSir", "välfärd")]
+        [Alias("pls", "plsSir", "välfärd"), Summary("Gives you a random amount of gold between 1-100")]
         public async Task DailyFreeGold()
         {
             var top3 = DataAccess.GetTopXGold(3).Select(x => x.UserID).ToList();
@@ -278,7 +273,7 @@ namespace MarvBotV3.Commands
         }
 
         [Command("Purge")]
-        [Alias("delete", "remove", "annihilate", "kill")]
+        [Alias("delete", "remove", "annihilate", "kill"), Summary("Deletes **user's** **amount** gold")]
         public async Task GoldPurge(IUser user, int amount = 0)
         {
             var richBitch = Context.Guild.Users.First(x => x.Roles.Select(z => z.Id).ToList().Contains(762789255965048833));
@@ -290,6 +285,11 @@ namespace MarvBotV3.Commands
             if (user == null)
             {
                 await ReplyAsync("Type '!Gold purge *User* *Amount*'");
+                return;
+            }
+            if (user.Id == Context.User.Id)
+            {
+                await ReplyAsync("Can't purge yourself");
                 return;
             }
             if (amount == 0)
