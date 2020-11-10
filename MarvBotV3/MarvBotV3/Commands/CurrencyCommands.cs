@@ -276,5 +276,37 @@ namespace MarvBotV3.Commands
             await DataAccess.SetDonation(Context.User, Context.Guild.Id, donationAmount);
             await ReplyAsync($"I have given you **{donationAmount}** gold. Spend with care.");
         }
+
+        [Command("Purge")]
+        [Alias("delete", "remove", "annihilate", "kill")]
+        public async Task GoldPurge(IUser user, int amount = 0)
+        {
+            var richBitch = Context.Guild.Users.First(x => x.Roles.Select(z => z.Id).ToList().Contains(762789255965048833));
+            if (richBitch.Id != Context.User.Id)
+            {
+                await ReplyAsync($"Only {MentionUtils.MentionRole(762789255965048833)} can purge someone");
+                return;
+            }
+            if (user == null)
+            {
+                await ReplyAsync("Type '!Gold purge *User* *Amount*'");
+                return;
+            }
+            if (amount == 0)
+                amount = DataAccess.GetGold(user.Id);
+
+            var richestGold = DataAccess.GetGold(Context.User.Id);
+
+            if (richestGold < amount)
+            {
+                await ReplyAsync($"You need more gold than **{amount}** to purge {user.Mention}");
+                return;
+            }
+
+            await ReplyAsync($"{Context.User.Mention} has removed **{amount}** gold from {user.Mention}");
+
+            await BusinessLayer.SaveGold(Context.User, Context.Guild, -amount);
+            await BusinessLayer.SaveGold(user, Context.Guild, -amount);
+        }
     }
 }
