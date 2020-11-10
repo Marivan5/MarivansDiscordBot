@@ -16,7 +16,7 @@ namespace MarvBotV3
     public class CommandHandler
     {
         private NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " " };
-        private readonly CommandService _commands;
+        public static CommandService _commands;
         public readonly DiscordShardedClient _discord;
         private readonly IServiceProvider _services;
 

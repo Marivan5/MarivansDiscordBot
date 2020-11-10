@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -201,7 +202,18 @@ namespace MarvBotV3
         [Alias("hjälp")]
         public async Task HelpCommand()
         {
-            await ReplyAsync("Sorry I can't help you.");
+            var commands = CommandHandler._commands.Commands.ToList();
+            var embedBuilder = new EmbedBuilder();
+
+            foreach (var command in commands)
+            {
+                // Get the command Summary attribute information
+                //string embedFieldText = command.Summary ?? "No description available\n";
+                if (command.Summary != null)
+                    embedBuilder.AddField($"!{command.Name}", command.Summary);
+            }
+
+            await ReplyAsync("Here's a list of commands and their description: ", false, embedBuilder.Build());
         }
     }
 }
