@@ -292,8 +292,14 @@ namespace MarvBotV3.Commands
                 await ReplyAsync("Can't purge yourself");
                 return;
             }
-            if (amount == 0)
-                amount = DataAccess.GetGold(user.Id);
+            var usersGold = DataAccess.GetGold(user.Id);
+            if (amount == 0 || amount > usersGold)
+                amount = usersGold;
+            if (amount <= 0)
+            {
+                await ReplyAsync($"{user.Mention} has too little money");
+                return;
+            }
 
             var richestGold = DataAccess.GetGold(Context.User.Id);
 
