@@ -172,7 +172,7 @@ namespace MarvBotV3
 
         [Command("ChangeNickname")]
         [Alias("nick", "changename", "changenick", "nickname")]
-        public async Task ChangeNickname(IUser user, string nickname)
+        public async Task ChangeNickname(IUser user, params string[] nickname)
         {
             const int costToChangeNick = 100;
             var richBitch = Context.Guild.Users.First(x => x.Roles.Select(z => z.Id).ToList().Contains(762789255965048833));
@@ -194,8 +194,13 @@ namespace MarvBotV3
                 return;
             }
 
+            var nick = "";
+
+            foreach (var s in nickname)
+                nick += $"{s} ";
+
             await BusinessLayer.SaveGold(Context.User, Context.Guild, -costToChangeNick);
-            await Context.Guild.GetUser(user.Id).ModifyAsync(x => x.Nickname = nickname);
+            await Context.Guild.GetUser(user.Id).ModifyAsync(x => x.Nickname = nick.Trim());
         }
 
         [Command("Help")]
