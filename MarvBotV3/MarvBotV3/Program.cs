@@ -16,7 +16,8 @@ namespace MarvBotV3
         public static List<Duel> awaitingDuels = new List<Duel>();
         public static List<Duel> activeDuels = new List<Duel>();
         public static List<int> nextRolls = new List<int>();
-
+        public static Dictionary<IUser, List<int>> nextUserRolls = new Dictionary<IUser, List<int>>();
+             
         public static void Main(string[] args) =>
             new Program().Start().GetAwaiter().GetResult();
 

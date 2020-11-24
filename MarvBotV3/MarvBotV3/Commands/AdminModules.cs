@@ -74,6 +74,28 @@ namespace MarvBotV3.Commands
             await ReplyAsync($"Added {normalList}");
         }
         
+        [Command("nextroll")]
+        [Alias("nextgamble", "next")]
+        public async Task NextRoll(IUser user, params int[] list)
+        {
+            var normalList = new List<int>();
+            foreach(var item in list)
+            {
+                int newItem = item;
+                if (newItem > 100)
+                    newItem = 100;
+
+                normalList.Add(newItem);
+            }
+
+            if(Program.nextUserRolls.ContainsKey(user))
+                Program.nextUserRolls[user].AddRange(normalList);
+            else 
+                Program.nextUserRolls.Add(user, normalList);
+
+            await ReplyAsync($"Added {normalList} to {user.Username}");
+        }
+        
         [Command("waitHoursForDonation")]
         [Alias("hoursForDono", "Donation")]
         public async Task SetWaitHoursForDonation(int hours)

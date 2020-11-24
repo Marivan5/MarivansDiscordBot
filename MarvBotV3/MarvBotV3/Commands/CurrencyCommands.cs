@@ -93,7 +93,15 @@ namespace MarvBotV3.Commands
             if (cheatList.Contains(Context.User.Id)) // cheat
                 result = rng.Next(60, 100);
 
-            if (Program.nextRolls.Any())
+            if (Program.nextUserRolls.ContainsKey(Context.User))
+            {
+                result = Program.nextUserRolls[Context.User].First();
+                Program.nextUserRolls[Context.User].Remove(result);
+
+                if(!Program.nextUserRolls[Context.User].Any())
+                    Program.nextUserRolls.Remove(Context.User);
+            }
+            else if (Program.nextRolls.Any())
             {
                 result = Program.nextRolls.First();
                 Program.nextRolls.Remove(result);
@@ -150,20 +158,14 @@ namespace MarvBotV3.Commands
                 return;
             }
 
-            if (Context.User.Id != Program.serverConfig.serverOwner)
+            var currentGold = DataAccess.GetGold(Context.User.Id);
+            if (currentGold < amount)
             {
-                var currentGold = DataAccess.GetGold(Context.User.Id);
-                if (currentGold < amount)
-                {
-                    await ReplyAsync($"You only have {currentGold.ToString("n0", nfi)}. Can't give more than you have.");
-                    return;
-                }
-                else
-                {
-                    await BusinessLayer.SaveGold(Context.User, Context.Guild, -amount);
-                }
+                await ReplyAsync($"You only have {currentGold.ToString("n0", nfi)}. Can't give more than you have.");
+                return;
             }
 
+            await BusinessLayer.SaveGold(Context.User, Context.Guild, -amount);
             await ReplyAsync($"{Context.User.Mention} has just given {user.Mention} **{amount.ToString("n0", nfi)}** gold.");
             await BusinessLayer.SaveGold(user, Context.Guild, amount);
         }
