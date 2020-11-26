@@ -93,20 +93,11 @@ namespace MarvBotV3.Commands
             if (cheatList.Contains(Context.User.Id)) // cheat
                 result = rng.Next(60, 100);
 
-            if (Program.nextUserRolls.ContainsKey(Context.User))
-            {
-                result = Program.nextUserRolls[Context.User].First();
-                Program.nextUserRolls[Context.User].Remove(result);
+            var nextRoll = DataAccess.GetNextRoll(Context.User.Id, true);
 
-                if(!Program.nextUserRolls[Context.User].Any())
-                    Program.nextUserRolls.Remove(Context.User);
-            }
-            else if (Program.nextRolls.Any())
-            {
-                result = Program.nextRolls.First();
-                Program.nextRolls.Remove(result);
-            }
-
+            if (nextRoll != null)
+                result = nextRoll.NextRoll;
+           
             reply += $"You rolled {result}." + Environment.NewLine;
             bool won;
 
@@ -312,7 +303,6 @@ namespace MarvBotV3.Commands
             }
 
             await ReplyAsync($"{Context.User.Mention} has removed **{amount}** gold from {user.Mention}");
-
             await BusinessLayer.SaveGold(Context.User, Context.Guild, -amount);
             await BusinessLayer.SaveGold(user, Context.Guild, -amount);
         }

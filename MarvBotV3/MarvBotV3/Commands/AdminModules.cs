@@ -10,7 +10,7 @@ namespace MarvBotV3.Commands
     public class AdminModules : ModuleBase<ShardedCommandContext>
     {
         [Command("clear"), Summary("Deletes X amount of messages")]
-        [Alias("delete", "prune", "purge")]
+        [Alias("delete", "prune")]
         public async Task ClearMessages([Summary("Clear X amount of messages")] int amountToClear = 1)
         {
             if (amountToClear > 100)
@@ -70,7 +70,7 @@ namespace MarvBotV3.Commands
 
                 normalList.Add(newItem);
             }
-            Program.nextRolls.AddRange(normalList);
+            await Database.DataAccess.SaveNextRoll(normalList);
             await ReplyAsync($"Added {normalList}");
         }
         
@@ -88,11 +88,7 @@ namespace MarvBotV3.Commands
                 normalList.Add(newItem);
             }
 
-            if(Program.nextUserRolls.ContainsKey(user))
-                Program.nextUserRolls[user].AddRange(normalList);
-            else 
-                Program.nextUserRolls.Add(user, normalList);
-
+            await Database.DataAccess.SaveNextRoll(normalList, user);
             await ReplyAsync($"Added {normalList} to {user.Username}");
         }
         

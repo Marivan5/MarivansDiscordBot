@@ -250,5 +250,44 @@ namespace MarvBotV3.Database
                 await db.SaveChangesAsync();
             }
         }
+
+        public static async Task SaveNextRoll(List<int> nextRolls, IUser user = null)
+        {
+            ulong userId = 0;
+            var username = "Anyone";
+            if(user != null)
+            {
+                userId = user.Id;
+                username = user.Username;
+            }
+
+            using (var db = new DatabaseContext())
+            {
+                foreach (var roll in nextRolls)
+                {
+                    db.TbNextRoll.Add(new TbNextRoll
+                    {
+                        UserID = userId,
+                        Username = username,
+                        NextRoll = roll,
+                        TimeStamp = DateTime.Now
+                    });
+                }
+                await db.SaveChangesAsync();
+            }
+        }
+
+        public static TbNextRoll GetNextRoll(ulong userId = 0, bool remove = false)
+        {
+            using (var db = new DatabaseContext())
+            {
+                var nextRoll =  db.TbNextRoll.AsQueryable().FirstOrDefault(x => x.UserID == 0 || x.UserID == userId);
+
+                if (remove)
+                    db.TbNextRoll.Remove(nextRoll);
+
+                return nextRoll;
+            }
+        }
     }
 }

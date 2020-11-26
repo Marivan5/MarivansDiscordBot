@@ -15,8 +15,6 @@ namespace MarvBotV3
         public static ServerConfig serverConfig;
         public static List<Duel> awaitingDuels = new List<Duel>();
         public static List<Duel> activeDuels = new List<Duel>();
-        public static List<int> nextRolls = new List<int>();
-        public static Dictionary<IUser, List<int>> nextUserRolls = new Dictionary<IUser, List<int>>();
              
         public static void Main(string[] args) =>
             new Program().Start().GetAwaiter().GetResult();
@@ -32,7 +30,6 @@ namespace MarvBotV3
             EnsureBotConfigExists();
             EnsureServerConfigExists();
             serverConfig = ServerConfig.Load();
-            //maxGambles = serverConfig.maxGambles;
 
             using (var services = ConfigureServices(config))
             {
