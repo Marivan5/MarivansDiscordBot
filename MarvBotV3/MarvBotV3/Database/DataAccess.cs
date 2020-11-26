@@ -284,7 +284,10 @@ namespace MarvBotV3.Database
                 var nextRoll =  db.TbNextRoll.AsQueryable().FirstOrDefault(x => x.UserID == 0 || x.UserID == userId);
 
                 if (remove)
+                {
                     db.TbNextRoll.Remove(nextRoll);
+                    db.SaveChanges();
+                }
 
                 return nextRoll;
             }
