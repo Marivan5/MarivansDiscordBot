@@ -154,15 +154,19 @@ namespace MarvBotV3.Database
             }
         }
 
-        public static List<TbGoldGambles> GetStats(ulong userID)
+        public static List<TbGoldGambles> GetStats(ulong userID, DateTime? fromDate = null)
         {
             using (var db = new DatabaseContext())
             {
                 if (!db.TbGoldGambles.Any(x => x.UserID == userID))
-                {
                     return null;
-                }
-                var value = db.TbGoldGambles.AsQueryable().Where(x => x.UserID == userID).ToList();
+
+                List<TbGoldGambles> value;
+                if (fromDate == null)
+                    value = db.TbGoldGambles.AsQueryable().Where(x => x.UserID == userID).ToList();
+                else
+                    value = db.TbGoldGambles.AsQueryable().Where(x => x.UserID == userID && x.TimeStamp >= fromDate).ToList();
+
                 return value;
             }
         }

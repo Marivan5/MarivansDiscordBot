@@ -207,7 +207,6 @@ namespace MarvBotV3.Commands
             if (user == null)
                 user = Context.User;
 
-            var reply = "";
             var stats = DataAccess.GetStats(user.Id);
 
             if (stats == null)
@@ -216,12 +215,41 @@ namespace MarvBotV3.Commands
                 return;
             }
 
+            var reply = "";
+            reply += ($"{user.Mention} has gambled **{stats.Count()}** time(s)") + Environment.NewLine;
             float winPercent = ((float)stats.Where(x => x.Won == true).Count() / (float)stats.Count()) * 100;
-            reply += ($"{user.Mention} has **won** {winPercent}% of their gambles.") + Environment.NewLine;
+            reply += ($"{user.Mention} has **won** {winPercent}% of their gambles") + Environment.NewLine;
             var amountWon = stats.Where(x => x.Won == true).Select(x => x.ChangeAmount).ToList();
             reply += ($"{user.Mention} has **won** a total amount of **{amountWon.Sum().ToString("n0", nfi)}** gold") + Environment.NewLine;
             var amountLost = stats.Where(x => x.Won == false).Select(x => x.ChangeAmount).ToList();
             reply += ($"{user.Mention} has **lost** a total amount of **{amountLost.Sum().ToString("n0", nfi)}** gold") + Environment.NewLine;
+            await ReplyAsync(reply);
+        }
+        
+        [Command("Today")]
+        [Alias("Todaystats", "statstoday"), Summary("Gets stats for **user** from the last 24 hours")]
+        public async Task GetStatsToday(IUser user = null)
+        {
+            if (user == null)
+                user = Context.User;
+
+            var yesterday = DateTime.Now.AddDays(-1);
+            var stats = DataAccess.GetStats(user.Id, yesterday);
+
+            if (stats == null)
+            {
+                await ReplyAsync($"Can't find any stats on {user.Mention} in the last 24 hours.");
+                return;
+            }
+
+            var reply = "";
+            reply += ($"{user.Mention} has gambled **{stats.Count()}** time(s) in the last 24 hours.") + Environment.NewLine;
+            float winPercent = ((float)stats.Where(x => x.Won == true).Count() / (float)stats.Count()) * 100;
+            reply += ($"{user.Mention} has **won** {winPercent}% of their gambles in the last 24 hours") + Environment.NewLine;
+            var amountWon = stats.Where(x => x.Won == true).Select(x => x.ChangeAmount).ToList();
+            reply += ($"{user.Mention} has **won** a total amount of **{amountWon.Sum().ToString("n0", nfi)}** gold in the last 24 hours") + Environment.NewLine;
+            var amountLost = stats.Where(x => x.Won == false).Select(x => x.ChangeAmount).ToList();
+            reply += ($"{user.Mention} has **lost** a total amount of **{amountLost.Sum().ToString("n0", nfi)}** gold in the last 24 hours") + Environment.NewLine;
             await ReplyAsync(reply);
         }
 

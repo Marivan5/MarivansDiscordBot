@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using MarvBotV3.Database;
 using MarvBotV3.DTO;
 using System.Globalization;
+using System.Threading;
 
 namespace MarvBotV3
 {
@@ -35,7 +36,7 @@ namespace MarvBotV3
             _discord.UserJoined += UserJoined;
             _discord.UserLeft += UserLeft;
             _discord.UserVoiceStateUpdated += ChangeVoiceChannel;
-            _ = GiveGoldToEveryone();
+            _ = RunIntervalTast();
         }
 
         private Task UserLeft(SocketGuildUser arg)
@@ -272,30 +273,37 @@ namespace MarvBotV3
             }
         }
 
-        public async Task GiveGoldToEveryone()
+        int millisecs = Convert.ToInt32(TimeSpan.FromMinutes(10).TotalMilliseconds);
+
+        public async Task RunIntervalTast()
         {
-            var millisecs = Convert.ToInt32(TimeSpan.FromMinutes(10).TotalMilliseconds);
+            CancellationToken cancellationToken = new CancellationToken(); // Todo move to commands
             while(true)
             {
-                var guilds = _discord.Guilds;
-                var users = new List<SocketGuildUser>();
-                var extraGoldUsers = new List<SocketGuildUser>();
-                foreach (var guild in guilds)
-                {
-                    var onlineUsers = guild.Users.Where(x => !x.IsSelfDeafened && x.Status == UserStatus.Online && !x.IsBot).ToList();
-                    onlineUsers.Remove(BusinessLayer.GetCurrentRichestPerson(guild));
-                    users.AddRange(onlineUsers);
-                    var userActivities = onlineUsers.GroupBy(x => new { x.Activity?.Name, x.VoiceChannel?.Id })
-                        .Where(x => x.Key.Name != null && x.Key.Id != null && x.Count() > 1 && x.Key.Name != "Custom Status" && x.Key.Id != ServerConfig.Load().afkChannel)
-                        .Select(x => x.ToList());
-                 
-                    foreach (var act in userActivities)
-                        extraGoldUsers.AddRange(act);
-                }
-                await DataAccess.GiveGoldEveryone(users, 1);
-                await DataAccess.GiveGoldEveryone(extraGoldUsers, 2);
-                await Task.Delay(millisecs);
+                await GiveGoldToEveryone();
+                await Task.Delay(millisecs, cancellationToken);
             }
+        }
+
+        public async Task GiveGoldToEveryone()
+        {
+            var guilds = _discord.Guilds;
+            var users = new List<SocketGuildUser>();
+            var extraGoldUsers = new List<SocketGuildUser>();
+            foreach (var guild in guilds)
+            {
+                var onlineUsers = guild.Users.Where(x => !x.IsSelfDeafened && x.Status == UserStatus.Online && !x.IsBot).ToList();
+                onlineUsers.Remove(BusinessLayer.GetCurrentRichestPerson(guild));
+                users.AddRange(onlineUsers);
+                var userActivities = onlineUsers.GroupBy(x => new { x.Activity?.Name, x.VoiceChannel?.Id })
+                    .Where(x => x.Key.Name != null && x.Key.Id != null && x.Count() > 1 && x.Key.Name != "Custom Status" && x.Key.Id != ServerConfig.Load().afkChannel)
+                    .Select(x => x.ToList());
+
+                foreach (var act in userActivities)
+                    extraGoldUsers.AddRange(act);
+            }
+            await DataAccess.GiveGoldEveryone(users, 1);
+            await DataAccess.GiveGoldEveryone(extraGoldUsers, 2);
         }
     }
 }

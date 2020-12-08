@@ -12,6 +12,7 @@ namespace MarvBotV3
         public DbSet<TbUserActivity> TbUserActivities { get; set; }
         public DbSet<TbDonations> TbDonations { get; set; }
         public DbSet<TbNextRoll> TbNextRoll { get; set; }
+        public DbSet<TbCommandsLog> TbCommandsLog { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
