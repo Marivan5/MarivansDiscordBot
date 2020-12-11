@@ -16,6 +16,14 @@ namespace MarvBotV3.Commands
         private readonly NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " " };
         int jackpotBorder = 250;
 
+        [Command("How")]
+        [Alias("help, wat, what")]
+        public async Task HowGold()
+        {
+            await ReplyAsync($"You can earn gold by being online. Every 10 minutes 1 gold is given to everyone who is **online**, and 2 extra gold to everyone who is playing a game together.{Environment.NewLine}" +
+                $"You can gamble your gold by typing '!gold roll **Amount**', if you roll a 60 or above, you win, else you lose. You can also duel people and bet gold on your self by typing '!duel **@User** **Amount**.'");
+        }
+
         [Command("Me")]
         [Alias("", "my", "stash")]
         public async Task MeGold()
