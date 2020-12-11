@@ -17,7 +17,7 @@ namespace MarvBotV3.Commands
         int jackpotBorder = 250;
 
         [Command("How")]
-        [Alias("help, wat, what")]
+        [Alias("help", "wat", "what")]
         public async Task HowGold()
         {
             await ReplyAsync($"You can earn gold by being online. Every 10 minutes 1 gold is given to everyone who is **online**, and 2 extra gold to everyone who is playing a game together.{Environment.NewLine}" +
