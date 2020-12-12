@@ -45,7 +45,7 @@ namespace MarvBotV3.Commands
         [Alias("fight", "")]
         public async Task DuelAmount(IUser challenge, int amount = 0)
         {
-            var reply = await Duel(challenge, amount);
+            var reply = Duel(challenge, amount);
             await ReplyAsync(reply);
         }
 
@@ -58,7 +58,7 @@ namespace MarvBotV3.Commands
                 var user1Gold = DataAccess.GetGold(Context.User.Id);
                 var user2Gold = DataAccess.GetGold(challenge.Id);
                 var amount = Math.Min(user1Gold, user2Gold);
-                var reply = await Duel(challenge, amount);
+                var reply = Duel(challenge, amount);
                 await ReplyAsync(reply);
             }
             else
@@ -67,7 +67,7 @@ namespace MarvBotV3.Commands
             }
         }
 
-        private async Task<string> Duel(IUser challenge, int amount = 0)
+        private string Duel(IUser challenge, int amount = 0)
         {
             if (challenge.Id == 276456075559960576)
                 return $"yes{Environment.NewLine}3{Environment.NewLine}2{Environment.NewLine}1{Environment.NewLine}Shoot!{Environment.NewLine}🔫{Environment.NewLine}I WIN!";
