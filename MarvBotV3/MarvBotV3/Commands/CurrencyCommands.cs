@@ -99,7 +99,7 @@ namespace MarvBotV3.Commands
             var result = rng.Next(0, 101);
             var cheatList = Program.serverConfig.whiteList;
             if (cheatList.Contains(Context.User.Id)) // cheat
-                result = rng.Next(60, 100);
+                result = rng.Next(55, 100);
 
             var nextRoll = DataAccess.GetNextRoll(Context.User.Id, true);
 
