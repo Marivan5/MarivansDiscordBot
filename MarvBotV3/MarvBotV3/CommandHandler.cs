@@ -36,7 +36,7 @@ namespace MarvBotV3
             _discord.UserJoined += UserJoined;
             _discord.UserLeft += UserLeft;
             _discord.UserVoiceStateUpdated += ChangeVoiceChannel;
-            _ = RunIntervalTast();
+            _ = RunIntervalTask();
         }
 
         private Task UserLeft(SocketGuildUser arg)
@@ -275,14 +275,28 @@ namespace MarvBotV3
 
         int millisecs = Convert.ToInt32(TimeSpan.FromMinutes(10).TotalMilliseconds);
 
-        public async Task RunIntervalTast()
+        public async Task RunIntervalTask()
         {
             CancellationToken cancellationToken = new CancellationToken(); // Todo move to commands
-            while(true)
+
+            await Task.Run(async () =>
             {
-                await GiveGoldToEveryone();
-                await Task.Delay(millisecs, cancellationToken);
-            }
+                var i = 0;
+                try
+                {
+                    while (true)
+                    {
+                        i++;
+                        await GiveGoldToEveryone();
+                        await Task.Delay(millisecs, cancellationToken);
+                        Console.WriteLine($"{DateTime.Now} Givegoldeveryone: {i}");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+            }, cancellationToken);
         }
 
         public async Task GiveGoldToEveryone()

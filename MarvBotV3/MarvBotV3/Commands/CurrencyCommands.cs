@@ -15,13 +15,14 @@ namespace MarvBotV3.Commands
     {
         private readonly NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " " };
         int jackpotBorder = 250;
+        int winningNumber = 55;
 
         [Command("How")]
         [Alias("help", "wat", "what")]
         public async Task HowGold()
         {
             await ReplyAsync($"You can earn gold by being online. Every 10 minutes 1 gold is given to everyone who is **online**, and 2 extra gold to everyone who is playing a game together.{Environment.NewLine}" +
-                $"You can gamble your gold by typing '!gold roll **Amount**', if you roll a 60 or above, you win, else you lose. You can also duel people and bet gold on your self by typing '!duel **@User** **Amount**.'");
+                $"You can gamble your gold by typing '!gold roll **Amount**', if you roll a {winningNumber} or above, you win, else you lose. You can also duel people and bet gold on your self by typing '!duel **@User** **Amount**.'");
         }
 
         [Command("Me")]
@@ -47,7 +48,7 @@ namespace MarvBotV3.Commands
             await ReplyAsync($"Removed all of {MentionUtils.MentionUser(userID)}'s gold");
         }
 
-        [Command("Gamble"), Summary("Rolls a random number between 0 and 100, get above 60 to win the same amount you have")]
+        [Command("Gamble"), Summary("Rolls a random number between to win the same amount you have")]
         [Alias("roll", "dice")]
         public async Task GambleGold(string input)
         {
@@ -63,7 +64,7 @@ namespace MarvBotV3.Commands
             }
         }
 
-        [Command("Roll"), Summary("Rolls a random number between 0 and 100, get above 60 to win the amount you bet")]
+        [Command("Roll"), Summary("Rolls a random number to win the amount you bet")]
         [Alias("rolls", "dices", "gamble", "dice")]
         public async Task GamblesGold(int amount = 10, int times = 1)
         {
@@ -99,7 +100,7 @@ namespace MarvBotV3.Commands
             var result = rng.Next(0, 101);
             var cheatList = Program.serverConfig.whiteList;
             if (cheatList.Contains(Context.User.Id)) // cheat
-                result = rng.Next(55, 100);
+                result = rng.Next(winningNumber, 100);
 
             var nextRoll = DataAccess.GetNextRoll(Context.User.Id, true);
 
@@ -110,7 +111,7 @@ namespace MarvBotV3.Commands
             bool won;
 
             var changeAmount = betAmount;
-            if (result >= 60)
+            if (result >= winningNumber)
             {
                 int jackpot = DataAccess.GetGold(276456075559960576);
                 won = true;

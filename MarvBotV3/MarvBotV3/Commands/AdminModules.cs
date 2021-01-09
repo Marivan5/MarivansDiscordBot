@@ -91,7 +91,20 @@ namespace MarvBotV3.Commands
             await Database.DataAccess.SaveNextRoll(normalList, user);
             await ReplyAsync($"Added {normalList} to {user.Username}");
         }
-        
+
+        [Command("SetBet")]
+        [Alias("CreateBet", "NewBet")]
+        public async Task CreateNewBet(params string[] list)
+        {
+            var name = "";
+            foreach (var ord in list)
+                name += ord + " ";
+
+            name = name.Trim();
+
+            await ReplyAsync($"A new bet has been created. **{name}**");
+        }
+
         [Command("waitHoursForDonation")]
         [Alias("hoursForDono", "Donation")]
         public async Task SetWaitHoursForDonation(int hours)
