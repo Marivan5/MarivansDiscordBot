@@ -1,5 +1,6 @@
 ﻿using MarvBotV3.Database.Tables;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace MarvBotV3
 {
@@ -31,8 +32,10 @@ namespace MarvBotV3
             // windows: \\RASPBERRYPI\share\Database\MarvBot.sqlite
             //string dbLocation = @"\\RASPBERRYPI\share\Database\MarvBot.sqlite";
             //string dbLocation = @"/share/Database/MarvBot.sqlite"; 
-            string dbLocation = "192.168.1.236"; 
-            options.UseMySql($"Server={dbLocation}; Port = 3306; DATABASE = MarvBot; UID=MarvBot; Password=MarvBotV3;", new MariaDbServerVersion(new System.Version(5, 5, 57)));
+            string dbLocation = "192.168.1.236";
+            options.UseMySql($"Server={dbLocation}; Port = 3306; DATABASE = MarvBot; UID=MarvBot; Password=MarvBotV3;",
+                new MariaDbServerVersion(new System.Version(5, 5, 57)),
+                mySqlOption => mySqlOption.EnableRetryOnFailure(maxRetryCount: 10, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null));
         }
     }
 }
