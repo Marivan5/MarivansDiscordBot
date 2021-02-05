@@ -70,13 +70,16 @@ namespace MarvBotV3
         [Alias("public")]
         public async Task PublicChannelInfo()
         {
-            if (Program.serverConfig.publicChannel == 0)
+            if (Program.serverConfig.publicChannel.Any())
             {
                 await ReplyAsync("Public channel is not set.");
             }
             else
             {
-                await ReplyAsync("Public channel is set to: " + MentionUtils.MentionChannel(Program.serverConfig.publicChannel));
+                foreach (var channel in Program.serverConfig.publicChannel)
+                {
+                    await ReplyAsync("Public channel is set to: " + MentionUtils.MentionChannel(channel));
+                }
             }
         }
 

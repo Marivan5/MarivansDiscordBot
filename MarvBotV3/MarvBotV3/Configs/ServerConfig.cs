@@ -9,7 +9,7 @@ namespace MarvBotV3
     public class ServerConfig
     {
         public ulong videoChannel { get; set; }
-        public ulong publicChannel { get; set; }
+        public List<ulong> publicChannel { get; set; }
         public ulong serverOwner { get; set; }
         public ulong afkChannel { get; set; }
         public ulong richRole { get; set; }
@@ -22,7 +22,7 @@ namespace MarvBotV3
         public ServerConfig()
         {
             videoChannel = 0;
-            publicChannel = 0;
+            publicChannel = new List<ulong>();
             serverOwner = 117628335516942343;
             afkChannel = 0;
             richRole = 0;

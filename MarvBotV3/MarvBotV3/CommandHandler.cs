@@ -63,7 +63,7 @@ namespace MarvBotV3
 
             if (Program.serverConfig.whiteList == null || Program.serverConfig.whiteList.All(x => x != message.Author.Id))
             {
-                if (Program.serverConfig.publicChannel != message.Channel.Id) // Special channel that does not follow the normal rules
+                if (!Program.serverConfig.publicChannel.Contains(message.Channel.Id)) // Special channel that does not follow the normal rules
                 {
                     if (Program.serverConfig.videoChannel != 0)
                     {

@@ -131,7 +131,7 @@ namespace MarvBotV3.Commands
         [RequireBotPermission(GuildPermission.ManageMessages)]
         public async Task SetPublicChannel([Remainder] SocketGuildChannel _channel)
         {
-            Program.serverConfig.publicChannel = _channel.Id;
+            Program.serverConfig.publicChannel.Add(_channel.Id);
             Program.serverConfig.Save();
             await ReplyAsync(_channel + " was succefully added.");
         }
