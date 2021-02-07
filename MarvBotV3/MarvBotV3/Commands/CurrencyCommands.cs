@@ -15,7 +15,7 @@ namespace MarvBotV3.Commands
     {
         private readonly NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " " };
         int jackpotBorder = 250;
-        int winningNumber = 55;
+        int winningNumber = 56;
 
         [Command("How")]
         [Alias("help", "wat", "what")]
