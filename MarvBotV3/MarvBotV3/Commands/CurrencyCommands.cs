@@ -98,6 +98,10 @@ namespace MarvBotV3.Commands
 
             var rng = new Random();
             var result = rng.Next(0, 101);
+            if (result == 100)
+                if (rng.Next(0, 101) != 100)
+                    result = 99;
+
             var cheatList = Program.serverConfig.whiteList;
             if (cheatList.Contains(Context.User.Id)) // cheat
                 result = rng.Next(winningNumber, 100);
