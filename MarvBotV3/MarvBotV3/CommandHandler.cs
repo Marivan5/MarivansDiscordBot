@@ -287,6 +287,7 @@ namespace MarvBotV3
                     while (true)
                     {
                         i++;
+                        await CelebrateBirthday();
                         await GiveGoldToEveryone();
                         await Task.Delay(millisecs, cancellationToken);
                         Console.WriteLine($"{DateTime.Now} Givegoldeveryone: {i}");
@@ -297,6 +298,27 @@ namespace MarvBotV3
                     Console.WriteLine(e.Message);
                 }
             }, cancellationToken);
+        }
+
+        public async Task CelebrateBirthday()
+        {
+            var birthdays = DataAccess.GetTodaysBirthdaysWithoutGift();
+            if (!birthdays.Any())
+                return;
+
+            var guilds = _discord.Guilds;
+            
+            foreach (var guild in guilds)
+            {
+                foreach (var birthday in birthdays)
+                {
+                    if (guild.Users.Select(x => x.Id).Contains(birthday.UserID))
+                    {
+                        await guild.DefaultChannel.SendMessageAsync($":tada: Happy birthday {MentionUtils.MentionUser(birthday.UserID)} :tada:");
+                        await DataAccess.UpdateBirthdayLastGiftGiven(guild.GetUser(birthday.UserID), DateTime.Now);
+                    }
+                }
+            }
         }
 
         public async Task GiveGoldToEveryone()

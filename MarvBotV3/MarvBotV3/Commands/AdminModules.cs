@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -9,6 +10,34 @@ namespace MarvBotV3.Commands
     [RequireOwner]
     public class AdminModules : ModuleBase<ShardedCommandContext>
     {
+        [Command("Birthday")]
+        [Alias("SetBirthday", "SetBday", "Bday")]
+        public async Task SetBirthday(IUser user, string birthday)
+        {
+            if (!DateTime.TryParse(birthday, out var dateValue))
+            {
+                await ReplyAsync("Could not parse date values");
+                return;
+            }
+
+            await Database.DataAccess.SaveBirthday(user, dateValue);
+            await ReplyAsync($"Added {user.Mention}'s birthday");
+        }
+        
+        [Command("ChangeBirthday")]
+        [Alias("ChangeBday")]
+        public async Task ChangeBirthday(IUser user, string birthday)
+        {
+            if (!DateTime.TryParse(birthday, out var dateValue))
+            {
+                await ReplyAsync("Could not parse date values");
+                return;
+            }
+
+            await Database.DataAccess.UpdateBirthday(user, dateValue);
+            await ReplyAsync($"Added {user.Mention}'s birthday");
+        }
+
         [Command("clear"), Summary("Deletes X amount of messages")]
         [Alias("delete", "prune")]
         public async Task ClearMessages([Summary("Clear X amount of messages")] int amountToClear = 1)

@@ -295,5 +295,48 @@ namespace MarvBotV3.Database
                 return nextRoll;
             }
         }
+
+        public static async Task SaveBirthday(IUser user, DateTime birthday)
+        {
+            using (var db = new DatabaseContext())
+            {
+                db.TbBirthdays.Add(new TbBirthdays
+                {
+                    UserID = user.Id,
+                    Username = user.Username,
+                    Birthday = birthday,
+                    LastGiftGiven = DateTime.MinValue
+                });
+                await db.SaveChangesAsync();
+            }
+        }
+        
+        public static async Task UpdateBirthday(IUser user, DateTime birthday)
+        {
+            using (var db = new DatabaseContext())
+            {
+                TbBirthdays tbBirthdays = db.TbBirthdays.AsQueryable().Where(x => x.UserID == user.Id).FirstOrDefault();
+                tbBirthdays.Birthday = birthday;
+                await db.SaveChangesAsync();
+            }
+        }
+        
+        public static async Task UpdateBirthdayLastGiftGiven(IUser user, DateTime giftTime)
+        {
+            using (var db = new DatabaseContext())
+            {
+                TbBirthdays tbBirthdays = db.TbBirthdays.AsQueryable().Where(x => x.UserID == user.Id).FirstOrDefault();
+                tbBirthdays.LastGiftGiven = giftTime;
+                await db.SaveChangesAsync();
+            }
+        }
+
+        public static List<TbBirthdays> GetTodaysBirthdaysWithoutGift()
+        {
+            using (var db = new DatabaseContext())
+            {
+                return db.TbBirthdays.AsQueryable().Where(x => x.Birthday.Date == DateTime.Today && x.Birthday.Date != x.LastGiftGiven.Date).ToList();
+            }
+        }
     }
 }

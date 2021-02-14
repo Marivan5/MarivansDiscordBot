@@ -16,6 +16,7 @@ namespace MarvBotV3
         public DbSet<TbCommandsLog> TbCommandsLog { get; set; }
         public DbSet<TbPolls> TbPolls { get; set; }
         public DbSet<TbBets> TbBets { get; set; }
+        public DbSet<TbBirthdays> TbBirthdays { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

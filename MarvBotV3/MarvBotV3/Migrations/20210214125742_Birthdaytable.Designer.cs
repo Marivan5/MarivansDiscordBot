@@ -3,14 +3,16 @@ using System;
 using MarvBotV3;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace MarvBotV3.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20210214125742_Birthdaytable")]
+    partial class Birthdaytable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,27 +43,6 @@ namespace MarvBotV3.Migrations
                     b.HasKey("ID");
 
                     b.ToTable("TbBets");
-                });
-
-            modelBuilder.Entity("MarvBotV3.Database.Tables.TbBirthdays", b =>
-                {
-                    b.Property<ulong>("UserID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint unsigned");
-
-                    b.Property<DateTime>("Birthday")
-                        .HasColumnType("datetime");
-
-                    b.Property<DateTime>("LastGiftGiven")
-                        .HasColumnType("datetime");
-
-                    b.Property<string>("Username")
-                        .HasMaxLength(64)
-                        .HasColumnType("varchar(64) CHARACTER SET utf8mb4");
-
-                    b.HasKey("UserID");
-
-                    b.ToTable("TbBirthdays");
                 });
 
             modelBuilder.Entity("MarvBotV3.Database.Tables.TbCommandsLog", b =>
