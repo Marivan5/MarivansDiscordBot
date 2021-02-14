@@ -25,7 +25,7 @@ namespace MarvBotV3.Commands
         }
         
         [Command("ChangeBirthday")]
-        [Alias("ChangeBday")]
+        [Alias("ChangeBday", "UpdateBirthday", "UpdateBday")]
         public async Task ChangeBirthday(IUser user, string birthday)
         {
             if (!DateTime.TryParse(birthday, out var dateValue))
@@ -35,7 +35,7 @@ namespace MarvBotV3.Commands
             }
 
             await Database.DataAccess.UpdateBirthday(user, dateValue);
-            await ReplyAsync($"Added {user.Mention}'s birthday");
+            await ReplyAsync($"Changed {user.Mention}'s birthday");
         }
 
         [Command("clear"), Summary("Deletes X amount of messages")]
