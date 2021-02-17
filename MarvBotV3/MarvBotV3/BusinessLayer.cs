@@ -6,17 +6,24 @@ using System.Threading.Tasks;
 
 namespace MarvBotV3
 {
-    public static class BusinessLayer
+    public class BusinessLayer
     {
-        public static async Task SaveGold(IUser user, SocketGuild guild, int amount)
+        private DataAccess _da;
+
+        public BusinessLayer(DataAccess da)
         {
-            await DataAccess.SaveGold(user, guild.Id, amount);
+            _da = da; 
+        }
+
+        public async Task SaveGold(IUser user, SocketGuild guild, int amount)
+        {
+            await _da.SaveGold(user, guild.Id, amount);
             await CheckRichestPerson(guild);
         }
 
-        private static async Task CheckRichestPerson(SocketGuild guild)
+        private async Task CheckRichestPerson(SocketGuild guild)
         {
-            var newRichestPerson = DataAccess.GetTopXGold(1).FirstOrDefault()?.UserID ?? 0;
+            var newRichestPerson = _da.GetTopXGold(1).FirstOrDefault()?.UserID ?? 0;
 
             if (newRichestPerson == 0)
                 return;
@@ -32,14 +39,14 @@ namespace MarvBotV3
             }
         }
         
-        public static SocketGuildUser GetCurrentRichestPerson(SocketGuild guild)
+        public SocketGuildUser GetCurrentRichestPerson(SocketGuild guild)
         {
             return guild.Users.FirstOrDefault(x => x.Roles.Any(y => y.Id == ServerConfig.Load().richRole));
         }
 
-        public static async Task SaveUserAcitivity(IUser user, string beforeActivity, string afterActivity)
+        public async Task SaveUserAcitivity(IUser user, string beforeActivity, string afterActivity)
         {
-            await DataAccess.SaveUserAcitivity(user, beforeActivity, afterActivity);
+            await _da.SaveUserAcitivity(user, beforeActivity, afterActivity);
         }
     }
 }

@@ -16,6 +16,14 @@ namespace MarvBotV3.Commands
         private readonly NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " " };
         int jackpotBorder = 250;
         int winningNumber = 56;
+        DataAccess da;
+        BusinessLayer bl;
+
+        public CurrencyCommands()
+        {
+            da = new DataAccess(new DatabaseContext());
+            bl = new BusinessLayer(da);
+        }
 
         [Command("How")]
         [Alias("help", "wat", "what")]
@@ -29,14 +37,14 @@ namespace MarvBotV3.Commands
         [Alias("", "my", "stash")]
         public async Task MeGold()
         {
-            await ReplyAsync($"You have **{DataAccess.GetGold(Context.User.Id).ToString("n0", nfi)}** gold.");
+            await ReplyAsync($"You have **{da.GetGold(Context.User.Id).ToString("n0", nfi)}** gold.");
         }
 
         [Command("info")]
         [Alias("howmuch", "bank", "stash")]
         public async Task InfoGold(IUser user)
         {
-            await ReplyAsync($"{user.Mention} has **{DataAccess.GetGold(user.Id).ToString("n0", nfi)}** gold.");
+            await ReplyAsync($"{user.Mention} has **{da.GetGold(user.Id).ToString("n0", nfi)}** gold.");
         }
 
         [RequireOwner]
@@ -44,7 +52,7 @@ namespace MarvBotV3.Commands
         [Alias("remove", "kill")]
         public async Task DeleteUser(ulong userID)
         {
-            await DataAccess.DeleteUser(userID);
+            await da.DeleteUser(userID);
             await ReplyAsync($"Removed all of {MentionUtils.MentionUser(userID)}'s gold");
         }
 
@@ -54,7 +62,7 @@ namespace MarvBotV3.Commands
         {
             if (input.ToLower() == "all" || input.ToLower() == "all in")
             {
-                var amount = DataAccess.GetGold(Context.User.Id);
+                var amount = da.GetGold(Context.User.Id);
                 var reply = await Gamble(amount);
                 await ReplyAsync(reply);
             }
@@ -83,7 +91,7 @@ namespace MarvBotV3.Commands
         private async Task<string> Gamble(int betAmount)
         {
             string reply = "";
-            var currentGold = DataAccess.GetGold(Context.User.Id);
+            var currentGold = da.GetGold(Context.User.Id);
 
             if (currentGold < betAmount)
             {
@@ -106,7 +114,7 @@ namespace MarvBotV3.Commands
             if (cheatList.Contains(Context.User.Id)) // cheat
                 result = rng.Next(winningNumber, 100);
 
-            var nextRoll = DataAccess.GetNextRoll(Context.User.Id, true);
+            var nextRoll = da.GetNextRoll(Context.User.Id, true);
 
             if (nextRoll != null)
                 result = nextRoll.NextRoll;
@@ -117,32 +125,32 @@ namespace MarvBotV3.Commands
             var changeAmount = betAmount;
             if (result >= winningNumber)
             {
-                int jackpot = DataAccess.GetGold(276456075559960576);
+                int jackpot = da.GetGold(276456075559960576);
                 won = true;
                 if (result == 100 && betAmount < jackpot && betAmount >= jackpotBorder)
                 {
                     changeAmount = jackpot;
                     reply += ($":tada: {Context.User.Mention} **WIN THE JACKPOT**, **{jackpot.ToString("n0", nfi)}** gold has been added to your bank. :tada:") + Environment.NewLine;
-                    await DataAccess.SaveGoldToBot(-jackpot + jackpotBorder);
+                    await da.SaveGoldToBot(-jackpot + jackpotBorder);
                 }
                 else
                 {
                     reply += ($"{Context.User.Mention} **WIN**, **{changeAmount.ToString("n0", nfi)}** gold has been added to your bank.") + Environment.NewLine;
                 }
-                await BusinessLayer.SaveGold(Context.User, Context.Guild, changeAmount);
+                await bl.SaveGold(Context.User, Context.Guild, changeAmount);
             }
             else
             {
                 won = false;
                 reply += ($"{Context.User.Mention} has lost, **{betAmount.ToString("n0", nfi)}** gold has been removed from your bank.") + Environment.NewLine;
-                await BusinessLayer.SaveGold(Context.User, Context.Guild, -betAmount);
+                await bl.SaveGold(Context.User, Context.Guild, -betAmount);
                 if (betAmount > 1)
                 {
-                    await DataAccess.SaveGoldToBot(betAmount / 2);
+                    await da.SaveGoldToBot(betAmount / 2);
                 }
             }
-            await DataAccess.UpdateGambleAmount(Context.User);
-            await DataAccess.SaveStats(Context.User, won, betAmount, changeAmount, result);
+            await da.UpdateGambleAmount(Context.User);
+            await da.SaveStats(Context.User, won, betAmount, changeAmount, result);
 
             return reply;
         }
@@ -162,16 +170,16 @@ namespace MarvBotV3.Commands
                 return;
             }
 
-            var currentGold = DataAccess.GetGold(Context.User.Id);
+            var currentGold = da.GetGold(Context.User.Id);
             if (currentGold < amount)
             {
                 await ReplyAsync($"You only have {currentGold.ToString("n0", nfi)}. Can't give more than you have.");
                 return;
             }
 
-            await BusinessLayer.SaveGold(Context.User, Context.Guild, -amount);
+            await bl.SaveGold(Context.User, Context.Guild, -amount);
             await ReplyAsync($"{Context.User.Mention} has just given {user.Mention} **{amount.ToString("n0", nfi)}** gold.");
-            await BusinessLayer.SaveGold(user, Context.Guild, amount);
+            await bl.SaveGold(user, Context.Guild, amount);
         }
 
         [RequireOwner]
@@ -180,7 +188,7 @@ namespace MarvBotV3.Commands
         public async Task TakeGold(IUser user, int amount = 1)
         {
             await ReplyAsync($"{Context.User.Mention} has just taken **{amount.ToString("n0", nfi)}** gold from {user.Mention}.");
-            await BusinessLayer.SaveGold(user, Context.Guild, -amount);
+            await bl.SaveGold(user, Context.Guild, -amount);
         }
 
         [RequireOwner]
@@ -188,7 +196,7 @@ namespace MarvBotV3.Commands
         public async Task GiveGoldEveryone(int amount)
         {
             var users = Context.Guild.Users;
-            await DataAccess.GiveGoldEveryone(users.Where(x => !x.IsSelfDeafened && x.Status == UserStatus.Online && !x.IsBot).ToList(), amount);
+            await da.GiveGoldEveryone(users.Where(x => !x.IsSelfDeafened && x.Status == UserStatus.Online && !x.IsBot).ToList(), amount);
             await ReplyAsync($"You have given everyone who is online, **{amount.ToString("n0", nfi)}** gold");
         }
 
@@ -196,7 +204,7 @@ namespace MarvBotV3.Commands
         [Alias("top", "richest"), Summary("Lists out the richest users")]
         public async Task TopGold(int amount = 10)
         {
-            var topList = DataAccess.GetTopXGold(amount);
+            var topList = da.GetTopXGold(amount);
             var reply = "";
             var i = 1;
             foreach (var top in topList)
@@ -210,7 +218,7 @@ namespace MarvBotV3.Commands
         [Command("Jackpot"), Summary("Displays what the jackpot is at")]
         public async Task JackpotStash()
         {
-            await ReplyAsync($"**{DataAccess.GetGold(276456075559960576)}** gold is currently in the jackpot. To win the jackpot you have to bet **{jackpotBorder}** gold or more and roll a **100** in a regular gamble.");
+            await ReplyAsync($"**{da.GetGold(276456075559960576)}** gold is currently in the jackpot. To win the jackpot you have to bet **{jackpotBorder}** gold or more and roll a **100** in a regular gamble.");
         }
 
         [Command("Stats")]
@@ -220,7 +228,7 @@ namespace MarvBotV3.Commands
             if (user == null)
                 user = Context.User;
 
-            var stats = DataAccess.GetStats(user.Id);
+            var stats = da.GetStats(user.Id);
 
             if (stats == null)
             {
@@ -247,7 +255,7 @@ namespace MarvBotV3.Commands
                 user = Context.User;
 
             var yesterday = DateTime.Now.AddDays(-1);
-            var stats = DataAccess.GetStats(user.Id, yesterday);
+            var stats = da.GetStats(user.Id, yesterday);
 
             if (stats == null)
             {
@@ -270,14 +278,14 @@ namespace MarvBotV3.Commands
         [Alias("pls", "plsSir", "välfärd"), Summary("Gives you a random amount of gold between 1-100")]
         public async Task DailyFreeGold()
         {
-            var top3 = DataAccess.GetTopXGold(3).Select(x => x.UserID).ToList();
+            var top3 = da.GetTopXGold(3).Select(x => x.UserID).ToList();
             if (top3.Contains(Context.User.Id))
             {
                 await ReplyAsync("You are too rich to recieve free cash.");
                 return;
             }
 
-            var lastDonation = DataAccess.GetLatestDonation(Context.Guild.Id);
+            var lastDonation = da.GetLatestDonation(Context.Guild.Id);
             int waitHours = Program.serverConfig.donationWaitHours;
 
             if (lastDonation != null && (DateTime.Now - lastDonation.TimeStamp).TotalHours < waitHours)
@@ -286,7 +294,7 @@ namespace MarvBotV3.Commands
                 return;
             }
 
-            var botGoldAmount = DataAccess.GetGold(276456075559960576);
+            var botGoldAmount = da.GetGold(276456075559960576);
 
             if (botGoldAmount <= 0)
             {
@@ -300,9 +308,9 @@ namespace MarvBotV3.Commands
             if (donationAmount > botGoldAmount)
                 donationAmount = botGoldAmount;
 
-            await DataAccess.SaveGoldToBot(-donationAmount);
-            await BusinessLayer.SaveGold(Context.User, Context.Guild, donationAmount);
-            await DataAccess.SetDonation(Context.User, Context.Guild.Id, donationAmount);
+            await da.SaveGoldToBot(-donationAmount);
+            await bl.SaveGold(Context.User, Context.Guild, donationAmount);
+            await da.SetDonation(Context.User, Context.Guild.Id, donationAmount);
             await ReplyAsync($"I have given you **{donationAmount}** gold. Spend with care.");
         }
 
@@ -326,7 +334,7 @@ namespace MarvBotV3.Commands
                 await ReplyAsync("Can't purge yourself");
                 return;
             }
-            var usersGold = DataAccess.GetGold(user.Id);
+            var usersGold = da.GetGold(user.Id);
             if (amount == 0 || amount > usersGold)
                 amount = usersGold;
             if (amount <= 0)
@@ -335,7 +343,7 @@ namespace MarvBotV3.Commands
                 return;
             }
 
-            var richestGold = DataAccess.GetGold(Context.User.Id);
+            var richestGold = da.GetGold(Context.User.Id);
 
             if (richestGold < amount)
             {
@@ -344,8 +352,8 @@ namespace MarvBotV3.Commands
             }
 
             await ReplyAsync($"{Context.User.Mention} has removed **{amount}** gold from {user.Mention}");
-            await BusinessLayer.SaveGold(Context.User, Context.Guild, -amount);
-            await BusinessLayer.SaveGold(user, Context.Guild, -amount);
+            await bl.SaveGold(Context.User, Context.Guild, -amount);
+            await bl.SaveGold(user, Context.Guild, -amount);
         }
     }
 }

@@ -14,6 +14,12 @@ namespace MarvBotV3.Commands
     public class DuelCommands : ModuleBase<SocketCommandContext>
     {
         private NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " " };
+        DataAccess da;
+
+        public DuelCommands()
+        {
+            da = new DataAccess(new DatabaseContext());
+        }
 
         [Command("Stats")]
         [Alias("info", "stat")]
@@ -24,7 +30,7 @@ namespace MarvBotV3.Commands
                 user = Context.User;
             }
             var reply = "";
-            var stats = DataAccess.GetDuelStats(user.Id);
+            var stats = da.GetDuelStats(user.Id);
 
             if (stats == null)
             {
@@ -55,8 +61,8 @@ namespace MarvBotV3.Commands
         {
             if (input.ToLower() == "all" || input.ToLower() == "all in")
             {
-                var user1Gold = DataAccess.GetGold(Context.User.Id);
-                var user2Gold = DataAccess.GetGold(challenge.Id);
+                var user1Gold = da.GetGold(Context.User.Id);
+                var user2Gold = da.GetGold(challenge.Id);
                 var amount = Math.Min(user1Gold, user2Gold);
                 var reply = Duel(challenge, amount);
                 await ReplyAsync(reply);
@@ -72,8 +78,8 @@ namespace MarvBotV3.Commands
             if (challenge.Id == 276456075559960576)
                 return $"yes{Environment.NewLine}3{Environment.NewLine}2{Environment.NewLine}1{Environment.NewLine}Shoot!{Environment.NewLine}🔫{Environment.NewLine}I WIN!";
 
-            var challengerGold = DataAccess.GetGold(Context.User.Id);
-            var challengeGold = DataAccess.GetGold(challenge.Id);
+            var challengerGold = da.GetGold(Context.User.Id);
+            var challengeGold = da.GetGold(challenge.Id);
 
             if (challengerGold < amount)
                 return $"You only have {challengerGold.ToString("n0", nfi)} gold.";

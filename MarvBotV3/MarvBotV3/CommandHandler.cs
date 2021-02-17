@@ -24,6 +24,9 @@ namespace MarvBotV3
         public static List<SocketUser> freeMsgList = new List<SocketUser>();
         private char prefix = Configuration.Load().Prefix;
 
+        DataAccess da;
+        BusinessLayer bl;
+
         public CommandHandler(IServiceProvider services)
         {
             _commands = services.GetRequiredService<CommandService>();
@@ -37,11 +40,15 @@ namespace MarvBotV3
             _discord.UserLeft += UserLeft;
             _discord.UserVoiceStateUpdated += ChangeVoiceChannel;
             _ = RunIntervalTask();
+
+            da = new DataAccess(new DatabaseContext());
+            bl = new BusinessLayer(da);
         }
 
         private Task UserLeft(SocketGuildUser arg)
         {
-            return DataAccess.DeleteUser(arg.Id);
+            DataAccess da = new DataAccess(new DatabaseContext());
+            return da.DeleteUser(arg.Id);
         }
 
         private Task UserJoined(SocketGuildUser arg)
@@ -129,9 +136,9 @@ namespace MarvBotV3
                 var loser = duel.Challenge == rawMessage.Author.Id ? duel.Challenger : duel.Challenge;
                 await context.Channel.SendMessageAsync($"{rawMessage.Author.Mention} has won {duel.BetAmount.ToString("n0", nfi)} of {MentionUtils.MentionUser(loser)} gold");
                 Program.activeDuels.Remove(duel);
-                await BusinessLayer.SaveGold(rawMessage.Author, context.Guild, duel.BetAmount);
-                await BusinessLayer.SaveGold(context.Guild.GetUser(loser), context.Guild, -duel.BetAmount);
-                await DataAccess.SetDuel(duel.Challenger, duel.Challenge, rawMessage.Author.Id, duel.BetAmount);
+                await bl.SaveGold(rawMessage.Author, context.Guild, duel.BetAmount);
+                await bl.SaveGold(context.Guild.GetUser(loser), context.Guild, -duel.BetAmount);
+                await da.SetDuel(duel.Challenger, duel.Challenge, rawMessage.Author.Id, duel.BetAmount);
             }
 
             // This value holds the offset where the prefix ends
@@ -165,7 +172,7 @@ namespace MarvBotV3
 
             if (!string.IsNullOrWhiteSpace(beforeChangeUser.Activity?.Name) || !string.IsNullOrWhiteSpace(afterChangeUser.Activity?.Name))
                 if (beforeChangeUser.Activity?.Name != afterChangeUser.Activity?.Name)
-                    await BusinessLayer.SaveUserAcitivity(user, beforeChangeUser.Activity?.Name ?? "", afterChangeUser.Activity?.Name ?? "");
+                    await bl.SaveUserAcitivity(user, beforeChangeUser.Activity?.Name ?? "", afterChangeUser.Activity?.Name ?? "");
 
             if(afterChangeUser.Activity != null)
             {
@@ -302,7 +309,7 @@ namespace MarvBotV3
 
         public async Task CelebrateBirthday()
         {
-            var birthdays = DataAccess.GetTodaysBirthdaysWithoutGift();
+            var birthdays = da.GetTodaysBirthdaysWithoutGift();
             if (!birthdays.Any())
                 return;
 
@@ -315,7 +322,7 @@ namespace MarvBotV3
                     if (guild.Users.Select(x => x.Id).Contains(birthday.UserID))
                     {
                         await guild.DefaultChannel.SendMessageAsync($":tada: Happy birthday {MentionUtils.MentionUser(birthday.UserID)} :tada:");
-                        await DataAccess.UpdateBirthdayLastGiftGiven(guild.GetUser(birthday.UserID), DateTime.Now);
+                        await da.UpdateBirthdayLastGiftGiven(guild.GetUser(birthday.UserID), DateTime.Now);
                     }
                 }
             }
@@ -329,7 +336,7 @@ namespace MarvBotV3
             foreach (var guild in guilds)
             {
                 var onlineUsers = guild.Users.Where(x => !x.IsSelfDeafened && x.Status == UserStatus.Online && !x.IsBot).ToList();
-                onlineUsers.Remove(BusinessLayer.GetCurrentRichestPerson(guild));
+                onlineUsers.Remove(bl.GetCurrentRichestPerson(guild));
                 users.AddRange(onlineUsers);
                 var userActivities = onlineUsers.GroupBy(x => new { x.Activity?.Name })
                     .Where(x => x.Key.Name != null && x.Count() > 1 && x.Key.Name != "Custom Status")
@@ -338,8 +345,8 @@ namespace MarvBotV3
                 foreach (var act in userActivities)
                     extraGoldUsers.AddRange(act);
             }
-            await DataAccess.GiveGoldEveryone(users, 1);
-            await DataAccess.GiveGoldEveryone(extraGoldUsers, 2);
+            await da.GiveGoldEveryone(users, 1);
+            await da.GiveGoldEveryone(extraGoldUsers, 2);
         }
     }
 }

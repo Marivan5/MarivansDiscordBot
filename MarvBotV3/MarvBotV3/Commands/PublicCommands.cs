@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,6 +11,14 @@ namespace MarvBotV3
     public class PublicCommands : ModuleBase<ShardedCommandContext>
     {
         private NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " ", CurrencyDecimalSeparator = "." };
+        DataAccess da;
+        BusinessLayer bl;
+
+        public PublicCommands()
+        {
+            da = new DataAccess(new DatabaseContext());
+            bl = new BusinessLayer(da);
+        }
 
         // Get info on a user, or the user who invoked the command if one is not specified
         [Command("userinfo")]
@@ -26,7 +33,7 @@ namespace MarvBotV3
         [Alias("temperature", "grader")]
         public async Task GetTempData()
         {
-            var tempData = DataAccess.GetTempDataAsync();
+            var tempData = da.GetTempDataAsync();
             foreach (var data in tempData)
             {
                 var reply = $"At {data.Time} it was {data.Temperature.ToString("0.00", nfi)}C at {data.Room}";
@@ -190,7 +197,7 @@ namespace MarvBotV3
                 return;
             }
 
-            var currentGold = DataAccess.GetGold(Context.User.Id);
+            var currentGold = da.GetGold(Context.User.Id);
             if (currentGold < costToChangeNick)
             {
                 await ReplyAsync($"It costs {costToChangeNick} Gold to change someones nickname, you only have {currentGold}");
@@ -202,7 +209,7 @@ namespace MarvBotV3
             foreach (var s in nickname)
                 nick += $"{s} ";
 
-            await BusinessLayer.SaveGold(Context.User, Context.Guild, -costToChangeNick);
+            await bl.SaveGold(Context.User, Context.Guild, -costToChangeNick);
             await Context.Guild.GetUser(user.Id).ModifyAsync(x => x.Nickname = nick.Trim());
         }
 

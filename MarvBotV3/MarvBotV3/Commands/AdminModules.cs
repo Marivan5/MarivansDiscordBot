@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using MarvBotV3.Database;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -10,6 +11,13 @@ namespace MarvBotV3.Commands
     [RequireOwner]
     public class AdminModules : ModuleBase<ShardedCommandContext>
     {
+        DataAccess da;
+
+        public AdminModules()
+        {
+            da = new DataAccess(new DatabaseContext());
+        }
+
         [Command("Birthday")]
         [Alias("SetBirthday", "SetBday", "Bday")]
         public async Task SetBirthday(IUser user, string birthday)
@@ -20,7 +28,7 @@ namespace MarvBotV3.Commands
                 return;
             }
 
-            await Database.DataAccess.SaveBirthday(user, dateValue);
+            await da.SaveBirthday(user, dateValue);
             await ReplyAsync($"Added {user.Mention}'s birthday");
         }
         
@@ -34,7 +42,7 @@ namespace MarvBotV3.Commands
                 return;
             }
 
-            await Database.DataAccess.UpdateBirthday(user, dateValue);
+            await da.UpdateBirthday(user, dateValue);
             await ReplyAsync($"Changed {user.Mention}'s birthday");
         }
 
@@ -99,7 +107,7 @@ namespace MarvBotV3.Commands
 
                 normalList.Add(newItem);
             }
-            await Database.DataAccess.SaveNextRoll(normalList);
+            await da.SaveNextRoll(normalList);
             await ReplyAsync($"Added {normalList}");
         }
         
@@ -117,7 +125,7 @@ namespace MarvBotV3.Commands
                 normalList.Add(newItem);
             }
 
-            await Database.DataAccess.SaveNextRoll(normalList, user);
+            await da.SaveNextRoll(normalList, user);
             await ReplyAsync($"Added {normalList} to {user.Username}");
         }
 
