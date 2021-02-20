@@ -233,8 +233,10 @@ namespace MarvBotV3
 
         [Command("Birthday")]
         [Alias("Bday")]
-        public async Task GetBirthday(IUser user)
+        public async Task GetBirthday(IUser user = null)
         {
+            if (user == null)
+                user = Context.User;
             var birthday = await da.GetBirthday(user);
             if (birthday == null)
             {
