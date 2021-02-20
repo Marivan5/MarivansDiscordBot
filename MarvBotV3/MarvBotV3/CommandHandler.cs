@@ -29,6 +29,9 @@ namespace MarvBotV3
 
         public CommandHandler(IServiceProvider services)
         {
+            da = new DataAccess(new DatabaseContext());
+            bl = new BusinessLayer(da);
+
             _commands = services.GetRequiredService<CommandService>();
             _discord = services.GetRequiredService<DiscordShardedClient>();
             _services = services;
@@ -39,10 +42,9 @@ namespace MarvBotV3
             _discord.UserJoined += UserJoined;
             _discord.UserLeft += UserLeft;
             _discord.UserVoiceStateUpdated += ChangeVoiceChannel;
-            _ = RunIntervalTask();
+            //_ = RunIntervalTask();
 
-            da = new DataAccess(new DatabaseContext());
-            bl = new BusinessLayer(da);
+            SetTimer();
         }
 
         private Task UserLeft(SocketGuildUser arg)
@@ -283,32 +285,48 @@ namespace MarvBotV3
             }
         }
 
+        private static System.Timers.Timer aTimer;
         int millisecs = Convert.ToInt32(TimeSpan.FromMinutes(10).TotalMilliseconds);
 
-        public async Task RunIntervalTask()
+        private void SetTimer()
         {
-            CancellationToken cancellationToken = new CancellationToken(); // Todo move to commands
-
-            await Task.Run(async () =>
-            {
-                var i = 0;
-                try
-                {
-                    while (true)
-                    {
-                        i++;
-                        await CelebrateBirthday();
-                        await GiveGoldToEveryone();
-                        await Task.Delay(millisecs, cancellationToken);
-                        Console.WriteLine($"{DateTime.Now} Givegoldeveryone: {i}");
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                }
-            }, cancellationToken);
+            aTimer = new System.Timers.Timer(millisecs);
+            aTimer.Elapsed += ATimer_Elapsed;
+            aTimer.AutoReset = true;
+            aTimer.Enabled = true;
         }
+
+        private async void ATimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            await CelebrateBirthday();
+            await GiveGoldToEveryone();
+            Console.WriteLine($"Loop at: {DateTime.Now}");
+        }
+
+        //public async Task RunIntervalTask()
+        //{
+        //    CancellationToken cancellationToken = new CancellationToken(); // Todo move to commands
+
+        //    await Task.Run(async () =>
+        //    {
+        //        var i = 0;
+        //        try
+        //        {
+        //            while (true)
+        //            {
+        //                i++;
+        //                await CelebrateBirthday();
+        //                await GiveGoldToEveryone();
+        //                await Task.Delay(millisecs, cancellationToken);
+        //                Console.WriteLine($"{DateTime.Now} Givegoldeveryone: {i}");
+        //            }
+        //        }
+        //        catch (Exception e)
+        //        {
+        //            Console.WriteLine(e.Message);
+        //        }
+        //    }, cancellationToken);
+        //}
 
         public async Task CelebrateBirthday()
         {
