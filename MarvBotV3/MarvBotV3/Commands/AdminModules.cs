@@ -18,8 +18,8 @@ namespace MarvBotV3.Commands
             da = new DataAccess(new DatabaseContext());
         }
 
-        [Command("Birthday")]
-        [Alias("SetBirthday", "SetBday", "Bday")]
+        [Command("SetBirthday")]
+        [Alias("SetBday")]
         public async Task SetBirthday(IUser user, string birthday)
         {
             if (!DateTime.TryParse(birthday, out var dateValue))

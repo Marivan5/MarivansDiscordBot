@@ -230,5 +230,37 @@ namespace MarvBotV3
 
             await ReplyAsync("Here's a list of commands and their description: ", false, embedBuilder.Build());
         }
+
+        [Command("Birthday")]
+        [Alias("Bday")]
+        public async Task GetBirthday(IUser user)
+        {
+            var birthday = da.GetBirthday(user);
+            if (birthday == null)
+            {
+                await ReplyAsync("User does not have a registred birthday");
+                return;
+            }
+            await ReplyAsync($"{user.Mention}s birthday is {birthday.Birthday:yyyy-MM-dd}");
+        }
+        
+        [Command("Birthdays")]
+        [Alias("Bdays", "GetBirthdays", "AllBirthdays")]
+        public async Task GetBirthdays()
+        {
+            var birthdays = da.GetBirthdays().OrderBy(x => x.Birthday.Month).ThenBy(x => x.Birthday.Day);
+            if (birthdays == null)
+            {
+                await ReplyAsync("No birthdays have a registred");
+                return;
+            }
+            var reply = "";
+
+            foreach (var bday in birthdays)
+            {
+                reply += $"{MentionUtils.MentionUser(bday.UserID)} was born on {bday.Birthday:yyyy-MM-dd}{Environment.NewLine}";
+            }
+            await ReplyAsync(reply);
+        }
     }
 }

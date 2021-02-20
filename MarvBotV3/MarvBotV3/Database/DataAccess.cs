@@ -257,6 +257,16 @@ namespace MarvBotV3.Database
             await db.SaveChangesAsync();
         }
 
+        public TbBirthdays GetBirthday(IUser user)
+        {
+            return db.TbBirthdays.AsQueryable().FirstOrDefault(x => x.UserID == user.Id);
+        }
+        
+        public List<TbBirthdays> GetBirthdays()
+        {
+            return db.TbBirthdays.AsQueryable().ToList();
+        }
+
         public async Task UpdateBirthday(IUser user, DateTime birthday)
         {
             var tbBirthdays = db.TbBirthdays.AsQueryable().Where(x => x.UserID == user.Id).FirstOrDefault();
