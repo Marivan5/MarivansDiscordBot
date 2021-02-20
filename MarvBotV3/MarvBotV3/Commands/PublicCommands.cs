@@ -243,7 +243,7 @@ namespace MarvBotV3
                 await ReplyAsync("User does not have a registred birthday");
                 return;
             }
-            await ReplyAsync($"{user.Mention}s birthday is {birthday.Birthday:yyyy-MM-dd}");
+            await ReplyAsync($"{user.Mention}'s birthday is {birthday.Birthday:yyyy-MM-dd}");
         }
         
         [Command("Birthdays")]
