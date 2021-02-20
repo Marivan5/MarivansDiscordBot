@@ -30,7 +30,7 @@ namespace MarvBotV3.Commands
                 user = Context.User;
             }
             var reply = "";
-            var stats = da.GetDuelStats(user.Id);
+            var stats = await da.GetDuelStats(user.Id);
 
             if (stats == null)
             {
@@ -38,7 +38,7 @@ namespace MarvBotV3.Commands
                 return;
             }
 
-            float winPercent = ((float)stats.Where(x => x.Winner == user.Id).Count() / (float)stats.Count()) * 100;
+            float winPercent = (float)stats.Where(x => x.Winner == user.Id).Count() / stats.Count() * 100;
             reply += ($"{user.Mention} has **won** {winPercent}% of their duels.") + Environment.NewLine;
             var amountWon = stats.Where(x => x.Winner == user.Id).Select(x => x.BetAmount).ToList();
             reply += ($"{user.Mention} has **won** a total amount of **{amountWon.Sum().ToString("n0", nfi)}** gold from duels") + Environment.NewLine;
@@ -51,7 +51,7 @@ namespace MarvBotV3.Commands
         [Alias("fight", "")]
         public async Task DuelAmount(IUser challenge, int amount = 0)
         {
-            var reply = Duel(challenge, amount);
+            var reply = await Duel(challenge, amount);
             await ReplyAsync(reply);
         }
 
@@ -61,10 +61,10 @@ namespace MarvBotV3.Commands
         {
             if (input.ToLower() == "all" || input.ToLower() == "all in")
             {
-                var user1Gold = da.GetGold(Context.User.Id);
-                var user2Gold = da.GetGold(challenge.Id);
+                var user1Gold = await da.GetGold(Context.User.Id);
+                var user2Gold = await da.GetGold(challenge.Id);
                 var amount = Math.Min(user1Gold, user2Gold);
-                var reply = Duel(challenge, amount);
+                var reply = await Duel(challenge, amount);
                 await ReplyAsync(reply);
             }
             else
@@ -73,13 +73,13 @@ namespace MarvBotV3.Commands
             }
         }
 
-        private string Duel(IUser challenge, int amount = 0)
+        private async Task<string> Duel(IUser challenge, int amount = 0)
         {
             if (challenge.Id == 276456075559960576)
                 return $"yes{Environment.NewLine}3{Environment.NewLine}2{Environment.NewLine}1{Environment.NewLine}Shoot!{Environment.NewLine}🔫{Environment.NewLine}I WIN!";
 
-            var challengerGold = da.GetGold(Context.User.Id);
-            var challengeGold = da.GetGold(challenge.Id);
+            var challengerGold = await da.GetGold(Context.User.Id);
+            var challengeGold = await da.GetGold(challenge.Id);
 
             if (challengerGold < amount)
                 return $"You only have {challengerGold.ToString("n0", nfi)} gold.";

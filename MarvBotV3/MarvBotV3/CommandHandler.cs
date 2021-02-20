@@ -125,12 +125,15 @@ namespace MarvBotV3
             {
                 var duel = Program.awaitingDuels.Last(x => x.Challenge == rawMessage.Author.Id);
                 var challenger = duel.Challenger;
-                await context.Channel.SendMessageAsync($"{rawMessage.Author.Mention} has accepted {MentionUtils.MentionUser(challenger)}s call to duel. Be ready to shoot (🔫).");
+                await context.Channel
+                    .SendMessageAsync($"{rawMessage.Author.Mention} has accepted {MentionUtils.MentionUser(challenger)}s call to duel. Be ready to shoot (🔫).");
                 Program.awaitingDuels.Remove(duel);
                 _ = CountDownInChat(context.Channel, challenger, rawMessage.Author.Id, duel.BetAmount);
             }
 
-            if ((Program.activeDuels.Select(x => x.Challenge).Contains(rawMessage.Author.Id) || Program.activeDuels.Select(x => x.Challenger).Contains(rawMessage.Author.Id)) && rawMessage.Content.ToLower().Split(" ").Contains("🔫"))
+            if ((Program.activeDuels.Select(x => x.Challenge).Contains(rawMessage.Author.Id) 
+                || Program.activeDuels.Select(x => x.Challenger).Contains(rawMessage.Author.Id)) 
+                && rawMessage.Content.ToLower().Split(" ").Contains("🔫"))
             {
                 var duel = Program.activeDuels.Last(x => x.Challenge == rawMessage.Author.Id || x.Challenger == rawMessage.Author.Id);
                 var loser = duel.Challenge == rawMessage.Author.Id ? duel.Challenger : duel.Challenge;
@@ -309,7 +312,7 @@ namespace MarvBotV3
 
         public async Task CelebrateBirthday()
         {
-            var birthdays = da.GetTodaysBirthdaysWithoutGift();
+            var birthdays = await da.GetTodaysBirthdaysWithoutGift();
             if (!birthdays.Any())
                 return;
 
@@ -321,7 +324,8 @@ namespace MarvBotV3
                 {
                     if (guild.Users.Select(x => x.Id).Contains(birthday.UserID))
                     {
-                        await guild.DefaultChannel.SendMessageAsync($":tada: Happy birthday {MentionUtils.MentionUser(birthday.UserID)} :tada:");
+                        await guild.DefaultChannel
+                            .SendMessageAsync($":tada: Happy birthday {MentionUtils.MentionUser(birthday.UserID)} :tada:");
                         await da.UpdateBirthdayLastGiftGiven(guild.GetUser(birthday.UserID), DateTime.Now);
                     }
                 }

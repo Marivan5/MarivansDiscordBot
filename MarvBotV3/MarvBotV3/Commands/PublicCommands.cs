@@ -33,7 +33,7 @@ namespace MarvBotV3
         [Alias("temperature", "grader")]
         public async Task GetTempData()
         {
-            var tempData = da.GetTempDataAsync();
+            var tempData = await da.GetTempDataAsync();
             foreach (var data in tempData)
             {
                 var reply = $"At {data.Time} it was {data.Temperature.ToString("0.00", nfi)}C at {data.Room}";
@@ -197,7 +197,7 @@ namespace MarvBotV3
                 return;
             }
 
-            var currentGold = da.GetGold(Context.User.Id);
+            var currentGold = await da.GetGold(Context.User.Id);
             if (currentGold < costToChangeNick)
             {
                 await ReplyAsync($"It costs {costToChangeNick} Gold to change someones nickname, you only have {currentGold}");
@@ -235,7 +235,7 @@ namespace MarvBotV3
         [Alias("Bday")]
         public async Task GetBirthday(IUser user)
         {
-            var birthday = da.GetBirthday(user);
+            var birthday = await da.GetBirthday(user);
             if (birthday == null)
             {
                 await ReplyAsync("User does not have a registred birthday");
@@ -248,7 +248,7 @@ namespace MarvBotV3
         [Alias("Bdays", "GetBirthdays", "AllBirthdays")]
         public async Task GetBirthdays()
         {
-            var birthdays = da.GetBirthdays().OrderBy(x => x.Birthday.Month).ThenBy(x => x.Birthday.Day);
+            var birthdays = await da.GetBirthdays().Pipe(x => x.OrderBy(x => x.Birthday.Month).ThenBy(x => x.Birthday.Day));
             if (birthdays == null)
             {
                 await ReplyAsync("No birthdays have a registred");

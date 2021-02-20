@@ -23,7 +23,7 @@ namespace MarvBotV3
 
         private async Task CheckRichestPerson(SocketGuild guild)
         {
-            var newRichestPerson = _da.GetTopXGold(1).FirstOrDefault()?.UserID ?? 0;
+            var newRichestPerson = (await _da.GetTopXGold(1)).FirstOrDefault()?.UserID ?? 0;
 
             if (newRichestPerson == 0)
                 return;
