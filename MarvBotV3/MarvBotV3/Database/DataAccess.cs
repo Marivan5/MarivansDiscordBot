@@ -296,6 +296,12 @@ namespace MarvBotV3.Database
 
         public async Task SetCalendarDays(List<TbCalendarDays> days)
         {
+            var daysAlreadyIn = await db.TbCalendarDays.AsQueryable()
+                .Where(x => x.CalendarDate.Year == days.First().CalendarDate.Year)
+                .Select(x => x.CalendarDate)
+                .ToListAsync();
+            days.RemoveAll(x => daysAlreadyIn.Contains(x.CalendarDate));
+
             db.TbCalendarDays.AddRange(days);
             await db.SaveChangesAsync();
         }
