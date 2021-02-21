@@ -46,7 +46,7 @@ namespace MarvBotV3.BusinessLayer
         public async Task<List<TbCalendarDays>> GetWeekDaysThatAreNotBankDays(int year)
         {
             var calendarDays = await _da.GetCalendarDaysForYear(year);
-            if (!calendarDays.Any())
+            if (calendarDays.Count <= 1)
                 calendarDays = await GetCalendarDaysFromYear(year);
 
             return calendarDays.Where(x => x.CalendarDate.DayOfWeek != DayOfWeek.Sunday 
