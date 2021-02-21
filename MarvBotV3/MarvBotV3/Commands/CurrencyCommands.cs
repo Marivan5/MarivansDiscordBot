@@ -17,12 +17,12 @@ namespace MarvBotV3.Commands
         int jackpotBorder = 250;
         int winningNumber = 56;
         DataAccess da;
-        BusinessLayer bl;
+        MarvBotBusinessLayer bl;
 
         public CurrencyCommands()
         {
             da = new DataAccess(new DatabaseContext());
-            bl = new BusinessLayer(da);
+            bl = new MarvBotBusinessLayer(da);
         }
 
         [Command("How")]
@@ -220,7 +220,7 @@ namespace MarvBotV3.Commands
         [Command("Jackpot"), Summary("Displays what the jackpot is at")]
         public async Task JackpotStash()
         {
-            await ReplyAsync($"**{da.GetGold(276456075559960576)}** gold is currently in the jackpot. To win the jackpot you have to bet **{jackpotBorder}** gold or more and roll a **100** in a regular gamble.");
+            await ReplyAsync($"**{await da.GetGold(276456075559960576)}** gold is currently in the jackpot. To win the jackpot you have to bet **{jackpotBorder}** gold or more and roll a **100** in a regular gamble.");
         }
 
         [Command("Stats")]

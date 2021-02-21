@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using MarvBotV3.Database;
 using MarvBotV3.DTO;
 using System.Globalization;
-using System.Threading;
 
 namespace MarvBotV3
 {
@@ -25,12 +24,12 @@ namespace MarvBotV3
         private char prefix = Configuration.Load().Prefix;
 
         DataAccess da;
-        BusinessLayer bl;
+        MarvBotBusinessLayer bl;
 
         public CommandHandler(IServiceProvider services)
         {
             da = new DataAccess(new DatabaseContext());
-            bl = new BusinessLayer(da);
+            bl = new MarvBotBusinessLayer(da);
 
             _commands = services.GetRequiredService<CommandService>();
             _discord = services.GetRequiredService<DiscordShardedClient>();

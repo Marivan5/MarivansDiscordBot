@@ -293,5 +293,14 @@ namespace MarvBotV3.Database
                 && x.Birthday.Day == DateTime.Today.Day
                 && x.Birthday.Date != x.LastGiftGiven.Date)
             .ToListAsync();
+
+        public async Task SetCalendarDays(List<TbCalendarDays> days)
+        {
+            db.TbCalendarDays.AddRange(days);
+            await db.SaveChangesAsync();
+        }
+
+        public Task<List<TbCalendarDays>> GetCalendarDaysForYear(int year) => 
+            db.TbCalendarDays.AsQueryable().Where(x => x.CalendarDate.Year == year).ToListAsync();
     }
 }

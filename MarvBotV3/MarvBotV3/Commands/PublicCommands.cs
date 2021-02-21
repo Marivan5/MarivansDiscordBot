@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -12,12 +13,14 @@ namespace MarvBotV3
     {
         private NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " ", CurrencyDecimalSeparator = "." };
         DataAccess da;
-        BusinessLayer bl;
+        MarvBotBusinessLayer bl;
+        BusinessLayer.RiksbankenBusiness rb;
 
         public PublicCommands()
         {
             da = new DataAccess(new DatabaseContext());
-            bl = new BusinessLayer(da);
+            bl = new MarvBotBusinessLayer(da);
+            rb = new BusinessLayer.RiksbankenBusiness(da);
         }
 
         // Get info on a user, or the user who invoked the command if one is not specified
@@ -117,33 +120,21 @@ namespace MarvBotV3
                 return;
             }
 
-            const int delay = 1010; // Keep it just above a second so that i dont get hit with a preemtive rate limit
+            var emojis = new IEmote[]
+            {
+               new Emoji("🇫"),
+               new Emoji("🇦"),
+               new Emoji("🇨"),
+               new Emoji("🇰"),
+               new Emoji("🖕"),
+               new Emoji("🇾"),
+               new Emoji("🇴"),
+               new Emoji("🇺"),
+            };
 
-            Emoji Femoji = new Emoji("🇫");
-            Emoji Aemoji = new Emoji("🇦");
-            Emoji Cemoji = new Emoji("🇨");
-            Emoji Kemoji = new Emoji("🇰");
-            Emoji Yemoji = new Emoji("🇾");
-            Emoji Oemoji = new Emoji("🇴");
-            Emoji Uemoji = new Emoji("🇺");
-            Emoji MFemoji = new Emoji("🖕");
             try
             {
-                await msg.AddReactionAsync(Femoji);
-                await Task.Delay(delay);
-                await msg.AddReactionAsync(Aemoji);
-                await Task.Delay(delay);
-                await msg.AddReactionAsync(Cemoji);
-                await Task.Delay(delay);
-                await msg.AddReactionAsync(Kemoji);
-                await Task.Delay(delay);
-                await msg.AddReactionAsync(MFemoji);
-                await Task.Delay(delay);
-                await msg.AddReactionAsync(Yemoji);
-                await Task.Delay(delay);
-                await msg.AddReactionAsync(Oemoji);
-                await Task.Delay(delay);
-                await msg.AddReactionAsync(Uemoji);
+                await msg.AddReactionsAsync(emojis);
             }
             catch
             {
@@ -243,7 +234,7 @@ namespace MarvBotV3
                 await ReplyAsync("User does not have a registred birthday");
                 return;
             }
-            await ReplyAsync($"{user.Mention}'s birthday is {birthday.Birthday:yyyy-MM-dd}");
+            await ReplyAsync(BirthdayReply(birthday.UserID, birthday.Birthday));
         }
         
         [Command("Birthdays")]
@@ -260,8 +251,63 @@ namespace MarvBotV3
 
             foreach (var bday in birthdays)
             {
-                reply += $"{MentionUtils.MentionUser(bday.UserID)} was born on {bday.Birthday:yyyy-MM-dd}{Environment.NewLine}";
+                reply += BirthdayReply(bday.UserID, bday.Birthday);
             }
+            await ReplyAsync(reply);
+        }
+
+        private string BirthdayReply(ulong userID, DateTime birthday) =>
+            $"{MentionUtils.MentionUser(userID)} was born on {birthday:yyyy-MM-dd}. " +
+            $"They are {CalculateYourAge(birthday)} old. " +
+            $"There are {CalculateDaysUntilNextBirthday(birthday)} days until next their birthday.{Environment.NewLine}";
+
+        private int CalculateDaysUntilNextBirthday(DateTime birthday)
+        {
+            DateTime next = birthday.AddYears(DateTime.Today.Year - birthday.Year);
+
+            if (next < DateTime.Today)
+                next = next.AddYears(1);
+
+            return (next - DateTime.Today).Days;
+        }
+
+        private string CalculateYourAge(DateTime birthday)
+        {
+            DateTime Now = DateTime.Now;
+            int Years = new DateTime(DateTime.Now.Subtract(birthday).Ticks).Year - 1;
+            DateTime PastYearDate = birthday.AddYears(Years);
+            int Months = 0;
+            for (int i = 1; i <= 12; i++)
+            {
+                if (PastYearDate.AddMonths(i) == Now)
+                {
+                    Months = i;
+                    break;
+                }
+                else if (PastYearDate.AddMonths(i) >= Now)
+                {
+                    Months = i - 1;
+                    break;
+                }
+            }
+            int Days = Now.Subtract(PastYearDate.AddMonths(Months)).Days;
+            return $"{Years} Year" + (Years > 1 ? "s" : "") + $" {Months} Month" + (Months > 1 ? "s" : "") + $" {Days} Day" + (Days > 1 ? "s" : "");
+        }
+
+        [Command("FreeDays")]
+        [Alias("RedDays", "RödaDagar")]
+        public async Task GetNotBankDaysThisYear(int year = 0)
+        {
+            if (year == 0)
+                year = DateTime.Today.Year;
+
+            var days = await rb.GetWeekDaysThatAreNotBankDays(year).Pipe(x => x.OrderBy(y => y.CalendarDate));
+            var reply = "";
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+
+            foreach (var day in days)
+                reply += $"{day.CalendarDate:dddd yyyy-MM-dd} is not a bank day.{Environment.NewLine}";
+
             await ReplyAsync(reply);
         }
     }

@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace MarvBotV3
 {
-    public class BusinessLayer
+    public class MarvBotBusinessLayer
     {
         private DataAccess _da;
 
-        public BusinessLayer(DataAccess da)
+        public MarvBotBusinessLayer(DataAccess da)
         {
             _da = da; 
         }
