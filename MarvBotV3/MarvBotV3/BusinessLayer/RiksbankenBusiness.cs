@@ -24,7 +24,7 @@ namespace MarvBotV3.BusinessLayer
 
             riksbankClient.InnerChannel.OperationTimeout = new TimeSpan(0, 5, 0);
             var fromDate = new DateTime(year, 1, 1);
-            var toDate = new DateTime(year + 1, 1, 1);
+            var toDate = new DateTime(year, 12, 31);
             var calendarDays = await riksbankClient.getCalendarDaysAsync(fromDate, toDate).Pipe(x => x.@return.ToList());
 
             var tbCalendarDays = new List<TbCalendarDays>();
