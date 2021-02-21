@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using MarvBotV3.Database;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -47,6 +48,39 @@ namespace MarvBotV3
         public async Task SaveUserAcitivity(IUser user, string beforeActivity, string afterActivity)
         {
             await _da.SaveUserAcitivity(user, beforeActivity, afterActivity);
+        }
+
+        public int CalculateDaysUntilNextDate(DateTime date, bool calcForward = true)
+        {
+            DateTime next = date.AddYears(DateTime.Today.Year - date.Year);
+
+            if (next < DateTime.Today && calcForward)
+                next = next.AddYears(1);
+
+            return (next - DateTime.Today).Days;
+        }
+
+        public string CalculateYourAge(DateTime birthday)
+        {
+            DateTime Now = DateTime.Now;
+            int Years = new DateTime(DateTime.Now.Subtract(birthday).Ticks).Year - 1;
+            DateTime PastYearDate = birthday.AddYears(Years);
+            int Months = 0;
+            for (int i = 1; i <= 12; i++)
+            {
+                if (PastYearDate.AddMonths(i) == Now)
+                {
+                    Months = i;
+                    break;
+                }
+                else if (PastYearDate.AddMonths(i) >= Now)
+                {
+                    Months = i - 1;
+                    break;
+                }
+            }
+            int Days = Now.Subtract(PastYearDate.AddMonths(Months)).Days;
+            return $"{Years} Year" + (Years > 1 ? "s" : "") + $" {Months} Month" + (Months > 1 ? "s" : "") + $" {Days} Day" + (Days > 1 ? "s" : "");
         }
     }
 }

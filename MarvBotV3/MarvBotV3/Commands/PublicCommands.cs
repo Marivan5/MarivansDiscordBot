@@ -258,44 +258,11 @@ namespace MarvBotV3
 
         private string BirthdayReply(ulong userID, DateTime birthday) =>
             $"{MentionUtils.MentionUser(userID)} was born on {birthday:yyyy-MM-dd}. " +
-            $"They are {CalculateYourAge(birthday)} old. " +
-            $"There are {CalculateDaysUntilNextBirthday(birthday)} days until next their birthday.{Environment.NewLine}";
-
-        private int CalculateDaysUntilNextBirthday(DateTime birthday)
-        {
-            DateTime next = birthday.AddYears(DateTime.Today.Year - birthday.Year);
-
-            if (next < DateTime.Today)
-                next = next.AddYears(1);
-
-            return (next - DateTime.Today).Days;
-        }
-
-        private string CalculateYourAge(DateTime birthday)
-        {
-            DateTime Now = DateTime.Now;
-            int Years = new DateTime(DateTime.Now.Subtract(birthday).Ticks).Year - 1;
-            DateTime PastYearDate = birthday.AddYears(Years);
-            int Months = 0;
-            for (int i = 1; i <= 12; i++)
-            {
-                if (PastYearDate.AddMonths(i) == Now)
-                {
-                    Months = i;
-                    break;
-                }
-                else if (PastYearDate.AddMonths(i) >= Now)
-                {
-                    Months = i - 1;
-                    break;
-                }
-            }
-            int Days = Now.Subtract(PastYearDate.AddMonths(Months)).Days;
-            return $"{Years} Year" + (Years > 1 ? "s" : "") + $" {Months} Month" + (Months > 1 ? "s" : "") + $" {Days} Day" + (Days > 1 ? "s" : "");
-        }
+            $"They are {bl.CalculateYourAge(birthday)} old. " +
+            $"There are {bl.CalculateDaysUntilNextDate(birthday)} days until next their birthday.{Environment.NewLine}";
 
         [Command("FreeDays")]
-        [Alias("RedDays", "RödaDagar")]
+        [Alias("RedDays", "RödaDagar", "Holidays", "Holiday")]
         public async Task GetNotBankDaysThisYear(int year = 0)
         {
             if (year == 0)
@@ -304,9 +271,14 @@ namespace MarvBotV3
             var days = await rb.GetWeekDaysThatAreNotBankDays(year).Pipe(x => x.OrderBy(y => y.CalendarDate));
             var reply = "";
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            var index = 1;
 
             foreach (var day in days)
-                reply += $"{day.CalendarDate:dddd yyyy-MM-dd} is not a bank day.{Environment.NewLine}";
+            {
+                var daysToGo = bl.CalculateDaysUntilNextDate(day.CalendarDate, false);
+                reply += $"{index}: {day.CalendarDate:dddd yyyy-MM-dd} is a holiday. It is currently {Math.Abs(daysToGo)} days " + (daysToGo > 0 ? "left." : "ago.") + Environment.NewLine;
+                ++index;
+            }
 
             await ReplyAsync(reply);
         }
