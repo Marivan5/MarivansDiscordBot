@@ -46,28 +46,22 @@ namespace MarvBotV3
             SetTimer();
         }
 
-        private Task UserLeft(SocketGuildUser arg)
-        {
-            DataAccess da = new DataAccess(new DatabaseContext());
-            return da.DeleteUser(arg.Id);
-        }
+        private Task UserLeft(SocketGuildUser arg) => 
+            da.DeleteUser(arg.Id);
 
-        private Task UserJoined(SocketGuildUser arg)
-        {
-            var role = arg.Guild.GetRole(349580645502025728); // Intruder
-            return arg.AddRoleAsync(role);
-        }
+        private Task UserJoined(SocketGuildUser arg) => 
+            arg.AddRoleAsync(arg.Guild.GetRole(349580645502025728));
 
-        public async Task InitializeAsync()
-        {
+        public async Task InitializeAsync() => 
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
-        }
 
         public async Task MessageReceivedAsync(SocketMessage rawMessage)
         {
             // Ignore system messages, or messages from other bots
-            if (!(rawMessage is SocketUserMessage message)) return;
-            if (message.Source != MessageSource.User) return;
+            if (rawMessage is not SocketUserMessage message) 
+                return;
+            if (message.Source != MessageSource.User) 
+                return;
 
             if (Program.serverConfig.whiteList == null || Program.serverConfig.whiteList.All(x => x != message.Author.Id))
             {
@@ -78,18 +72,16 @@ namespace MarvBotV3
                         if (Program.serverConfig.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id == Program.serverConfig.videoChannel)
                         {
                             if (!freeMsgList.Contains(message.Author))
-                            {
                                 freeMsgList.Add(message.Author);
-                            }
+
                             Emoji thumbsUp = new Emoji("👍");
                             await message.AddReactionAsync(thumbsUp);
                         }
                         else if (Program.serverConfig.videoList.Any(message.Content.ToLower().Contains) && message.Channel.Id != Program.serverConfig.videoChannel)
                         {
                             if (!freeMsgList.Contains(message.Author))
-                            {
                                 freeMsgList.Add(message.Author);
-                            }
+
                             ulong videoChan = Program.serverConfig.videoChannel;
                             await message.DeleteAsync();
                             await message.Channel.SendMessageAsync("Please don't post videos in this channel. I have posted it for you in " + MentionUtils.MentionChannel(videoChan));
@@ -106,7 +98,6 @@ namespace MarvBotV3
                             else
                             {
                                 await message.DeleteAsync();
-                                //await message.Channel.SendMessageAsync("Please only post videos in this channel");
                                 await message.Author.SendMessageAsync("Please only post videos in the video channel");
                             }
                         }
@@ -301,31 +292,6 @@ namespace MarvBotV3
             await GiveGoldToEveryone();
             Console.WriteLine($"Loop at: {DateTime.Now}");
         }
-
-        //public async Task RunIntervalTask()
-        //{
-        //    CancellationToken cancellationToken = new CancellationToken(); // Todo move to commands
-
-        //    await Task.Run(async () =>
-        //    {
-        //        var i = 0;
-        //        try
-        //        {
-        //            while (true)
-        //            {
-        //                i++;
-        //                await CelebrateBirthday();
-        //                await GiveGoldToEveryone();
-        //                await Task.Delay(millisecs, cancellationToken);
-        //                Console.WriteLine($"{DateTime.Now} Givegoldeveryone: {i}");
-        //            }
-        //        }
-        //        catch (Exception e)
-        //        {
-        //            Console.WriteLine(e.Message);
-        //        }
-        //    }, cancellationToken);
-        //}
 
         public async Task CelebrateBirthday()
         {

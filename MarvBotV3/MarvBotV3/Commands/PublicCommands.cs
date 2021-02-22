@@ -41,9 +41,8 @@ namespace MarvBotV3
             {
                 var reply = $"At {data.Time} it was {data.Temperature.ToString("0.00", nfi)}C at {data.Room}";
                 if(data.Humidity != 0)
-                {
                     reply += $" with a humidity of {data.Humidity.ToString("0.00", nfi)}%";
-                }
+
                 await ReplyAsync(reply);
             }
         }
@@ -53,13 +52,9 @@ namespace MarvBotV3
         public async Task VideoChannelInfo()
         {
             if(Program.serverConfig.videoChannel == 0)
-            {
                 await ReplyAsync("Video channel is not set.");
-            }
             else
-            {
                 await ReplyAsync("Video channel is set to: " + MentionUtils.MentionChannel(Program.serverConfig.videoChannel));
-            }
         }
 
         [Command("AFKChat")]
@@ -67,13 +62,9 @@ namespace MarvBotV3
         public async Task AfkChannelInfo()
         {
             if (Program.serverConfig.videoChannel == 0)
-            {
                 await ReplyAsync("AFK channel is not set.");
-            }
             else
-            {
                 await ReplyAsync("AFK channel is set to: " + MentionUtils.MentionChannel(Program.serverConfig.afkChannel));
-            }
         }
 
         [Command("PublicChat")]
@@ -87,9 +78,7 @@ namespace MarvBotV3
             else
             {
                 foreach (var channel in Program.serverConfig.publicChannel)
-                {
                     await ReplyAsync("Public channel is set to: " + MentionUtils.MentionChannel(channel));
-                }
             }
         }
 
@@ -102,9 +91,7 @@ namespace MarvBotV3
             await ReplyAsync("Whitelist contains:");
 
             foreach (var user in whitelist)
-            {
                 await ReplyAsync(MentionUtils.MentionUser(user));
-            }
         }
 
         [Command("fu"), Summary("FU!")]

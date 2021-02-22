@@ -218,10 +218,8 @@ namespace MarvBotV3.Commands
         }
 
         [Command("Jackpot"), Summary("Displays what the jackpot is at")]
-        public async Task JackpotStash()
-        {
+        public async Task JackpotStash() => 
             await ReplyAsync($"**{await da.GetGold(276456075559960576)}** gold is currently in the jackpot. To win the jackpot you have to bet **{jackpotBorder}** gold or more and roll a **100** in a regular gamble.");
-        }
 
         [Command("Stats")]
         [Alias("info", "stat"), Summary("Gets stats for **user**")]

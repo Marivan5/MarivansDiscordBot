@@ -37,10 +37,11 @@ namespace MarvBotV3.Database
             await db.SaveChangesAsync();
         }
 
-        public Task<List<TbCurrency>> GetTopXGold(int amount = 10)
-        {
-            return db.TbCurrencies.AsQueryable().Where(x => x.UserID != 276456075559960576).OrderByDescending(x => x.GoldAmount).Take(amount).ToListAsync();
-        }
+        public Task<List<TbCurrency>> GetTopXGold(int amount = 10) =>
+            db.TbCurrencies.AsQueryable()
+            .Where(x => x.UserID != 276456075559960576)
+            .OrderByDescending(x => x.GoldAmount)
+            .Take(amount).ToListAsync();
 
         public async Task SaveGold(IUser user, ulong guildID, int amount)
         {
@@ -296,12 +297,6 @@ namespace MarvBotV3.Database
 
         public async Task SetCalendarDays(List<TbCalendarDays> days)
         {
-            //var daysAlreadyIn = await db.TbCalendarDays.AsQueryable()
-            //    .Where(x => x.CalendarDate.Year == days.First().CalendarDate.Year)
-            //    .Select(x => x.CalendarDate)
-            //    .ToListAsync();
-            //days.RemoveAll(x => daysAlreadyIn.Contains(x.CalendarDate));
-
             db.TbCalendarDays.AddRange(days);
             await db.SaveChangesAsync();
         }
