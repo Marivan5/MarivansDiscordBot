@@ -276,7 +276,8 @@ namespace MarvBotV3
             foreach (var day in days)
             {
                 var daysToGo = bl.CalculateDaysUntilNextDate(day.CalendarDate, false);
-                reply += $"{index}: {day.CalendarDate:dddd yyyy-MM-dd} is a holiday. It is currently {Math.Abs(daysToGo)} days " + (daysToGo > 0 ? "left." : "ago.") + Environment.NewLine;
+                string afterText = year == DateTime.Today.Year ? $"It is currently { Math.Abs(daysToGo) } days " + (daysToGo > 0 ? "left." : "ago.") : "";
+                reply += $"{index}: {day.CalendarDate:dddd yyyy-MM-dd} is a holiday. " + afterText + Environment.NewLine;
                 ++index;
             }
 

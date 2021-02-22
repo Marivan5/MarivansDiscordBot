@@ -284,8 +284,8 @@ namespace MarvBotV3
             }
         }
 
-        private static System.Timers.Timer aTimer;
-        int millisecs = Convert.ToInt32(TimeSpan.FromMinutes(10).TotalMilliseconds);
+        private System.Timers.Timer aTimer;
+        readonly int millisecs = Convert.ToInt32(TimeSpan.FromMinutes(10).TotalMilliseconds);
 
         private void SetTimer()
         {
