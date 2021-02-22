@@ -49,9 +49,10 @@ namespace MarvBotV3.BusinessLayer
             if (calendarDays.Count <= 1)
                 calendarDays = await GetCalendarDaysFromYear(year);
 
-            return calendarDays.Where(x => x.CalendarDate.DayOfWeek != DayOfWeek.Sunday 
-            && x.CalendarDate.DayOfWeek != DayOfWeek.Saturday 
-            && !x.BankDay).ToList();
+            return calendarDays
+                .Where(x => x.CalendarDate.DayOfWeek != DayOfWeek.Sunday
+                    && x.CalendarDate.DayOfWeek != DayOfWeek.Saturday
+                    && !x.BankDay).ToList();
         }
     }
 }

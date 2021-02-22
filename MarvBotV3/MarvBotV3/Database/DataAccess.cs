@@ -184,7 +184,11 @@ namespace MarvBotV3.Database
             if (!exists)
                 return null;
 
-            return await db.TbDuels.AsQueryable().Where(x => x.Challenger == userID || x.Challenge == userID).ToListAsync();
+            return await db.TbDuels
+                .AsQueryable()
+                .Where(x => x.Challenger == userID 
+                    || x.Challenge == userID)
+                .ToListAsync();
         }
 
         public async Task SaveUserAcitivity(IUser user, string beforeActivity, string afterActivity)
@@ -289,11 +293,11 @@ namespace MarvBotV3.Database
 
         public Task<List<TbBirthdays>> GetTodaysBirthdaysWithoutGift() =>
             db.TbBirthdays
-            .AsQueryable()
-            .Where(x => x.Birthday.Month == DateTime.Today.Month
-                && x.Birthday.Day == DateTime.Today.Day
-                && x.Birthday.Date != x.LastGiftGiven.Date)
-            .ToListAsync();
+                .AsQueryable()
+                .Where(x => x.Birthday.Month == DateTime.Today.Month
+                    && x.Birthday.Day == DateTime.Today.Day
+                    && x.Birthday.Date != x.LastGiftGiven.Date)
+                .ToListAsync();
 
         public async Task SetCalendarDays(List<TbCalendarDays> days)
         {

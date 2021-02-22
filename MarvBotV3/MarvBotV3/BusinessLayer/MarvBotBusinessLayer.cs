@@ -39,16 +39,12 @@ namespace MarvBotV3
                     await currentRichestPerson.RemoveRoleAsync(guildRole);
             }
         }
-        
-        public SocketGuildUser GetCurrentRichestPerson(SocketGuild guild)
-        {
-            return guild.Users.FirstOrDefault(x => x.Roles.Any(y => y.Id == ServerConfig.Load().richRole));
-        }
 
-        public async Task SaveUserAcitivity(IUser user, string beforeActivity, string afterActivity)
-        {
+        public SocketGuildUser GetCurrentRichestPerson(SocketGuild guild) => 
+            guild.Users.FirstOrDefault(x => x.Roles.Any(y => y.Id == ServerConfig.Load().richRole));
+
+        public async Task SaveUserAcitivity(IUser user, string beforeActivity, string afterActivity) => 
             await _da.SaveUserAcitivity(user, beforeActivity, afterActivity);
-        }
 
         public int CalculateDaysUntilNextDate(DateTime date, bool calcForward = true)
         {

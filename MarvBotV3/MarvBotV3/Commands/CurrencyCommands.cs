@@ -84,9 +84,8 @@ namespace MarvBotV3.Commands
             string reply = "";
 
             for (int i = 0; i < times; ++i)
-            {
                 reply += await Gamble(amount);
-            }
+
             await ReplyAsync(reply);
         }
 
@@ -147,9 +146,7 @@ namespace MarvBotV3.Commands
                 reply += ($"{Context.User.Mention} has lost, **{betAmount.ToString("n0", nfi)}** gold has been removed from your bank.") + Environment.NewLine;
                 await bl.SaveGold(Context.User, Context.Guild, -betAmount);
                 if (betAmount > 1)
-                {
                     await da.SaveGoldToBot(betAmount / 2);
-                }
             }
             await da.UpdateGambleAmount(Context.User);
             await da.SaveStats(Context.User, won, betAmount, changeAmount, result);
