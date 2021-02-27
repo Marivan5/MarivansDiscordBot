@@ -287,7 +287,7 @@ namespace MarvBotV3.Commands
 
             if (lastDonation != null && (DateTime.Now - lastDonation.TimeStamp).TotalHours < waitHours)
             {
-                await ReplyAsync($"Last donations was given to {MentionUtils.MentionUser(lastDonation.UserID)} at {lastDonation.TimeStamp}. I only give out 1 donation per {waitHours} hours");
+                await ReplyAsync($"Last donations was given to {MentionUtils.MentionUser(lastDonation.UserID)} at {lastDonation.TimeStamp:yyyy-MM-dd HH:mm:ss}. I only give out 1 donation per {waitHours} hours");
                 return;
             }
 
