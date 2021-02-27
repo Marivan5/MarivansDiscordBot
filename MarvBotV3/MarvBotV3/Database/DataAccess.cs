@@ -314,15 +314,17 @@ namespace MarvBotV3.Database
         public Task<List<TbPolls>> GetActivePolls() => 
             db.TbPolls.AsQueryable().Where(x => x.Result == null).ToListAsync();
 
-        public async Task SaveNewPoll(string name, ulong creator)
+        public async Task<long> SaveNewPoll(string name, ulong creator)
         {
-            db.TbPolls.Add(new TbPolls
+            var tbPoll = new TbPolls
             {
                 CreatorUserID = creator,
                 Name = name,
                 CreatedTimeStamp = DateTime.Now,
-            });
+            };
+            db.TbPolls.Add(tbPoll);
             await db.SaveChangesAsync();
+            return tbPoll.ID;
         }
         
         public async Task SetResultPoll(long id, bool result)
@@ -339,6 +341,9 @@ namespace MarvBotV3.Database
 
         public Task<List<TbBets>> GetBetsFromPollId(long id) => 
             db.TbBets.AsQueryable().Where(x => x.PollID == id).ToListAsync();
+
+        public Task<List<TbBets>> GetBetsFromUserId(ulong id) =>
+            db.TbBets.AsQueryable().Where(x => x.UserID == id).ToListAsync();
 
         public async Task SaveNewBet(int id, bool result, int amount, IUser user)
         {

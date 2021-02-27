@@ -1,7 +1,9 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using MarvBotV3.Database;
+using MarvBotV3.Database.Tables;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -95,7 +97,7 @@ namespace MarvBotV3
             {
                 var user = guild.GetUser(bet.UserID);
                 var amount = bet.Bet == result ? bet.BetAmount : -bet.BetAmount;
-                await SaveGold(user, guild, amount);
+                await SaveGold(user, guild, amount * 2);
             }
 
             await _da.SaveChanges();
@@ -103,6 +105,14 @@ namespace MarvBotV3
             return $"Result saved for poll: {tbPoll.Name} {Environment.NewLine}" +
                 $"Winners: {tbBets.Count(x => x.Bet == result)} {Environment.NewLine}" +
                 $"Losers: {tbBets.Count(x => x.Bet != result)}";
+        }
+
+        public async Task<List<TbBets>> GetActiveBets(IUser user)
+        {
+            var allBets = await _da.GetBetsFromUserId(user.Id);
+            var activePollIds = await _da.GetActivePolls().Pipe(x => x.Select(y => y.ID).ToList());
+
+            return allBets.Where(x => activePollIds.Contains(x.PollID)).ToList();
         }
     }
 }
