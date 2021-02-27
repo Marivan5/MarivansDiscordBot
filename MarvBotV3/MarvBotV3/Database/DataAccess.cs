@@ -18,6 +18,9 @@ namespace MarvBotV3.Database
             db = dbContext;
         }
 
+        public Task SaveChanges() => 
+            db.SaveChangesAsync();
+
         public async Task<int> GetGold(ulong userID)
         {
             if (!db.TbCurrencies.Any(x => x.UserID == userID))
@@ -307,5 +310,53 @@ namespace MarvBotV3.Database
 
         public Task<List<TbCalendarDays>> GetCalendarDaysForYear(int year) => 
             db.TbCalendarDays.AsQueryable().Where(x => x.CalendarDate.Year == year).ToListAsync();
+
+        public Task<List<TbPolls>> GetActivePolls() => 
+            db.TbPolls.AsQueryable().Where(x => x.Result == null).ToListAsync();
+
+        public async Task SaveNewPoll(string name, ulong creator)
+        {
+            db.TbPolls.Add(new TbPolls
+            {
+                CreatorUserID = creator,
+                Name = name,
+                CreatedTimeStamp = DateTime.Now,
+            });
+            await db.SaveChangesAsync();
+        }
+        
+        public async Task SetResultPoll(long id, bool result)
+        {
+            var tbPoll = await db.TbPolls
+                .AsQueryable()
+                .Where(x => x.ID == id && x.Result == null)
+                .SingleOrDefaultAsync();
+
+            tbPoll.Result = result;
+            tbPoll.ResultTimeStamp = DateTime.Now;
+            await db.SaveChangesAsync();
+        }
+
+        public Task<List<TbBets>> GetBetsFromPollId(long id) => 
+            db.TbBets.AsQueryable().Where(x => x.PollID == id).ToListAsync();
+
+        public async Task SaveNewBet(int id, bool result, int amount, IUser user)
+        {
+            var activePoll = await GetActivePolls().Pipe(x => x.Where(y => y.ID == id).ToList());
+
+            if (!activePoll.Any())
+                return;
+
+            // Is there active poll with this iD?
+            db.TbBets.Add(new TbBets
+            {
+                PollID = id,
+                UserID = user.Id,
+                Bet = result,
+                BetAmount = amount,
+                TimeStamp = DateTime.Now
+            });
+            await db.SaveChangesAsync();
+        }
     }
 }

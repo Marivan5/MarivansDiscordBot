@@ -89,7 +89,7 @@ namespace MarvBotV3.Commands
             await ReplyAsync(reply);
         }
 
-        private async Task<string> Gamble(int betAmount)
+        private async Task<string> Gamble(int betAmount) // Should be in business layer
         {
             string reply = "";
             var currentGold = await da.GetGold(Context.User.Id);
@@ -107,7 +107,7 @@ namespace MarvBotV3.Commands
 
             var rng = new Random();
             var result = rng.Next(0, 101);
-            if (result == 100)
+            if (result == 100 && betAmount >= jackpotBorder)
                 if (rng.Next(0, 101) != 100)
                     result = 99;
 
@@ -275,7 +275,7 @@ namespace MarvBotV3.Commands
         [Alias("pls", "plsSir", "välfärd"), Summary("Gives you a random amount of gold between 1-100")]
         public async Task DailyFreeGold()
         {
-            var top3 = await da.GetTopXGold(3).Pipe(x => x.Select(x => x.UserID).ToList());
+            var top3 = await da.GetTopXGold(3).Pipe(x => x.Select(y => y.UserID).ToList());
             if (top3.Contains(Context.User.Id))
             {
                 await ReplyAsync("You are too rich to recieve free cash.");
