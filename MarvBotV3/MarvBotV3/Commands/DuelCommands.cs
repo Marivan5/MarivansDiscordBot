@@ -11,7 +11,7 @@ namespace MarvBotV3.Commands
     [Group("Duel")]
     [Alias("vs", "1v1", "fight")]
     [Summary("Duel group")]
-    public class DuelCommands : ModuleBase<SocketCommandContext>
+    public class DuelCommands : ModuleBase<ShardedCommandContext>
     {
         private NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " " };
         DataAccess da;

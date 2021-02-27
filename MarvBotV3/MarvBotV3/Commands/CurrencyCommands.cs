@@ -11,7 +11,7 @@ namespace MarvBotV3.Commands
     [Group("Gold")]
     [Alias("cash", "dinero", "money", "currency", "bank", "ducates", "euro", "dollar", "dollaroos")]
     [Summary("Currency group")]
-    public class CurrencyCommands : ModuleBase<SocketCommandContext>
+    public class CurrencyCommands : ModuleBase<ShardedCommandContext>
     {
         private readonly NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " " };
         int jackpotBorder = 250;

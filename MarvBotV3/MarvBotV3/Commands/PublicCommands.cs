@@ -28,7 +28,7 @@ namespace MarvBotV3
         [Alias("vem", "info")]
         public async Task UserInfoAsync(IUser user = null)
         {
-            user = user ?? Context.User;
+            user ??= Context.User;
             await ReplyAsync(user.ToString());
         }
 

@@ -10,7 +10,7 @@ namespace MarvBotV3.Commands
     [Group("Poll")]
     [Alias("polls")]
     [Summary("Polls")]
-    public class PollsCommands : ModuleBase<SocketCommandContext>
+    public class PollsCommands : ModuleBase<ShardedCommandContext>
     {
         DataAccess da;
         MarvBotBusinessLayer bl;
