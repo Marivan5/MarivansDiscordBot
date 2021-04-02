@@ -299,7 +299,7 @@ namespace MarvBotV3.Database
                 .AsQueryable()
                 .Where(x => x.Birthday.Month == DateTime.Today.Month
                     && x.Birthday.Day == DateTime.Today.Day
-                    && x.Birthday.Date != x.LastGiftGiven.Date)
+                    && DateTime.Now.Date != x.LastGiftGiven.Date)
                 .ToListAsync();
 
         public async Task SetCalendarDays(List<TbCalendarDays> days)
