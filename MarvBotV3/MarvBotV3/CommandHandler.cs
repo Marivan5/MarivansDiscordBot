@@ -169,23 +169,24 @@ namespace MarvBotV3
                 if (beforeChangeUser.Activity?.Name != afterChangeUser.Activity?.Name)
                     await bl.SaveUserAcitivity(user, beforeChangeUser.Activity?.Name ?? "", afterChangeUser.Activity?.Name ?? "");
 
-            if(afterChangeUser.Activity != null)
+            var beforeName = beforeChangeUser.Activity.Name.Trim();
+            var afterName = afterChangeUser.Activity.Name.Trim();
+
+            if (afterChangeUser.Activity != null)
             {
                 if(beforeChangeUser.Activity != null)
                 {
-                    if(beforeChangeUser.Activity.Name == afterChangeUser.Activity.Name)
+                    if(beforeName == afterName)
                         return;
 
-                    gameRole = guild.Roles.Where(x => x.ToString().Equals(beforeChangeUser.Activity.Name) && !x.IsMentionable).FirstOrDefault();
+                    gameRole = guild.Roles.Where(x => x.ToString().Equals(beforeName) && !x.IsMentionable).FirstOrDefault();
                     await DeleteGameRoleAndVoiceChannel(guild, gameRole, user);
                     gameRole = null;
                 }
-                gameRole = guild.Roles.Where(x => x.ToString().Equals(afterChangeUser.Activity.Name) && !x.IsMentionable).FirstOrDefault();
+                gameRole = guild.Roles.Where(x => x.ToString().Equals(afterName) && !x.IsMentionable).FirstOrDefault();
 
                 if (gameRole == null) // if role does not exist, create it
-                    gameRole = await guild.CreateRoleAsync(afterChangeUser.Activity.Name, permissions: GuildPermissions.None, color: Color.Default, isHoisted: false, false);
-
-                Discord.Rest.RestVoiceChannel altChannel = null;
+                    gameRole = await guild.CreateRoleAsync(afterName, permissions: GuildPermissions.None, color: Color.Default, isHoisted: false, false);
                 var channel = guild.VoiceChannels.Where(x => x.ToString().Equals(gameRole.Name) && x.Bitrate == 96000).FirstOrDefault();
                 if (channel == null)
                 {
@@ -193,7 +194,7 @@ namespace MarvBotV3
                     {
                         Bitrate = 96000
                     };
-                    altChannel = await guild.CreateVoiceChannelAsync(gameRole.Name);
+                    var altChannel = await guild.CreateVoiceChannelAsync(gameRole.Name);
                     await altChannel.AddPermissionOverwriteAsync(guild.EveryoneRole, new OverwritePermissions(connect: PermValue.Deny, viewChannel: PermValue.Deny));
                     await altChannel.AddPermissionOverwriteAsync(gameRole, new OverwritePermissions(connect: PermValue.Allow, viewChannel: PermValue.Allow));
                     await altChannel.ModifyAsync(x => x.Bitrate = properties.Bitrate); 
@@ -201,13 +202,13 @@ namespace MarvBotV3
                 }
                 //else
                 //{
-                //    await user.ModifyAsync(x => x.Channel = channel); // Flyttar användaren
+                //    await user.ModifyAsync(x => x.Channel = altChannel); // Flyttar användaren
                 //}
                 await user.AddRoleAsync(gameRole);
             }
             else if (beforeChangeUser.Activity != null && afterChangeUser.Activity == null)
             {
-                gameRole = guild.Roles.Where(x => x.ToString().Equals(beforeChangeUser.Activity.Name) && !x.IsMentionable).FirstOrDefault();
+                gameRole = guild.Roles.Where(x => x.ToString().Equals(beforeName) && !x.IsMentionable).FirstOrDefault();
 
                 if (gameRole == null)
                     return;
