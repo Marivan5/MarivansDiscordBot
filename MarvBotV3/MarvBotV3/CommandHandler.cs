@@ -169,8 +169,8 @@ namespace MarvBotV3
                 if (beforeChangeUser.Activity?.Name != afterChangeUser.Activity?.Name)
                     await bl.SaveUserAcitivity(user, beforeChangeUser.Activity?.Name ?? "", afterChangeUser.Activity?.Name ?? "");
 
-            var beforeName = beforeChangeUser.Activity.Name.Trim();
-            var afterName = afterChangeUser.Activity.Name.Trim();
+            var beforeName = beforeChangeUser.Activity?.Name.Trim() ?? null;
+            var afterName = afterChangeUser.Activity?.Name.Trim() ?? null;
 
             if (afterChangeUser.Activity != null)
             {
@@ -319,22 +319,23 @@ namespace MarvBotV3
         public async Task GiveGoldToEveryone()
         {
             var guilds = _discord.Guilds;
-            var users = new List<SocketGuildUser>();
-            var extraGoldUsers = new List<SocketGuildUser>();
             foreach (var guild in guilds)
             {
                 var onlineUsers = guild.Users.Where(x => !x.IsSelfDeafened && x.Status == UserStatus.Online && !x.IsBot).ToList();
                 onlineUsers.Remove(bl.GetCurrentRichestPerson(guild));
-                users.AddRange(onlineUsers);
                 var userActivities = onlineUsers.GroupBy(x => new { x.Activity?.Name })
                     .Where(x => x.Key.Name != null && x.Count() > 1 && x.Key.Name != "Custom Status")
                     .Select(x => x.ToList());
 
+                foreach (var user in onlineUsers)
+                    await bl.SaveGold(user, guild, 1);
+
                 foreach (var act in userActivities)
-                    extraGoldUsers.AddRange(act);
+                    foreach (var user in act)
+                        await bl.SaveGold(user, guild, 2);
             }
-            await da.GiveGoldEveryone(users, 1);
-            await da.GiveGoldEveryone(extraGoldUsers, 2);
+            //await da.GiveGoldEveryone(users, 1); // Is super wierd after a days running for some reason
+            //await da.GiveGoldEveryone(extraGoldUsers, 2);
         }
     }
 }
