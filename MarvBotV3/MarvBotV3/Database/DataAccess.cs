@@ -61,9 +61,11 @@ namespace MarvBotV3.Database
             else
             {
                 TbCurrency tbUser = db.TbCurrencies.AsQueryable().Where(x => x.UserID == user.Id).FirstOrDefault();
+                var debugGoldAmount = tbUser.GoldAmount;
                 tbUser.GoldAmount += amount;
                 tbUser.Username = user.Username;
                 db.TbCurrencies.Update(tbUser);
+                Console.WriteLine($"Giving {tbUser.Username} {amount} gold, they had {debugGoldAmount} and now have {tbUser.GoldAmount}");
             }
             await db.SaveChangesAsync();
         }

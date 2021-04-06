@@ -65,7 +65,16 @@ namespace MarvBotV3.Commands
             if (input.ToLower() == "all" || input.ToLower() == "all in")
             {
                 var amount = await da.GetGold(Context.User.Id);
-                var reply = await Gamble(amount);
+                var reply = "";
+                try
+                {
+                    reply = await Gamble(amount);
+                }
+                catch (Exception e)
+                {
+                    reply = e.Message;
+                }
+
                 await ReplyAsync(reply);
             }
             else
@@ -84,7 +93,16 @@ namespace MarvBotV3.Commands
             string reply = "";
 
             for (int i = 0; i < times; ++i)
-                reply += await Gamble(amount);
+                try
+                {
+                    reply += await Gamble(amount);
+                }
+                catch (Exception e)
+                {
+
+                    reply += e.Message;
+                    break;
+                }
 
             await ReplyAsync(reply);
         }
@@ -96,13 +114,11 @@ namespace MarvBotV3.Commands
 
             if (currentGold < betAmount)
             {
-                reply += $"You only have {currentGold.ToString("n0", nfi)}. Can't gamble more.";
-                return reply;
+                throw new ArgumentException($"You only have {currentGold.ToString("n0", nfi)}. Can't gamble more.");
             }
             if (betAmount <= 0)
             {
-                reply += $"You can't gamble 0 gold.";
-                return reply;
+                throw new ArgumentException($"You can't gamble 0 gold.");
             }
 
             var rng = new Random();
