@@ -23,14 +23,9 @@ namespace MarvBotV3
         public static List<SocketUser> freeMsgList = new List<SocketUser>();
         private char prefix = Configuration.Load().Prefix;
 
-        DataAccess da;
-        MarvBotBusinessLayer bl;
 
         public CommandHandler(IServiceProvider services)
         {
-            da = new DataAccess(new DatabaseContext());
-            bl = new MarvBotBusinessLayer(da);
-
             _commands = services.GetRequiredService<CommandService>();
             _discord = services.GetRequiredService<DiscordShardedClient>();
             _services = services;
@@ -47,7 +42,7 @@ namespace MarvBotV3
         }
 
         private Task UserLeft(SocketGuildUser arg) => 
-            da.DeleteUser(arg.Id);
+            new DataAccess(new DatabaseContext()).DeleteUser(arg.Id);
 
         private Task UserJoined(SocketGuildUser arg) => 
             arg.AddRoleAsync(arg.Guild.GetRole(349580645502025728));
@@ -131,6 +126,8 @@ namespace MarvBotV3
                 var loser = duel.Challenge == rawMessage.Author.Id ? duel.Challenger : duel.Challenge;
                 await context.Channel.SendMessageAsync($"{rawMessage.Author.Mention} has won {duel.BetAmount.ToString("n0", nfi)} of {MentionUtils.MentionUser(loser)} gold");
                 Program.activeDuels.Remove(duel);
+                var da = new DataAccess(new DatabaseContext());
+                var bl = new MarvBotBusinessLayer(da);
                 await bl.SaveGold(rawMessage.Author, context.Guild, duel.BetAmount);
                 await bl.SaveGold(context.Guild.GetUser(loser), context.Guild, -duel.BetAmount);
                 await da.SetDuel(duel.Challenger, duel.Challenge, rawMessage.Author.Id, duel.BetAmount);
@@ -167,7 +164,7 @@ namespace MarvBotV3
 
             if (!string.IsNullOrWhiteSpace(beforeChangeUser.Activity?.Name) || !string.IsNullOrWhiteSpace(afterChangeUser.Activity?.Name))
                 if (beforeChangeUser.Activity?.Name != afterChangeUser.Activity?.Name)
-                    await bl.SaveUserAcitivity(user, beforeChangeUser.Activity?.Name ?? "", afterChangeUser.Activity?.Name ?? "");
+                    await new MarvBotBusinessLayer(new DataAccess(new DatabaseContext())).SaveUserAcitivity(user, beforeChangeUser.Activity?.Name ?? "", afterChangeUser.Activity?.Name ?? "");
 
             var beforeName = beforeChangeUser.Activity?.Name.Trim() ?? null;
             var afterName = afterChangeUser.Activity?.Name.Trim() ?? null;
@@ -296,6 +293,8 @@ namespace MarvBotV3
 
         public async Task CelebrateBirthday()
         {
+            var da = new DataAccess(new DatabaseContext());
+
             var birthdays = await da.GetTodaysBirthdaysWithoutGift();
             if (!birthdays.Any())
                 return;
@@ -318,6 +317,9 @@ namespace MarvBotV3
 
         public async Task GiveGoldToEveryone()
         {
+            var da = new DataAccess(new DatabaseContext());
+            var bl = new MarvBotBusinessLayer(da);
+
             var guilds = _discord.Guilds;
             foreach (var guild in guilds)
             {

@@ -15,7 +15,7 @@ namespace MarvBotV3.Commands
     {
         private readonly NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " " };
         int jackpotBorder = 250;
-        int winningNumber = 56;
+        int winningNumber = 60;
         DataAccess da;
         MarvBotBusinessLayer bl;
 
@@ -99,7 +99,6 @@ namespace MarvBotV3.Commands
                 }
                 catch (Exception e)
                 {
-
                     reply += e.Message;
                     break;
                 }
@@ -113,19 +112,18 @@ namespace MarvBotV3.Commands
             var currentGold = await da.GetGold(Context.User.Id);
 
             if (currentGold < betAmount)
-            {
                 throw new ArgumentException($"You only have {currentGold.ToString("n0", nfi)}. Can't gamble more.");
-            }
             if (betAmount <= 0)
-            {
                 throw new ArgumentException($"You can't gamble 0 gold.");
-            }
 
             var rng = new Random();
             var result = rng.Next(0, 101);
             if (result == 100 && betAmount >= jackpotBorder)
                 if (rng.Next(0, 101) != 100)
                     result = 99;
+
+            if (bl.GetCurrentRichestPerson(Context.Guild).Id == Context.User.Id && result == 100)
+                result = rng.Next(winningNumber, 100);
 
             var cheatList = Program.serverConfig.whiteList;
             if (cheatList.Contains(Context.User.Id)) // cheat
@@ -331,12 +329,12 @@ namespace MarvBotV3.Commands
         [Alias("delete", "remove", "annihilate", "kill"), Summary("Deletes **user's** **amount** gold")]
         public async Task GoldPurge(IUser user, int amount = 0)
         {
-            var richBitch = Context.Guild.Users.First(x => x.Roles.Select(z => z.Id).ToList().Contains(762789255965048833));
-            if (richBitch.Id != Context.User.Id)
-            {
-                await ReplyAsync($"Only {MentionUtils.MentionRole(762789255965048833)} can purge someone");
-                return;
-            }
+            //var richBitch = Context.Guild.Users.First(x => x.Roles.Select(z => z.Id).ToList().Contains(richBitchId)); bl.GetCurrentRichestPerson(Context.Guild)
+            //if (richBitch.Id != Context.User.Id)
+            //{
+            //    await ReplyAsync($"Only {MentionUtils.MentionRole(richBitchId)} can purge someone");
+            //    return;
+            //}
             if (user == null)
             {
                 await ReplyAsync("Type '!Gold purge *User* *Amount*'");
@@ -356,9 +354,9 @@ namespace MarvBotV3.Commands
                 return;
             }
 
-            var richestGold = await da.GetGold(Context.User.Id);
+            var userGoldAmount = await da.GetGold(Context.User.Id);
 
-            if (richestGold < amount)
+            if (userGoldAmount < amount)
             {
                 await ReplyAsync($"You need more gold than **{amount}** to purge {user.Mention}");
                 return;
