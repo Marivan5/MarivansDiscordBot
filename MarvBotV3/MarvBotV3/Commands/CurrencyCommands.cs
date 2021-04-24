@@ -144,9 +144,9 @@ namespace MarvBotV3.Commands
                 won = true;
                 if (result == 100 && betAmount < jackpot && betAmount >= jackpotBorder)
                 {
-                    changeAmount = jackpot;
-                    reply += ($":tada: {Context.User.Mention} **WIN THE JACKPOT**, **{jackpot.ToString("n0", nfi)}** gold has been added to your bank. :tada:") + Environment.NewLine;
-                    await da.SaveGoldToBot(-jackpot + jackpotBorder);
+                    changeAmount = betAmount * 100 > jackpot ? jackpot : betAmount * 100;
+                    reply += ($":tada: {Context.User.Mention} **WIN THE JACKPOT**, **{changeAmount.ToString("n0", nfi)}** gold has been added to your bank. :tada:") + Environment.NewLine;
+                    await da.SaveGoldToBot(-changeAmount + jackpotBorder);
                 }
                 else
                 {
