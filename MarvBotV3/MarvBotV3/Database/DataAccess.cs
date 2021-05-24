@@ -227,7 +227,7 @@ namespace MarvBotV3.Database
             await db.SaveChangesAsync();
         }
 
-        public async Task SaveNextRoll(List<int> nextRolls, IUser user = null)
+        public async Task SaveNextRoll(List<int> nextRolls, int amountOver = 0, IUser user = null)
         {
             ulong userId = 0;
             var username = "Anyone";
@@ -244,6 +244,7 @@ namespace MarvBotV3.Database
                     UserID = userId,
                     Username = username,
                     NextRoll = roll,
+                    AmountOver = 0,
                     TimeStamp = DateTime.Now
                 });
             }

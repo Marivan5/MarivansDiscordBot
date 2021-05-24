@@ -125,7 +125,20 @@ namespace MarvBotV3.Commands
                 normalList.Add(newItem);
             }
 
-            await da.SaveNextRoll(normalList, user);
+            await da.SaveNextRoll(normalList, 0, user);
+            await ReplyAsync($"Added {normalList} to {user.Username}");
+        }
+
+        [Command("nextrollover")]
+        [Alias("nextgambleover", "nextover")]
+        public async Task NextRoll(int overAmount, int roll, IUser user = null)
+        {
+            var normalList = new List<int>();
+            if (roll > 100)
+                roll = 100;
+            normalList.Add(roll);
+
+            await da.SaveNextRoll(normalList, overAmount, user);
             await ReplyAsync($"Added {normalList} to {user.Username}");
         }
 

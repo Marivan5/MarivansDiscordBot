@@ -270,5 +270,12 @@ namespace MarvBotV3
 
             await ReplyAsync(reply);
         }
+
+        [Command("Pogday")]
+        [Alias("Pogdag", "pog")]
+        public async Task PogDay()
+        {
+            await ReplyAsync("https://www.twitch.tv/henkeohlsen");
+        }
     }
 }
