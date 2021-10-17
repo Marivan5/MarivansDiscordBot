@@ -58,6 +58,12 @@ namespace MarvBotV3
             if (message.Source != MessageSource.User) 
                 return;
 
+            if (Program.serverConfig.blacklistWords.Any(message.Content.ToLower().Contains))
+            {
+                await message.DeleteAsync();
+                return;
+            }
+
             if (Program.serverConfig.whiteList == null || Program.serverConfig.whiteList.All(x => x != message.Author.Id))
             {
                 if (!Program.serverConfig.publicChannel.Contains(message.Channel.Id)) // Special channel that does not follow the normal rules

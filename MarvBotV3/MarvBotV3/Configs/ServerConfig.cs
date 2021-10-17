@@ -16,6 +16,7 @@ namespace MarvBotV3
         public List<ulong> whiteList { get; set; }
         public List<string> videoList { get; set; }
         public int donationWaitHours { get; set; }
+        public List<string> blacklistWords { get; set; }
 
         private static string dir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Data/serverConfiguration.json");
 
@@ -29,6 +30,7 @@ namespace MarvBotV3
             donationWaitHours = 6;
             JsonConvert.SerializeObject(whiteList);
             JsonConvert.SerializeObject(videoList);
+            JsonConvert.SerializeObject(blacklistWords);
         }
 
         // Save the configuration to the specified file location.
