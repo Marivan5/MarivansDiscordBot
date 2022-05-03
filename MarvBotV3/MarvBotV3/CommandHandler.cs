@@ -33,6 +33,7 @@ namespace MarvBotV3
             //_commands.CommandExecuted += CommandExecutedAsync;
             _discord.MessageReceived += MessageReceivedAsync;
             _discord.GuildMemberUpdated += ChangeGameAndRole;
+            _discord.PresenceUpdated += PresenceUpdated;
             _discord.UserJoined += UserJoined;
             _discord.UserLeft += UserLeft;
             _discord.UserVoiceStateUpdated += ChangeVoiceChannel;
@@ -41,8 +42,67 @@ namespace MarvBotV3
             SetTimer();
         }
 
-        private Task UserLeft(SocketGuildUser arg) => 
-            new DataAccess(new DatabaseContext()).DeleteUser(arg.Id);
+        private async Task PresenceUpdated(SocketUser user, SocketPresence before, SocketPresence after)
+        {
+            IRole gameRole = null;
+            List<SocketGuild> guilds = user.MutualGuilds.ToList();
+
+            if (!before.Activities.Any() && !after.Activities.Any())
+                return;
+
+            if (!string.IsNullOrWhiteSpace(before.Activities.FirstOrDefault()?.Name) || !string.IsNullOrWhiteSpace(after.Activities.FirstOrDefault()?.Name))
+                if (before.Activities.FirstOrDefault()?.Name != after.Activities.FirstOrDefault()?.Name)
+                    await new MarvBotBusinessLayer(new DataAccess(new DatabaseContext())).SaveUserAcitivity(user, before.Activities.FirstOrDefault()?.Name ?? "", after.Activities.FirstOrDefault()?.Name ?? "");
+
+            var beforeName = before.Activities.FirstOrDefault()?.Name.Trim() ?? null;
+            var afterName = after.Activities.FirstOrDefault()?.Name.Trim() ?? null;
+
+            foreach (var guild in guilds)
+            {
+                var guildUser = guild.GetUser(user.Id);
+                if (after.Activities.FirstOrDefault() != null)
+                {
+                    if (before.Activities.FirstOrDefault() != null)
+                    {
+                        if (beforeName == afterName)
+                            return;
+
+                        gameRole = guild.Roles.Where(x => x.ToString().Equals(beforeName) && !x.IsMentionable).FirstOrDefault();
+                        await DeleteGameRoleAndVoiceChannel(guild, gameRole, guildUser);
+                        gameRole = null;
+                    }
+                    gameRole = guild.Roles.Where(x => x.ToString().Equals(afterName) && !x.IsMentionable).FirstOrDefault();
+
+                    if (gameRole == null) // if role does not exist, create it
+                        gameRole = await guild.CreateRoleAsync(afterName, permissions: GuildPermissions.None, color: Color.Default, isHoisted: false, false);
+                    var channel = guild.VoiceChannels.Where(x => x.ToString().Equals(gameRole.Name) && x.Bitrate == 96000).FirstOrDefault();
+                    if (channel == null)
+                    {
+                        var properties = new VoiceChannelProperties
+                        {
+                            Bitrate = 96000
+                        };
+                        var altChannel = await guild.CreateVoiceChannelAsync(gameRole.Name);
+                        await altChannel.AddPermissionOverwriteAsync(guild.EveryoneRole, new OverwritePermissions(connect: PermValue.Deny, viewChannel: PermValue.Deny));
+                        await altChannel.AddPermissionOverwriteAsync(gameRole, new OverwritePermissions(connect: PermValue.Allow, viewChannel: PermValue.Allow));
+                        await altChannel.ModifyAsync(x => x.Bitrate = properties.Bitrate);
+                    }
+                    await guildUser.AddRoleAsync(gameRole);
+                }
+                else if (before.Activities.FirstOrDefault() != null && after.Activities.FirstOrDefault() == null)
+                {
+                    gameRole = guild.Roles.Where(x => x.ToString().Equals(beforeName) && !x.IsMentionable).FirstOrDefault();
+
+                    if (gameRole == null)
+                        return;
+
+                    await DeleteGameRoleAndVoiceChannel(guild, gameRole, guildUser);
+                }
+            }
+        }
+
+        private Task UserLeft(SocketGuild arg1, SocketUser arg2) => 
+            new DataAccess(new DatabaseContext()).DeleteUser(arg2.Id);
 
         private Task UserJoined(SocketGuildUser arg) => 
             arg.AddRoleAsync(arg.Guild.GetRole(349580645502025728));
@@ -162,22 +222,26 @@ namespace MarvBotV3
             Program.activeDuels.Add(new Duel { Challenger = challenger, Challenge = challenge, BetAmount = betAmount, TimeStamp = DateTime.Now });
         }
 
-        public async Task ChangeGameAndRole(SocketGuildUser beforeChangeUser, SocketGuildUser afterChangeUser)
+        public async Task ChangeGameAndRole(Cacheable<SocketGuildUser, ulong> beforeChangeUser, SocketGuildUser afterChangeUser)
         {
+            Console.WriteLine("ChangeGameAndRole");
             SocketGuildUser user = afterChangeUser;
             IRole gameRole = null;
             SocketGuild guild = user.Guild;
 
-            if (!string.IsNullOrWhiteSpace(beforeChangeUser.Activity?.Name) || !string.IsNullOrWhiteSpace(afterChangeUser.Activity?.Name))
-                if (beforeChangeUser.Activity?.Name != afterChangeUser.Activity?.Name)
-                    await new MarvBotBusinessLayer(new DataAccess(new DatabaseContext())).SaveUserAcitivity(user, beforeChangeUser.Activity?.Name ?? "", afterChangeUser.Activity?.Name ?? "");
+            if (!beforeChangeUser.Value.Activities.Any() && !afterChangeUser.Activities.Any())
+                return;
 
-            var beforeName = beforeChangeUser.Activity?.Name.Trim() ?? null;
-            var afterName = afterChangeUser.Activity?.Name.Trim() ?? null;
+            if (!string.IsNullOrWhiteSpace(beforeChangeUser.Value.Activities.FirstOrDefault()?.Name) || !string.IsNullOrWhiteSpace(afterChangeUser.Activities.FirstOrDefault()?.Name))
+                if (beforeChangeUser.Value.Activities.FirstOrDefault()?.Name != afterChangeUser.Activities.FirstOrDefault()?.Name)
+                    await new MarvBotBusinessLayer(new DataAccess(new DatabaseContext())).SaveUserAcitivity(user, beforeChangeUser.Value.Activities.FirstOrDefault()?.Name ?? "", afterChangeUser.Activities.FirstOrDefault()?.Name ?? "");
 
-            if (afterChangeUser.Activity != null)
+            var beforeName = beforeChangeUser.Value.Activities.FirstOrDefault()?.Name.Trim() ?? null;
+            var afterName = afterChangeUser.Activities.FirstOrDefault()?.Name.Trim() ?? null;
+
+            if (afterChangeUser.Activities.FirstOrDefault() != null)
             {
-                if(beforeChangeUser.Activity != null)
+                if(beforeChangeUser.Value.Activities.FirstOrDefault() != null)
                 {
                     if(beforeName == afterName)
                         return;
@@ -209,7 +273,7 @@ namespace MarvBotV3
                 //}
                 await user.AddRoleAsync(gameRole);
             }
-            else if (beforeChangeUser.Activity != null && afterChangeUser.Activity == null)
+            else if (beforeChangeUser.Value.Activities.FirstOrDefault() != null && afterChangeUser.Activities.FirstOrDefault() == null)
             {
                 gameRole = guild.Roles.Where(x => x.ToString().Equals(beforeName) && !x.IsMentionable).FirstOrDefault();
 
@@ -331,7 +395,7 @@ namespace MarvBotV3
             {
                 var onlineUsers = guild.Users.Where(x => !x.IsSelfDeafened && x.Status == UserStatus.Online && !x.IsBot).ToList();
                 onlineUsers.Remove(bl.GetCurrentRichestPerson(guild));
-                var userActivities = onlineUsers.GroupBy(x => new { x.Activity?.Name })
+                var userActivities = onlineUsers.GroupBy(x => new { x.Activities.FirstOrDefault()?.Name })
                     .Where(x => x.Key.Name != null && x.Count() > 1 && x.Key.Name != "Custom Status")
                     .Select(x => x.ToList());
 

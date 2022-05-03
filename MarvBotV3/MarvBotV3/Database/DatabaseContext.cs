@@ -36,7 +36,7 @@ namespace MarvBotV3
             //string dbLocation = @"/share/Database/MarvBot.sqlite"; 
             string dbLocation = "192.168.1.236";
             options.UseMySql($"Server={dbLocation}; Port = 3306; DATABASE = MarvBot; UID=MarvBot; Password=MarvBotV3;",
-                new MariaDbServerVersion(new System.Version(5, 5, 57)),
+                new MariaDbServerVersion(new System.Version(5, 5, 68)),
                 mySqlOption => mySqlOption.EnableRetryOnFailure(maxRetryCount: 50, maxRetryDelay: TimeSpan.FromSeconds(60), errorNumbersToAdd: null));
         }
     }

@@ -24,7 +24,8 @@ namespace MarvBotV3
             var config = new DiscordSocketConfig
             {
                 TotalShards = 1,
-                ExclusiveBulkDelete = true
+                GatewayIntents = GatewayIntents.All,
+                AlwaysDownloadUsers = true
             };
 
             EnsureBotConfigExists();
