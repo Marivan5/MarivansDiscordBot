@@ -51,8 +51,7 @@ namespace MarvBotV3.Commands
         [Alias("fight", "")]
         public async Task DuelAmount(IUser challenge, int amount = 0)
         {
-            var reply = await Duel(challenge, amount);
-            await ReplyAsync(reply);
+            await Duel(challenge, amount);
         }
 
         [Command("Duel")]
@@ -64,8 +63,7 @@ namespace MarvBotV3.Commands
                 var user1Gold = await da.GetGold(Context.User.Id);
                 var user2Gold = await da.GetGold(challenge.Id);
                 var amount = Math.Min(user1Gold, user2Gold);
-                var reply = await Duel(challenge, amount);
-                await ReplyAsync(reply);
+                await Duel(challenge, amount);
             }
             else
             {
@@ -73,23 +71,38 @@ namespace MarvBotV3.Commands
             }
         }
 
-        private async Task<string> Duel(IUser challenge, int amount = 0)
+        private async Task Duel(IUser challenge, int amount = 0)
         {
             if (challenge.Id == 276456075559960576)
-                return $"yes{Environment.NewLine}3{Environment.NewLine}2{Environment.NewLine}1{Environment.NewLine}Shoot!{Environment.NewLine}🔫{Environment.NewLine}I WIN!";
+            {
+                await ReplyAsync($"yes{Environment.NewLine}3{Environment.NewLine}2{Environment.NewLine}1{Environment.NewLine}Shoot!{Environment.NewLine}🔫{Environment.NewLine}I WIN!");
+                return;
+            }
 
             var challengerGold = await da.GetGold(Context.User.Id);
             var challengeGold = await da.GetGold(challenge.Id);
 
             if (challengerGold < amount)
-                return $"You only have {challengerGold.ToString("n0", nfi)} gold.";
+            {
+                await ReplyAsync($"You only have {challengerGold.ToString("n0", nfi)} gold.");
+                return;
+            }
             else if (challengeGold < amount)
-                return $"{challenge.Mention} only has {challengeGold.ToString("n0", nfi)} gold.";
+            {
+                await ReplyAsync($"{challenge.Mention} only has {challengeGold.ToString("n0", nfi)} gold.");
+                return;
+            }
             if (challenge == Context.User)
-                return "You can't duel yourself.";
+            { 
+                await ReplyAsync("You can't duel yourself.");
+                return;
+            }
 
-            Program.awaitingDuels.Add(new DTO.Duel { Challenger = Context.User.Id, Challenge = challenge.Id, BetAmount = amount, TimeStamp = DateTime.Now });
-            return $"{Context.User.Mention} has challenged {challenge.Mention} for {amount.ToString("n0", nfi)} gold{Environment.NewLine}{challenge.Mention} do you accept? (type **Yes** to accept) (Expires in 1 minute)";
+            var id = DateTime.Now.Ticks;
+
+            var buttons = new ComponentBuilder().WithButton("Accept", $"duel_accept{id}").WithButton("Decline", $"duel_decline{id}");
+            Program.awaitingDuels.Add(new DTO.Duel { DuelId = id, Challenger = Context.User.Id, Challenge = challenge.Id, BetAmount = amount, TimeStamp = DateTime.Now });
+            await ReplyAsync($"{Context.User.Mention} has challenged {challenge.Mention} for {amount.ToString("n0", nfi)} gold{Environment.NewLine}{challenge.Mention} do you accept? (Expires in 1 minute)", components: buttons.Build());
         }
 
         [Command("Duels")]

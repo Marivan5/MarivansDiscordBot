@@ -32,14 +32,94 @@ namespace MarvBotV3
 
             //_commands.CommandExecuted += CommandExecutedAsync;
             _discord.MessageReceived += MessageReceivedAsync;
-            _discord.GuildMemberUpdated += ChangeGameAndRole;
+            //_discord.GuildMemberUpdated += ChangeGameAndRole;
             _discord.PresenceUpdated += PresenceUpdated;
             _discord.UserJoined += UserJoined;
             _discord.UserLeft += UserLeft;
             _discord.UserVoiceStateUpdated += ChangeVoiceChannel;
+            _discord.ButtonExecuted += ButtonExecuted;
             //_ = RunIntervalTask();
 
             SetTimer();
+        }
+
+        private async Task ButtonExecuted(SocketMessageComponent component)
+        {
+            foreach (var duel in Program.awaitingDuels)
+            {
+                if (duel.TimeStamp < DateTime.Now.AddMinutes(-1))
+                    Program.awaitingDuels.Remove(duel);
+            }
+
+            if (component.Data.CustomId.StartsWith("duel_"))
+            {
+                long duelId = 0;
+                Duel duel = null;
+
+                if (component.Data.CustomId.StartsWith("duel_countdown"))
+                {
+                    return;
+                }
+
+                if (component.Data.CustomId.StartsWith("duel_shoot"))
+                {
+                    duelId = Convert.ToInt64(component.Data.CustomId.Substring("duel_shoot".Length));
+                    duel = Program.activeDuels.FirstOrDefault(x => x.DuelId == duelId);
+
+                    if (duel.Challenge == component.User.Id || duel.Challenger == component.User.Id) 
+                    {
+                        var finalButton = new ComponentBuilder().WithButton("🔫", $"duel_shoot{duelId}", disabled: true);
+                        await component.Message.ModifyAsync(x => x.Components = finalButton.Build());
+                        var loser = duel.Challenge == component.User.Id ? duel.Challenger : duel.Challenge;
+                        await component.RespondAsync($"{component.User.Mention} has won {duel.BetAmount.ToString("n0", nfi)} of {MentionUtils.MentionUser(loser)} gold");
+                        Program.activeDuels.Remove(duel);
+                        var da = new DataAccess(new DatabaseContext());
+                        var bl = new MarvBotBusinessLayer(da);
+
+                        SocketGuild guild = component.User.MutualGuilds.FirstOrDefault(x => x.Channels.Select(x => x.Id).ToList().Contains((ulong)component.ChannelId)); // Hack :(
+
+                        await bl.SaveGold(component.User, guild, duel.BetAmount);
+                        await bl.SaveGold(guild.GetUser(loser), guild, -duel.BetAmount);
+                        await da.SetDuel(duel.Challenger, duel.Challenge, component.User.Id, duel.BetAmount);
+                    }
+                    return;
+                }
+
+                var answer = "declined";
+                duelId = Convert.ToInt64(component.Data.CustomId.Substring("duel_decline".Length));
+                var buttons = new ComponentBuilder().WithButton("Accept", "duel_accept", disabled: true).WithButton("Decline", "duel_decline", disabled: true);
+
+                if (component.Data.CustomId.StartsWith("duel_accept"))
+                {
+                    duelId = Convert.ToInt64(component.Data.CustomId.Substring("duel_accept".Length));
+                    answer = "accepted";
+                }
+
+                duel = Program.awaitingDuels.FirstOrDefault(x => x.DuelId == duelId);
+                var challenger = duel.Challenger;
+
+                if (component.Data.CustomId.StartsWith("duel_decline"))
+                {
+                    if(challenger == component.User.Id)
+                    {
+                        await component.RespondAsync($"{MentionUtils.MentionUser(challenger)} has pussied out of their own duel");
+                        Program.awaitingDuels.Remove(duel);
+                        await component.Message.ModifyAsync(x => x.Components = buttons.Build());
+                        return;
+                    }
+                }
+
+
+                if (duel.Challenge == component.User.Id)
+                {
+                    await component.RespondAsync($"{component.User.Mention} has {answer} {MentionUtils.MentionUser(challenger)}s call to duel. (🔫).");
+                    Program.awaitingDuels.Remove(duel);
+                    await component.Message.ModifyAsync(x => x.Components = buttons.Build());
+                }
+
+                if (component.Data.CustomId.StartsWith("duel_accept"))
+                    _ = CountDownInChat(component, challenger, component.User.Id, duel.BetAmount, duelId);
+            }
         }
 
         private async Task PresenceUpdated(SocketUser user, SocketPresence before, SocketPresence after)
@@ -174,31 +254,6 @@ namespace MarvBotV3
                     Program.awaitingDuels.Remove(duel);
             }
 
-            if (Program.awaitingDuels.Select(x => x.Challenge).Contains(rawMessage.Author.Id) && rawMessage.Content.ToLower().Split(" ").Contains("yes"))
-            {
-                var duel = Program.awaitingDuels.Last(x => x.Challenge == rawMessage.Author.Id);
-                var challenger = duel.Challenger;
-                await context.Channel
-                    .SendMessageAsync($"{rawMessage.Author.Mention} has accepted {MentionUtils.MentionUser(challenger)}s call to duel. Be ready to shoot (🔫).");
-                Program.awaitingDuels.Remove(duel);
-                _ = CountDownInChat(context.Channel, challenger, rawMessage.Author.Id, duel.BetAmount);
-            }
-
-            if ((Program.activeDuels.Select(x => x.Challenge).Contains(rawMessage.Author.Id) 
-                || Program.activeDuels.Select(x => x.Challenger).Contains(rawMessage.Author.Id)) 
-                && rawMessage.Content.ToLower().Split(" ").Contains("🔫"))
-            {
-                var duel = Program.activeDuels.Last(x => x.Challenge == rawMessage.Author.Id || x.Challenger == rawMessage.Author.Id);
-                var loser = duel.Challenge == rawMessage.Author.Id ? duel.Challenger : duel.Challenge;
-                await context.Channel.SendMessageAsync($"{rawMessage.Author.Mention} has won {duel.BetAmount.ToString("n0", nfi)} of {MentionUtils.MentionUser(loser)} gold");
-                Program.activeDuels.Remove(duel);
-                var da = new DataAccess(new DatabaseContext());
-                var bl = new MarvBotBusinessLayer(da);
-                await bl.SaveGold(rawMessage.Author, context.Guild, duel.BetAmount);
-                await bl.SaveGold(context.Guild.GetUser(loser), context.Guild, -duel.BetAmount);
-                await da.SetDuel(duel.Challenger, duel.Challenge, rawMessage.Author.Id, duel.BetAmount);
-            }
-
             // This value holds the offset where the prefix ends
             var argPos = 0;
             if (!message.HasCharPrefix(prefix, ref argPos) && !message.HasMentionPrefix(_discord.CurrentUser, ref argPos))
@@ -210,16 +265,20 @@ namespace MarvBotV3
                 await context.Channel.SendMessageAsync(result.ToString());
         }
 
-        private async Task CountDownInChat(ISocketMessageChannel textChat, ulong challenger, ulong challenge, int betAmount)
+        private async Task CountDownInChat(SocketMessageComponent textMessage, ulong challenger, ulong challenge, int betAmount, long duelId)
         {
             var rnd = new Random();
-            for(int i = 3; i > 0; i--)
+            var originalMsg = await textMessage.GetOriginalResponseAsync();
+            for (int i = 3; i > 0; i--)
             {
-                await textChat.SendMessageAsync(i.ToString());
+                var button = new ComponentBuilder().WithButton(i.ToString(), $"duel_countdown{duelId}");
+                await textMessage.ModifyOriginalResponseAsync(x => { x.Content = $"{originalMsg.Content}"; x.Components = button.Build(); }); // x.Content = $"{originalMsg.Content}{Environment.NewLine}{i}"
                 await Task.Delay(rnd.Next(1001, 1500));
             }
-            await textChat.SendMessageAsync("Shoot! (🔫)");
-            Program.activeDuels.Add(new Duel { Challenger = challenger, Challenge = challenge, BetAmount = betAmount, TimeStamp = DateTime.Now });
+            var finalButton = new ComponentBuilder().WithButton("🔫", $"duel_shoot{duelId}");
+            await textMessage.ModifyOriginalResponseAsync(x => { x.Content = $"{originalMsg.Content}"; x.Components = finalButton.Build(); });
+            await textMessage.ModifyOriginalResponseAsync(x => x.Content = $"{originalMsg.Content}{Environment.NewLine}Shoot! ");//.SendMessageAsync("Shoot! (🔫)");
+            Program.activeDuels.Add(new Duel { DuelId = duelId, Challenger = challenger, Challenge = challenge, BetAmount = betAmount, TimeStamp = DateTime.Now });
         }
 
         public async Task ChangeGameAndRole(Cacheable<SocketGuildUser, ulong> beforeChangeUser, SocketGuildUser afterChangeUser)
