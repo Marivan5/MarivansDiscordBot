@@ -48,7 +48,17 @@ namespace MarvBotV3
             foreach (var duel in Program.awaitingDuels)
             {
                 if (duel.TimeStamp < DateTime.Now.AddMinutes(-1))
+                {
                     Program.awaitingDuels.Remove(duel);
+                    var duelId = Convert.ToInt64(component.Data.CustomId.Substring("duel_decline".Length));
+                    var buttons = new ComponentBuilder().WithButton("Accept", "duel_accept", disabled: true).WithButton("Decline", "duel_decline", disabled: true);
+
+                    if (component.Data.CustomId.StartsWith("duel_accept"))
+                        duelId = Convert.ToInt64(component.Data.CustomId.Substring("duel_accept".Length));
+
+                    if(duelId == duel.DuelId)
+                        await component.Message.ModifyAsync(x => x.Components = buttons.Build());
+                }
             }
 
             if (component.Data.CustomId.StartsWith("duel_"))
@@ -57,9 +67,7 @@ namespace MarvBotV3
                 Duel duel = null;
 
                 if (component.Data.CustomId.StartsWith("duel_countdown"))
-                {
                     return;
-                }
 
                 if (component.Data.CustomId.StartsWith("duel_shoot"))
                 {
@@ -78,9 +86,12 @@ namespace MarvBotV3
 
                         SocketGuild guild = component.User.MutualGuilds.FirstOrDefault(x => x.Channels.Select(x => x.Id).ToList().Contains((ulong)component.ChannelId)); // Hack :(
 
-                        await bl.SaveGold(component.User, guild, duel.BetAmount);
-                        await bl.SaveGold(guild.GetUser(loser), guild, -duel.BetAmount);
-                        await da.SetDuel(duel.Challenger, duel.Challenge, component.User.Id, duel.BetAmount);
+                        if (duel.BetAmount > 0)
+                        {
+                            await bl.SaveGold(component.User, guild, duel.BetAmount);
+                            await bl.SaveGold(guild.GetUser(loser), guild, -duel.BetAmount);
+                            await da.SetDuel(duel.Challenger, duel.Challenge, component.User.Id, duel.BetAmount);
+                        }
                     }
                     return;
                 }
@@ -102,7 +113,7 @@ namespace MarvBotV3
                 {
                     if(challenger == component.User.Id)
                     {
-                        await component.RespondAsync($"{MentionUtils.MentionUser(challenger)} has pussied out of their own duel");
+                        await component.RespondAsync($"{MentionUtils.MentionUser(challenger)} has pussied out of their own duel.");
                         Program.awaitingDuels.Remove(duel);
                         await component.Message.ModifyAsync(x => x.Components = buttons.Build());
                         return;
@@ -112,7 +123,7 @@ namespace MarvBotV3
 
                 if (duel.Challenge == component.User.Id)
                 {
-                    await component.RespondAsync($"{component.User.Mention} has {answer} {MentionUtils.MentionUser(challenger)}s call to duel. (🔫).");
+                    await component.RespondAsync($"{component.User.Mention} has {answer} {MentionUtils.MentionUser(challenger)}s call to duel.");
                     Program.awaitingDuels.Remove(duel);
                     await component.Message.ModifyAsync(x => x.Components = buttons.Build());
                 }
@@ -275,9 +286,20 @@ namespace MarvBotV3
                 await textMessage.ModifyOriginalResponseAsync(x => { x.Content = $"{originalMsg.Content}"; x.Components = button.Build(); }); // x.Content = $"{originalMsg.Content}{Environment.NewLine}{i}"
                 await Task.Delay(rnd.Next(1001, 1500));
             }
-            var finalButton = new ComponentBuilder().WithButton("🔫", $"duel_shoot{duelId}");
+
+            var duelListItems = new Dictionary<string, string>()
+            {
+               { "🔫", $"duel_shoot{duelId}" },
+               { "🗡", $"duel_dagger{duelId}" },
+               { "🔪", $"duel_knife{duelId}" }
+            }.Shuffle();
+
+            var finalButton = new ComponentBuilder();
+
+            foreach (var duel in duelListItems)
+                finalButton.WithButton(duel.Key, duel.Value);
+
             await textMessage.ModifyOriginalResponseAsync(x => { x.Content = $"{originalMsg.Content}"; x.Components = finalButton.Build(); });
-            await textMessage.ModifyOriginalResponseAsync(x => x.Content = $"{originalMsg.Content}{Environment.NewLine}Shoot! ");//.SendMessageAsync("Shoot! (🔫)");
             Program.activeDuels.Add(new Duel { DuelId = duelId, Challenger = challenger, Challenge = challenge, BetAmount = betAmount, TimeStamp = DateTime.Now });
         }
 
