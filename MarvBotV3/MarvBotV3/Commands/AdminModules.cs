@@ -164,6 +164,25 @@ namespace MarvBotV3.Commands
             await ReplyAsync($"Set to 1 donation per {hours} hours.");
         }
 
+        [Command("SetBotUpdateTimer")]
+        [Alias("BotUpdateTimer", "UpdateTimer", "BotUpdate")]
+        public async Task SetBotUpdateTimer(int minutes)
+        {
+            Program.serverConfig.BotUpdateTimer = minutes;
+            Program.serverConfig.Save();
+            await ReplyAsync($"Set to update once per {minutes} minutes.");
+        }
+
+        [Command("GoldToEveryoneTimer")]
+        [Alias("GoldTimer", "GoldToEveryone")]
+        public async Task SetGoldToEveryoneTimer(int minutes)
+        {
+            Program.serverConfig.GoldToEveryoneTimer = minutes;
+            Program.serverConfig.Save();
+            await ReplyAsync($"Set to give gold every {minutes} minutes.");
+        }
+
+
         [Command("SetVideoChat")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageChannels)]

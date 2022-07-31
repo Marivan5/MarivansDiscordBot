@@ -34,7 +34,7 @@ namespace MarvBotV3
             var currentRichestPerson = GetCurrentRichestPerson(guild);
             if(currentRichestPerson == null || newRichestPerson != currentRichestPerson.Id)
             {
-                var guildRole = (IRole)guild.GetRole(ServerConfig.Load().richRole);
+                var guildRole = (IRole)guild.GetRole(Program.serverConfig.richRole);
                 await guild.GetUser(newRichestPerson).AddRoleAsync(guildRole);
 
                 if(currentRichestPerson != null)
@@ -43,7 +43,7 @@ namespace MarvBotV3
         }
 
         public SocketGuildUser GetCurrentRichestPerson(SocketGuild guild) => 
-            guild.Users.FirstOrDefault(x => x.Roles.Any(y => y.Id == ServerConfig.Load().richRole));
+            guild.Users.FirstOrDefault(x => x.Roles.Any(y => y.Id == Program.serverConfig.richRole));
 
         public async Task SaveUserAcitivity(IUser user, string beforeActivity, string afterActivity) => 
             await _da.SaveUserAcitivity(user, beforeActivity, afterActivity);

@@ -19,10 +19,10 @@ namespace MarvBotV3
         public static CommandService _commands;
         public readonly DiscordShardedClient _discord;
         private readonly IServiceProvider _services;
+        private int goldToEveryoneTimer = 10;
 
         public static List<SocketUser> freeMsgList = new List<SocketUser>();
         private char prefix = Configuration.Load().Prefix;
-
 
         public CommandHandler(IServiceProvider services)
         {
@@ -40,10 +40,32 @@ namespace MarvBotV3
             _discord.ButtonExecuted += ButtonExecuted;
             //_ = RunIntervalTask();
 
+            ServerConfig.PropertyChanged += ServerConfig_PropertyChanged;
+            goldToEveryoneTimer = Program.serverConfig.GoldToEveryoneTimer;
+
             SetTimer();
         }
 
+        private void ServerConfig_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ServerConfig.GoldToEveryoneTimer))
+                goldToEveryoneTimer = Program.serverConfig.GoldToEveryoneTimer;
+            else if (e.PropertyName == nameof(ServerConfig.BotUpdateTimer))
+                aTimer.Interval = Convert.ToInt32(TimeSpan.FromMinutes(Program.serverConfig.BotUpdateTimer).TotalMilliseconds);
+        }
+
         private async Task ButtonExecuted(SocketMessageComponent component)
+        {
+            await ExecuteDuelLogic(component);
+            await ExecuteRockPaperScissors(component);
+        }
+
+        private async Task ExecuteRockPaperScissors(SocketMessageComponent component)
+        {
+
+        }
+
+        private async Task ExecuteDuelLogic(SocketMessageComponent component)
         {
             foreach (var duel in Program.awaitingDuels)
             {
@@ -56,7 +78,7 @@ namespace MarvBotV3
                     if (component.Data.CustomId.StartsWith("duel_accept"))
                         duelId = Convert.ToInt64(component.Data.CustomId.Substring("duel_accept".Length));
 
-                    if(duelId == duel.DuelId)
+                    if (duelId == duel.DuelId)
                         await component.Message.ModifyAsync(x => x.Components = buttons.Build());
                 }
             }
@@ -74,7 +96,7 @@ namespace MarvBotV3
                     duelId = Convert.ToInt64(component.Data.CustomId.Substring("duel_shoot".Length));
                     duel = Program.activeDuels.FirstOrDefault(x => x.DuelId == duelId);
 
-                    if (duel.Challenge == component.User.Id || duel.Challenger == component.User.Id) 
+                    if (duel.Challenge == component.User.Id || duel.Challenger == component.User.Id)
                     {
                         var finalButton = new ComponentBuilder().WithButton("🔫", $"duel_shoot{duelId}", disabled: true);
                         await component.Message.ModifyAsync(x => x.Components = finalButton.Build());
@@ -111,7 +133,7 @@ namespace MarvBotV3
 
                 if (component.Data.CustomId.StartsWith("duel_decline"))
                 {
-                    if(challenger == component.User.Id)
+                    if (challenger == component.User.Id)
                     {
                         await component.RespondAsync($"{MentionUtils.MentionUser(challenger)} has pussied out of their own duel.");
                         Program.awaitingDuels.Remove(duel);
@@ -389,8 +411,6 @@ namespace MarvBotV3
         }
 
         List<string> msges = new List<string>() { "Please undefean yourself before joining a voice channel.", "To join a voice channel you have to undeafen yourself." };
-        List<string> rareMsges = new List<string>() { "Bög", "I love you! <3", "Please don't hate me",
-            "I'm not a bot, I am a chinese worker living in Shenzen and I have been forced to work by the Chinese goverment. They have a deal with Marivan to force us to work for nothing. Please send help!" };
 
         public async Task ChangeVoiceChannel(SocketUser user, SocketVoiceState beforeState, SocketVoiceState afterState)
         {
@@ -409,27 +429,17 @@ namespace MarvBotV3
                 if (afkChannel != null)
                 {
                     await guildUser.ModifyAsync(x => x.Channel = afkChannel);
-                    var rnd = new Random().Next(0, 101);
-                    if(rnd > 99)
-                    {
-                        var rng = new Random().Next(0, rareMsges.Count());
-                        await guildUser.SendMessageAsync(rareMsges[rng]);
-                    }
-                    else
-                    {
-                        var rng = new Random().Next(0, msges.Count());
-                        await guildUser.SendMessageAsync(msges[rng]);
-                    }
+                    var rng = new Random().Next(0, msges.Count());
+                    await guildUser.SendMessageAsync(msges[rng]);
                 }
             }
         }
 
         private System.Timers.Timer aTimer;
-        readonly int millisecs = Convert.ToInt32(TimeSpan.FromMinutes(10).TotalMilliseconds);
 
         private void SetTimer()
         {
-            aTimer = new System.Timers.Timer(millisecs);
+            aTimer = new System.Timers.Timer(Convert.ToInt32(TimeSpan.FromMinutes(Program.serverConfig.BotUpdateTimer).TotalMilliseconds));
             aTimer.Elapsed += ATimer_Elapsed;
             aTimer.AutoReset = true;
             aTimer.Enabled = true;
@@ -439,7 +449,7 @@ namespace MarvBotV3
         {
             await CelebrateBirthday();
             await GiveGoldToEveryone();
-            Console.WriteLine($"Loop at: {DateTime.Now}");
+            //Console.WriteLine($"Loop at: {DateTime.Now}");
         }
 
         public async Task CelebrateBirthday()
@@ -466,8 +476,15 @@ namespace MarvBotV3
             }
         }
 
+        DateTime lastGoldGiveDateTime = DateTime.MinValue;
+
         public async Task GiveGoldToEveryone()
         {
+            if ((DateTime.Now - lastGoldGiveDateTime).TotalSeconds < 60 * goldToEveryoneTimer)
+                return;
+
+            lastGoldGiveDateTime = DateTime.Now;
+
             var da = new DataAccess(new DatabaseContext());
             var bl = new MarvBotBusinessLayer(da);
 

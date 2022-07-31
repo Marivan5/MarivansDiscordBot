@@ -1,8 +1,10 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace MarvBotV3
 {
@@ -17,8 +19,36 @@ namespace MarvBotV3
         public List<string> videoList { get; set; }
         public int donationWaitHours { get; set; }
         public List<string> blacklistWords { get; set; }
+        private int botUpdateTimer;
+        public int BotUpdateTimer
+        {
+            get { return botUpdateTimer; }
+            set
+            {
+                if (botUpdateTimer == value)
+                    return;
+
+                botUpdateTimer = value;
+                OnPropertyChanged();
+            }
+        }
+        private int goldToEveryoneTimer;
+        public int GoldToEveryoneTimer 
+        { 
+            get { return goldToEveryoneTimer; } 
+            set 
+            {
+                if (goldToEveryoneTimer == value)
+                    return;
+
+                goldToEveryoneTimer = value;
+                OnPropertyChanged(); 
+            } 
+        }
 
         private static string dir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Data/serverConfiguration.json");
+
+        public static event PropertyChangedEventHandler PropertyChanged;
 
         public ServerConfig()
         {
@@ -31,6 +61,13 @@ namespace MarvBotV3
             JsonConvert.SerializeObject(whiteList);
             JsonConvert.SerializeObject(videoList);
             JsonConvert.SerializeObject(blacklistWords);
+            goldToEveryoneTimer = 10;
+            botUpdateTimer = 1;
+        }
+
+        protected void OnPropertyChanged([CallerMemberName] string name = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
         // Save the configuration to the specified file location.
