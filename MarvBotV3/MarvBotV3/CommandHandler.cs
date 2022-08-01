@@ -78,8 +78,11 @@ namespace MarvBotV3
                 return;
 
             string rpsChoice = new string(component.Data.CustomId.ToCharArray().Where(x => char.IsLetter(x) || char.IsPunctuation(x)).ToArray());
+            var removeText = "rps_";
+            var indexRemove = rpsChoice.IndexOf(removeText);
+            rpsChoice = rpsChoice.Substring(indexRemove + removeText.Length);
 
-            if (rpsChoice == "rps_decline")
+            if (rpsChoice == "decline")
             {
                 var buttons = new ComponentBuilder().WithButton("🥌", $"rps_rock", disabled: true).WithButton("🧻", $"rps_paper", disabled: true).WithButton("✂", $"rps_scissors", disabled: true).WithButton("Decline", $"rps_decline", disabled: true);
                 if (rps.Challenger == component.User.Id)
@@ -112,9 +115,9 @@ namespace MarvBotV3
                 var winnerChoice = RockPaperScissorsTranslator(rpsChoice);
                 var loserChoice = "";
 
-                if ((rps.ChallengeChoice == "rps_rock" && rps.ChallengerChoice == "rps_scissors")
-                    || (rps.ChallengeChoice == "rps_scissors" && rps.ChallengerChoice == "rps_paper")
-                    || (rps.ChallengeChoice == "rps_paper" && rps.ChallengerChoice == "rps_rock"))
+                if ((rps.ChallengeChoice == "rock" && rps.ChallengerChoice == "scissors")
+                    || (rps.ChallengeChoice == "scissors" && rps.ChallengerChoice == "paper")
+                    || (rps.ChallengeChoice == "paper" && rps.ChallengerChoice == "rock"))
                 {
                     isThereWinner = true;
                     loser = rps.Challenger;
@@ -122,9 +125,9 @@ namespace MarvBotV3
                     winnerChoice = RockPaperScissorsTranslator(rps.ChallengeChoice);
                     loserChoice = RockPaperScissorsTranslator(rps.ChallengerChoice);
                 }
-                else if ((rps.ChallengerChoice == "rps_rock" && rps.ChallengeChoice == "rps_scissors")
-                    || (rps.ChallengerChoice == "rps_scissors" && rps.ChallengeChoice == "rps_paper")
-                    || (rps.ChallengerChoice == "rps_paper" && rps.ChallengeChoice == "rps_rock"))
+                else if ((rps.ChallengerChoice == "rock" && rps.ChallengeChoice == "scissors")
+                    || (rps.ChallengerChoice == "scissors" && rps.ChallengeChoice == "paper")
+                    || (rps.ChallengerChoice == "paper" && rps.ChallengeChoice == "rock"))
                 {
                     isThereWinner = true;
                     loser = rps.Challenge;
@@ -162,9 +165,9 @@ namespace MarvBotV3
         {
             string output = "🥌";
 
-            if (input == "rps_paper")
+            if (input == "paper")
                 output = "🧻";
-            else if (input == "rps_scissors")
+            else if (input == "scissors")
                 output = "✂";
 
             return output;
