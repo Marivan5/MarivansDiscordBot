@@ -36,11 +36,11 @@ namespace MarvBotV3.Commands
             }
 
             float winPercent = (float)stats.Where(x => x.Winner == user.Id).Count() / stats.Count * 100;
-            reply += $"{user.Mention} has **won** {winPercent}% of their rock paper scissors games, from a total of {stats.Count} chanllenges." + Environment.NewLine;
+            reply += $"{user.Mention} has **won** {winPercent}% of their rock paper scissors games, from a total of {stats.Count} challenges." + Environment.NewLine;
             var amountWon = stats.Where(x => x.Winner == user.Id).Select(x => x.BetAmount).ToList();
-            reply += ($"{user.Mention} has **won** a total amount of **{amountWon.Sum().ToString("n0", Program.nfi)}** gold from chanllenges") + Environment.NewLine;
+            reply += ($"{user.Mention} has **won** a total amount of **{amountWon.Sum().ToString("n0", Program.nfi)}** gold from challenges") + Environment.NewLine;
             var amountLost = stats.Where(x => x.Winner != user.Id).Select(x => x.BetAmount).ToList();
-            reply += ($"{user.Mention} has **lost** a total amount of **{amountLost.Sum().ToString("n0", Program.nfi)}** gold from chanllenges") + Environment.NewLine;
+            reply += ($"{user.Mention} has **lost** a total amount of **{amountLost.Sum().ToString("n0", Program.nfi)}** gold from challenges") + Environment.NewLine;
             await ReplyAsync(reply);
         }
 

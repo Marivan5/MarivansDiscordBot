@@ -89,7 +89,7 @@ namespace MarvBotV3
                     await component.RespondAsync($"{MentionUtils.MentionUser(rps.Challenger)} has pussied out of their own challenge.");
 
                 if (rps.Challenge == component.User.Id)
-                    await component.RespondAsync($"{component.User.Mention} has declined {MentionUtils.MentionUser(rps.Challenger)}s call to duel.");
+                    await component.RespondAsync($"{component.User.Mention} has declined {MentionUtils.MentionUser(rps.Challenger)}s call to Rock Paper Scissors.");
 
                 Program.activeRockPaperScissorsEvents.Remove(rps);
                 await component.Message.ModifyAsync(x => x.Components = buttons.Build());
