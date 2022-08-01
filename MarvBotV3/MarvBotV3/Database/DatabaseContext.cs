@@ -10,6 +10,7 @@ namespace MarvBotV3
         public DbSet<TbGoldGambles> TbGoldGambles { get; set; }
         public DbSet<TbTempData> TbTempData { get; set; }
         public DbSet<TbDuels> TbDuels { get; set; }
+        public DbSet<TbRockPaperScissors> TbRockPaperScissors { get; set; }
         public DbSet<TbUserActivity> TbUserActivities { get; set; }
         public DbSet<TbDonations> TbDonations { get; set; }
         public DbSet<TbNextRoll> TbNextRoll { get; set; }

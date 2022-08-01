@@ -1,10 +1,11 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using MarvBotV3.DTO;
+using MarvBotV3.Dto;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -15,7 +16,9 @@ namespace MarvBotV3
         public static ServerConfig serverConfig;
         public static List<Duel> awaitingDuels = new List<Duel>();
         public static List<Duel> activeDuels = new List<Duel>();
-             
+        public static List<RockPaperScissors> activeRockPaperScissorsEvents = new List<RockPaperScissors>();
+        public static NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " ", CurrencyDecimalSeparator = "." };
+
         public static void Main(string[] args) =>
             new Program().Start().GetAwaiter().GetResult();
 

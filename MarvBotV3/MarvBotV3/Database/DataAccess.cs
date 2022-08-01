@@ -65,7 +65,7 @@ namespace MarvBotV3.Database
                 tbUser.GoldAmount += amount;
                 tbUser.Username = user.Username;
                 db.TbCurrencies.Update(tbUser);
-                Console.WriteLine($"Giving {tbUser.Username} {amount} gold, they had {debugGoldAmount} and now have {tbUser.GoldAmount}");
+                Console.WriteLine($"{DateTime.Now} Giving {tbUser.Username} {amount} gold, they had {debugGoldAmount} and now have {tbUser.GoldAmount}");
             }
             await db.SaveChangesAsync();
         }
@@ -184,6 +184,21 @@ namespace MarvBotV3.Database
             await db.SaveChangesAsync();
         }
 
+        public async Task SetRockPaperScissors(ulong challenger, ulong challenge, ulong winner, int betAmount, string challengerChoice, string challengeChoice)
+        {
+            db.TbRockPaperScissors.Add(new TbRockPaperScissors
+            {
+                Challenger = challenger,
+                Challenge = challenge,
+                Winner = winner,
+                BetAmount = betAmount,
+                TimeStamp = DateTime.Now,
+                ChallengeChoice = challengeChoice,
+                ChallengerChoice = challengerChoice
+            });
+            await db.SaveChangesAsync();
+        }
+
         public async Task<List<TbDuels>> GetDuelStats(ulong userID)
         {
             var exists = await db.TbDuels.AsQueryable().AnyAsync(x => x.Challenger == userID || x.Challenge == userID);
@@ -194,6 +209,20 @@ namespace MarvBotV3.Database
             return await db.TbDuels
                 .AsQueryable()
                 .Where(x => x.Challenger == userID 
+                    || x.Challenge == userID)
+                .ToListAsync();
+        }
+
+        public async Task<List<TbRockPaperScissors>> GetRockPaperScissorsStats(ulong userID)
+        {
+            var exists = await db.TbRockPaperScissors.AsQueryable().AnyAsync(x => x.Challenger == userID || x.Challenge == userID);
+
+            if (!exists)
+                return null;
+
+            return await db.TbRockPaperScissors
+                .AsQueryable()
+                .Where(x => x.Challenger == userID
                     || x.Challenge == userID)
                 .ToListAsync();
         }

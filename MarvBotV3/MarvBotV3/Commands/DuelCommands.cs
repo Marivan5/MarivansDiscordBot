@@ -2,7 +2,6 @@
 using Discord.Commands;
 using MarvBotV3.Database;
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -13,7 +12,6 @@ namespace MarvBotV3.Commands
     [Summary("Duel group")]
     public class DuelCommands : ModuleBase<ShardedCommandContext>
     {
-        private NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " " };
         DataAccess da;
 
         public DuelCommands()
@@ -26,9 +24,8 @@ namespace MarvBotV3.Commands
         public async Task GetStats(IUser user = null)
         {
             if (user == null)
-            {
                 user = Context.User;
-            }
+
             var reply = "";
             var stats = await da.GetDuelStats(user.Id);
 
@@ -38,12 +35,12 @@ namespace MarvBotV3.Commands
                 return;
             }
 
-            float winPercent = (float)stats.Where(x => x.Winner == user.Id).Count() / stats.Count() * 100;
-            reply += ($"{user.Mention} has **won** {winPercent}% of their duels.") + Environment.NewLine;
+            float winPercent = (float)stats.Where(x => x.Winner == user.Id).Count() / stats.Count * 100;
+            reply += $"{user.Mention} has **won** {winPercent}% of their duels, from a total of {stats.Count} duels." + Environment.NewLine;
             var amountWon = stats.Where(x => x.Winner == user.Id).Select(x => x.BetAmount).ToList();
-            reply += ($"{user.Mention} has **won** a total amount of **{amountWon.Sum().ToString("n0", nfi)}** gold from duels") + Environment.NewLine;
+            reply += ($"{user.Mention} has **won** a total amount of **{amountWon.Sum().ToString("n0", Program.nfi)}** gold from duels") + Environment.NewLine;
             var amountLost = stats.Where(x => x.Winner != user.Id).Select(x => x.BetAmount).ToList();
-            reply += ($"{user.Mention} has **lost** a total amount of **{amountLost.Sum().ToString("n0", nfi)}** gold from duels") + Environment.NewLine;
+            reply += ($"{user.Mention} has **lost** a total amount of **{amountLost.Sum().ToString("n0", Program.nfi)}** gold from duels") + Environment.NewLine;
             await ReplyAsync(reply);
         }
 
@@ -58,7 +55,7 @@ namespace MarvBotV3.Commands
         [Alias("fight", "")]
         public async Task DuelAmount(IUser challenge, string input)
         {
-            if (input.ToLower() == "all" || input.ToLower() == "all in")
+            if (input.ToLower() == "all" || input.ToLower() == "allt")
             {
                 var user1Gold = await da.GetGold(Context.User.Id);
                 var user2Gold = await da.GetGold(challenge.Id);
@@ -75,7 +72,7 @@ namespace MarvBotV3.Commands
         {
             if (challenge.Id == 276456075559960576)
             {
-                await ReplyAsync($"yes{Environment.NewLine}3{Environment.NewLine}2{Environment.NewLine}1{Environment.NewLine}Shoot!{Environment.NewLine}🔫{Environment.NewLine}I WIN!");
+                await ReplyAsync($"Save your gold. You can't win over me.");
                 return;
             }
 
@@ -84,12 +81,12 @@ namespace MarvBotV3.Commands
 
             if (challengerGold < amount)
             {
-                await ReplyAsync($"You only have {challengerGold.ToString("n0", nfi)} gold.");
+                await ReplyAsync($"You only have {challengerGold.ToString("n0", Program.nfi)} gold.");
                 return;
             }
             else if (challengeGold < amount)
             {
-                await ReplyAsync($"{challenge.Mention} only has {challengeGold.ToString("n0", nfi)} gold.");
+                await ReplyAsync($"{challenge.Mention} only has {challengeGold.ToString("n0", Program.nfi)} gold.");
                 return;
             }
             if (challenge == Context.User)
@@ -101,8 +98,8 @@ namespace MarvBotV3.Commands
             var id = DateTime.Now.Ticks;
 
             var buttons = new ComponentBuilder().WithButton("Accept", $"duel_accept{id}").WithButton("Decline", $"duel_decline{id}");
-            Program.awaitingDuels.Add(new DTO.Duel { DuelId = id, Challenger = Context.User.Id, Challenge = challenge.Id, BetAmount = amount, TimeStamp = DateTime.Now });
-            await ReplyAsync($"{Context.User.Mention} has challenged {challenge.Mention} for {amount.ToString("n0", nfi)} gold{Environment.NewLine}{challenge.Mention} do you accept? (Expires in 1 minute)", components: buttons.Build());
+            Program.awaitingDuels.Add(new Dto.Duel { DuelId = id, Challenger = Context.User.Id, Challenge = challenge.Id, BetAmount = amount, TimeStamp = DateTime.Now });
+            await ReplyAsync($"{Context.User.Mention} has challenged {challenge.Mention} for {amount.ToString("n0", Program.nfi)} gold{Environment.NewLine}{challenge.Mention} do you accept? (Expires in 1 minute)", components: buttons.Build());
         }
 
         [Command("Duels")]

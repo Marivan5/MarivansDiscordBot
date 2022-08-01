@@ -8,18 +8,18 @@ using Discord.WebSocket;
 using System.Linq;
 using System.Collections.Generic;
 using MarvBotV3.Database;
-using MarvBotV3.DTO;
-using System.Globalization;
+using MarvBotV3.Dto;
 
 namespace MarvBotV3
 {
     public class CommandHandler
     {
-        private NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " " };
         public static CommandService _commands;
         public readonly DiscordShardedClient _discord;
         private readonly IServiceProvider _services;
         private int goldToEveryoneTimer = 10;
+        DataAccess da;
+        MarvBotBusinessLayer bl;
 
         public static List<SocketUser> freeMsgList = new List<SocketUser>();
         private char prefix = Configuration.Load().Prefix;
@@ -29,6 +29,8 @@ namespace MarvBotV3
             _commands = services.GetRequiredService<CommandService>();
             _discord = services.GetRequiredService<DiscordShardedClient>();
             _services = services;
+            da = new DataAccess(new DatabaseContext());
+            bl = new MarvBotBusinessLayer(da);
 
             //_commands.CommandExecuted += CommandExecutedAsync;
             _discord.MessageReceived += MessageReceivedAsync;
@@ -44,6 +46,7 @@ namespace MarvBotV3
             goldToEveryoneTimer = Program.serverConfig.GoldToEveryoneTimer;
 
             SetTimer();
+
         }
 
         private void ServerConfig_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -62,7 +65,109 @@ namespace MarvBotV3
 
         private async Task ExecuteRockPaperScissors(SocketMessageComponent component)
         {
+            if (!component.Data.CustomId.StartsWith("rps_"))
+                return;
 
+            long rpsId = Convert.ToInt64(new string(component.Data.CustomId.Where(char.IsDigit).ToArray()));
+            RockPaperScissors rps = Program.activeRockPaperScissorsEvents.FirstOrDefault(x => x.Id == rpsId);
+
+            if (rps == null)
+                return;
+
+            if (rps.Challenge != component.User.Id && rps.Challenger != component.User.Id)
+                return;
+
+            string rpsChoice = new string(component.Data.CustomId.ToCharArray().Where(x => char.IsLetter(x) || char.IsPunctuation(x)).ToArray());
+
+            if (rpsChoice == "rps_decline")
+            {
+                var buttons = new ComponentBuilder().WithButton("🥌", $"rps_rock", disabled: true).WithButton("🧻", $"rps_paper", disabled: true).WithButton("✂", $"rps_scissors", disabled: true).WithButton("Decline", $"rps_decline", disabled: true);
+                if (rps.Challenger == component.User.Id)
+                    await component.RespondAsync($"{MentionUtils.MentionUser(rps.Challenger)} has pussied out of their own challenge.");
+
+                if (rps.Challenge == component.User.Id)
+                    await component.RespondAsync($"{component.User.Mention} has declined {MentionUtils.MentionUser(rps.Challenger)}s call to duel.");
+
+                Program.activeRockPaperScissorsEvents.Remove(rps);
+                await component.Message.ModifyAsync(x => x.Components = buttons.Build());
+                return;
+            }
+
+            if(rps.Challenge == component.User.Id)
+                rps.ChallengeChoice = rpsChoice;
+            else if (rps.Challenger == component.User.Id)
+                rps.ChallengerChoice = rpsChoice;
+
+            Program.activeRockPaperScissorsEvents.Remove(rps);
+            Program.activeRockPaperScissorsEvents.Add(rps);
+
+            if (string.IsNullOrWhiteSpace(rps.ChallengeChoice) || string.IsNullOrWhiteSpace(rps.ChallengerChoice))
+                await component.RespondAsync($"{component.User.Mention} has made a choice.");
+
+            if (!string.IsNullOrWhiteSpace(rps.ChallengeChoice) && !string.IsNullOrWhiteSpace(rps.ChallengerChoice))
+            {
+                ulong loser = 0;
+                ulong winner = 0;
+                bool isThereWinner = false;
+                var winnerChoice = RockPaperScissorsTranslator(rpsChoice);
+                var loserChoice = "";
+
+                if ((rps.ChallengeChoice == "rps_rock" && rps.ChallengerChoice == "rps_scissors")
+                    || (rps.ChallengeChoice == "rps_scissors" && rps.ChallengerChoice == "rps_paper")
+                    || (rps.ChallengeChoice == "rps_paper" && rps.ChallengerChoice == "rps_rock"))
+                {
+                    isThereWinner = true;
+                    loser = rps.Challenger;
+                    winner = rps.Challenge;
+                    winnerChoice = RockPaperScissorsTranslator(rps.ChallengeChoice);
+                    loserChoice = RockPaperScissorsTranslator(rps.ChallengerChoice);
+                }
+                else if ((rps.ChallengerChoice == "rps_rock" && rps.ChallengeChoice == "rps_scissors")
+                    || (rps.ChallengerChoice == "rps_scissors" && rps.ChallengeChoice == "rps_paper")
+                    || (rps.ChallengerChoice == "rps_paper" && rps.ChallengeChoice == "rps_rock"))
+                {
+                    isThereWinner = true;
+                    loser = rps.Challenge;
+                    winner = rps.Challenger;
+                    winnerChoice = RockPaperScissorsTranslator(rps.ChallengerChoice);
+                    loserChoice = RockPaperScissorsTranslator(rps.ChallengeChoice);
+                }
+
+                var buttons = new ComponentBuilder().WithButton("🥌", $"rps_rock", disabled: true).WithButton("🧻", $"rps_paper", disabled: true).WithButton("✂", $"rps_scissors", disabled: true).WithButton("Decline", $"rps_decline", disabled: true);
+                await component.Message.ModifyAsync(x => x.Components = buttons.Build());
+
+                if (!isThereWinner)
+                {
+                    await component.RespondAsync($"There is no winner. Both took {winnerChoice}");
+                    Program.activeRockPaperScissorsEvents.Remove(rps);
+                    return;
+                }
+
+                await component.RespondAsync($"{MentionUtils.MentionUser(winner)} choose {winnerChoice}, while {MentionUtils.MentionUser(loser)} choose {loserChoice}. {MentionUtils.MentionUser(winner)} has won {rps.BetAmount.ToString("n0", Program.nfi)} of {MentionUtils.MentionUser(loser)} gold");
+
+                if (rps.BetAmount > 0)
+                {
+                    SocketGuild guild = component.User.MutualGuilds.FirstOrDefault(x => x.Channels.Select(x => x.Id).ToList().Contains((ulong)component.ChannelId)); // Hack :(
+                    await bl.SaveGold(guild.GetUser(winner), guild, rps.BetAmount);
+                    await bl.SaveGold(guild.GetUser(loser), guild, -rps.BetAmount);
+                    await da.SetRockPaperScissors(rps.Challenger, rps.Challenge, winner, rps.BetAmount, rps.ChallengerChoice, rps.ChallengeChoice);
+                }
+
+                Program.activeRockPaperScissorsEvents.Remove(rps);
+                return;
+            }
+        }
+
+        private string RockPaperScissorsTranslator(string input)
+        {
+            string output = "🥌";
+
+            if (input == "rps_paper")
+                output = "🧻";
+            else if (input == "rps_scissors")
+                output = "✂";
+
+            return output;
         }
 
         private async Task ExecuteDuelLogic(SocketMessageComponent component)
@@ -72,7 +177,7 @@ namespace MarvBotV3
                 if (duel.TimeStamp < DateTime.Now.AddMinutes(-1))
                 {
                     Program.awaitingDuels.Remove(duel);
-                    var duelId = Convert.ToInt64(component.Data.CustomId.Substring("duel_decline".Length));
+                    var duelId = Convert.ToInt64(new string(component.Data.CustomId.Where(Char.IsDigit).ToArray()));
                     var buttons = new ComponentBuilder().WithButton("Accept", "duel_accept", disabled: true).WithButton("Decline", "duel_decline", disabled: true);
 
                     if (component.Data.CustomId.StartsWith("duel_accept"))
@@ -85,27 +190,21 @@ namespace MarvBotV3
 
             if (component.Data.CustomId.StartsWith("duel_"))
             {
-                long duelId = 0;
-                Duel duel = null;
+                long duelId = Convert.ToInt64(new string(component.Data.CustomId.Where(Char.IsDigit).ToArray()));
+                Duel duel = Program.activeDuels.FirstOrDefault(x => x.DuelId == duelId);
 
                 if (component.Data.CustomId.StartsWith("duel_countdown"))
                     return;
 
                 if (component.Data.CustomId.StartsWith("duel_shoot"))
                 {
-                    duelId = Convert.ToInt64(component.Data.CustomId.Substring("duel_shoot".Length));
-                    duel = Program.activeDuels.FirstOrDefault(x => x.DuelId == duelId);
-
                     if (duel.Challenge == component.User.Id || duel.Challenger == component.User.Id)
                     {
                         var finalButton = new ComponentBuilder().WithButton("🔫", $"duel_shoot{duelId}", disabled: true);
                         await component.Message.ModifyAsync(x => x.Components = finalButton.Build());
                         var loser = duel.Challenge == component.User.Id ? duel.Challenger : duel.Challenge;
-                        await component.RespondAsync($"{component.User.Mention} has won {duel.BetAmount.ToString("n0", nfi)} of {MentionUtils.MentionUser(loser)} gold");
+                        await component.RespondAsync($"{component.User.Mention} has won {duel.BetAmount.ToString("n0", Program.nfi)} of {MentionUtils.MentionUser(loser)} gold");
                         Program.activeDuels.Remove(duel);
-                        var da = new DataAccess(new DatabaseContext());
-                        var bl = new MarvBotBusinessLayer(da);
-
                         SocketGuild guild = component.User.MutualGuilds.FirstOrDefault(x => x.Channels.Select(x => x.Id).ToList().Contains((ulong)component.ChannelId)); // Hack :(
 
                         if (duel.BetAmount > 0)
@@ -119,7 +218,6 @@ namespace MarvBotV3
                 }
 
                 var answer = "declined";
-                duelId = Convert.ToInt64(component.Data.CustomId.Substring("duel_decline".Length));
                 var buttons = new ComponentBuilder().WithButton("Accept", "duel_accept", disabled: true).WithButton("Decline", "duel_decline", disabled: true);
 
                 if (component.Data.CustomId.StartsWith("duel_accept"))
@@ -128,7 +226,6 @@ namespace MarvBotV3
                     answer = "accepted";
                 }
 
-                duel = Program.awaitingDuels.FirstOrDefault(x => x.DuelId == duelId);
                 var challenger = duel.Challenger;
 
                 if (component.Data.CustomId.StartsWith("duel_decline"))
@@ -141,7 +238,6 @@ namespace MarvBotV3
                         return;
                     }
                 }
-
 
                 if (duel.Challenge == component.User.Id)
                 {
@@ -165,7 +261,7 @@ namespace MarvBotV3
 
             if (!string.IsNullOrWhiteSpace(before.Activities.FirstOrDefault()?.Name) || !string.IsNullOrWhiteSpace(after.Activities.FirstOrDefault()?.Name))
                 if (before.Activities.FirstOrDefault()?.Name != after.Activities.FirstOrDefault()?.Name)
-                    await new MarvBotBusinessLayer(new DataAccess(new DatabaseContext())).SaveUserAcitivity(user, before.Activities.FirstOrDefault()?.Name ?? "", after.Activities.FirstOrDefault()?.Name ?? "");
+                    await bl.SaveUserAcitivity(user, before.Activities.FirstOrDefault()?.Name ?? "", after.Activities.FirstOrDefault()?.Name ?? "");
 
             var beforeName = before.Activities.FirstOrDefault()?.Name.Trim() ?? null;
             var afterName = after.Activities.FirstOrDefault()?.Name.Trim() ?? null;
@@ -215,7 +311,7 @@ namespace MarvBotV3
         }
 
         private Task UserLeft(SocketGuild arg1, SocketUser arg2) => 
-            new DataAccess(new DatabaseContext()).DeleteUser(arg2.Id);
+            da.DeleteUser(arg2.Id);
 
         private Task UserJoined(SocketGuildUser arg) => 
             arg.AddRoleAsync(arg.Guild.GetRole(349580645502025728));
@@ -327,7 +423,7 @@ namespace MarvBotV3
 
         public async Task ChangeGameAndRole(Cacheable<SocketGuildUser, ulong> beforeChangeUser, SocketGuildUser afterChangeUser)
         {
-            Console.WriteLine("ChangeGameAndRole");
+            //Console.WriteLine("ChangeGameAndRole");
             SocketGuildUser user = afterChangeUser;
             IRole gameRole = null;
             SocketGuild guild = user.Guild;
@@ -337,7 +433,7 @@ namespace MarvBotV3
 
             if (!string.IsNullOrWhiteSpace(beforeChangeUser.Value.Activities.FirstOrDefault()?.Name) || !string.IsNullOrWhiteSpace(afterChangeUser.Activities.FirstOrDefault()?.Name))
                 if (beforeChangeUser.Value.Activities.FirstOrDefault()?.Name != afterChangeUser.Activities.FirstOrDefault()?.Name)
-                    await new MarvBotBusinessLayer(new DataAccess(new DatabaseContext())).SaveUserAcitivity(user, beforeChangeUser.Value.Activities.FirstOrDefault()?.Name ?? "", afterChangeUser.Activities.FirstOrDefault()?.Name ?? "");
+                    await bl.SaveUserAcitivity(user, beforeChangeUser.Value.Activities.FirstOrDefault()?.Name ?? "", afterChangeUser.Activities.FirstOrDefault()?.Name ?? "");
 
             var beforeName = beforeChangeUser.Value.Activities.FirstOrDefault()?.Name.Trim() ?? null;
             var afterName = afterChangeUser.Activities.FirstOrDefault()?.Name.Trim() ?? null;
@@ -454,8 +550,6 @@ namespace MarvBotV3
 
         public async Task CelebrateBirthday()
         {
-            var da = new DataAccess(new DatabaseContext());
-
             var birthdays = await da.GetTodaysBirthdaysWithoutGift();
             if (!birthdays.Any())
                 return;
@@ -484,9 +578,6 @@ namespace MarvBotV3
                 return;
 
             lastGoldGiveDateTime = DateTime.Now;
-
-            var da = new DataAccess(new DatabaseContext());
-            var bl = new MarvBotBusinessLayer(da);
 
             var guilds = _discord.Guilds;
             foreach (var guild in guilds)

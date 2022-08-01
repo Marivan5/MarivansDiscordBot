@@ -11,7 +11,6 @@ namespace MarvBotV3
 {
     public class PublicCommands : ModuleBase<ShardedCommandContext>
     {
-        private NumberFormatInfo nfi = new NumberFormatInfo { NumberGroupSeparator = " ", CurrencyDecimalSeparator = "." };
         DataAccess da;
         MarvBotBusinessLayer bl;
         BusinessLayer.RiksbankenBusiness rb;
@@ -39,9 +38,9 @@ namespace MarvBotV3
             var tempData = await da.GetTempDataAsync();
             foreach (var data in tempData)
             {
-                var reply = $"At {data.Time} it was {data.Temperature.ToString("0.00", nfi)}C at {data.Room}";
+                var reply = $"At {data.Time} it was {data.Temperature.ToString("0.00", Program.nfi)}C at {data.Room}";
                 if(data.Humidity != 0)
-                    reply += $" with a humidity of {data.Humidity.ToString("0.00", nfi)}%";
+                    reply += $" with a humidity of {data.Humidity.ToString("0.00", Program.nfi)}%";
 
                 await ReplyAsync(reply);
             }

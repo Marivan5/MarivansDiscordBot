@@ -2,12 +2,14 @@
 
 namespace MarvBotV3.Dto
 {
-    public class Duel
+    public class RockPaperScissors
     {
-        public long DuelId { get; set; }
+        public long Id { get; set; }
         public ulong Challenger { get; set; }
         public ulong Challenge { get; set; }
         public int BetAmount { get; set; }
+        public string ChallengerChoice { get; set; }
+        public string ChallengeChoice { get; set; }
         public DateTime TimeStamp { get; set; }
     }
 }
