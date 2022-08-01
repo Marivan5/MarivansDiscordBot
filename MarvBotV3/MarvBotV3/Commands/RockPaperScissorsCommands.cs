@@ -41,6 +41,8 @@ namespace MarvBotV3.Commands
             reply += ($"{user.Mention} has **won** a total amount of **{amountWon.Sum().ToString("n0", Program.nfi)}** gold from challenges") + Environment.NewLine;
             var amountLost = stats.Where(x => x.Winner != user.Id).Select(x => x.BetAmount).ToList();
             reply += ($"{user.Mention} has **lost** a total amount of **{amountLost.Sum().ToString("n0", Program.nfi)}** gold from challenges") + Environment.NewLine;
+            var amountChallenged = stats.Where(x => x.Challenger == user.Id).Count();
+            reply += ($"{user.Mention} has challenged another user {amountChallenged} times. While they have been challended by other users {stats.Count - amountChallenged} times.") + Environment.NewLine;
             await ReplyAsync(reply);
         }
 
