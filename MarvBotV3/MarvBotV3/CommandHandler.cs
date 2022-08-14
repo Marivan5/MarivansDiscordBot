@@ -18,8 +18,6 @@ namespace MarvBotV3
         public readonly DiscordShardedClient _discord;
         private readonly IServiceProvider _services;
         private int goldToEveryoneTimer = 10;
-        DataAccess da;
-        MarvBotBusinessLayer bl;
 
         public static List<SocketUser> freeMsgList = new List<SocketUser>();
         private char prefix = Configuration.Load().Prefix;
@@ -29,8 +27,6 @@ namespace MarvBotV3
             _commands = services.GetRequiredService<CommandService>();
             _discord = services.GetRequiredService<DiscordShardedClient>();
             _services = services;
-            da = new DataAccess(new DatabaseContext());
-            bl = new MarvBotBusinessLayer(da);
 
             //_commands.CommandExecuted += CommandExecutedAsync;
             _discord.MessageReceived += MessageReceivedAsync;
@@ -96,10 +92,12 @@ namespace MarvBotV3
                 return;
             }
 
-            if(rps.Challenge == component.User.Id)
+            if (rps.Challenge == component.User.Id)
                 rps.ChallengeChoice = rpsChoice;
             else if (rps.Challenger == component.User.Id)
                 rps.ChallengerChoice = rpsChoice;
+
+            Console.WriteLine($"{component.User.Username} has choosen {rpsChoice}");
 
             Program.activeRockPaperScissorsEvents.Remove(rps);
             Program.activeRockPaperScissorsEvents.Add(rps);
@@ -150,6 +148,9 @@ namespace MarvBotV3
 
                 if (rps.BetAmount > 0)
                 {
+                    var da = new DataAccess(new DatabaseContext());
+                    var bl = new MarvBotBusinessLayer(da);
+
                     SocketGuild guild = component.User.MutualGuilds.FirstOrDefault(x => x.Channels.Select(x => x.Id).ToList().Contains((ulong)component.ChannelId)); // Hack :(
                     await bl.SaveGold(guild.GetUser(winner), guild, rps.BetAmount);
                     await bl.SaveGold(guild.GetUser(loser), guild, -rps.BetAmount);
@@ -212,6 +213,8 @@ namespace MarvBotV3
 
                         if (duel.BetAmount > 0)
                         {
+                            var da = new DataAccess(new DatabaseContext());
+                            var bl = new MarvBotBusinessLayer(da);
                             await bl.SaveGold(component.User, guild, duel.BetAmount);
                             await bl.SaveGold(guild.GetUser(loser), guild, -duel.BetAmount);
                             await da.SetDuel(duel.Challenger, duel.Challenge, component.User.Id, duel.BetAmount);
@@ -261,6 +264,9 @@ namespace MarvBotV3
 
             if (!before.Activities.Any() && !after.Activities.Any())
                 return;
+
+            var da = new DataAccess(new DatabaseContext());
+            var bl = new MarvBotBusinessLayer(da);
 
             if (!string.IsNullOrWhiteSpace(before.Activities.FirstOrDefault()?.Name) || !string.IsNullOrWhiteSpace(after.Activities.FirstOrDefault()?.Name))
                 if (before.Activities.FirstOrDefault()?.Name != after.Activities.FirstOrDefault()?.Name)
@@ -314,7 +320,7 @@ namespace MarvBotV3
         }
 
         private Task UserLeft(SocketGuild arg1, SocketUser arg2) => 
-            da.DeleteUser(arg2.Id);
+            new DataAccess(new DatabaseContext()).DeleteUser(arg2.Id);
 
         private Task UserJoined(SocketGuildUser arg) => 
             arg.AddRoleAsync(arg.Guild.GetRole(349580645502025728));
@@ -433,6 +439,9 @@ namespace MarvBotV3
 
             if (!beforeChangeUser.Value.Activities.Any() && !afterChangeUser.Activities.Any())
                 return;
+
+            var da = new DataAccess(new DatabaseContext());
+            var bl = new MarvBotBusinessLayer(da);
 
             if (!string.IsNullOrWhiteSpace(beforeChangeUser.Value.Activities.FirstOrDefault()?.Name) || !string.IsNullOrWhiteSpace(afterChangeUser.Activities.FirstOrDefault()?.Name))
                 if (beforeChangeUser.Value.Activities.FirstOrDefault()?.Name != afterChangeUser.Activities.FirstOrDefault()?.Name)
@@ -553,6 +562,9 @@ namespace MarvBotV3
 
         public async Task CelebrateBirthday()
         {
+            var da = new DataAccess(new DatabaseContext());
+            var bl = new MarvBotBusinessLayer(da);
+
             var birthdays = await da.GetTodaysBirthdaysWithoutGift();
             if (!birthdays.Any())
                 return;
@@ -581,6 +593,8 @@ namespace MarvBotV3
                 return;
 
             lastGoldGiveDateTime = DateTime.Now;
+            var da = new DataAccess(new DatabaseContext());
+            var bl = new MarvBotBusinessLayer(da);
 
             var guilds = _discord.Guilds;
             foreach (var guild in guilds)
