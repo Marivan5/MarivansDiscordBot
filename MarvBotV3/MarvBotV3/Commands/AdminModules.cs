@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace MarvBotV3.Commands
 {
     [RequireOwner]
-    public class AdminModules : ModuleBase<ShardedCommandContext>
+    public class AdminModules : ModuleBase<CommandContext>
     {
         DataAccess da;
 

@@ -5,11 +5,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using MarvBotV3.BusinessLayer;
 using MarvBotV3.Database;
 
 namespace MarvBotV3
 {
-    public class PublicCommands : ModuleBase<ShardedCommandContext>
+    public class PublicCommands : ModuleBase<CommandContext>
     {
         DataAccess da;
         MarvBotBusinessLayer bl;
@@ -162,7 +163,7 @@ namespace MarvBotV3
         public async Task ChangeNickname(IUser user, params string[] nickname)
         {
             const int costToChangeNick = 100;
-            var richBitch = Context.Guild.Users.First(x => x.Roles.Select(z => z.Id).ToList().Contains(762789255965048833));
+            var richBitch = Context.Guild.GetUsersAsync().Result.First(x => x.RoleIds.ToList().Contains(762789255965048833));
             if (richBitch.Id != Context.User.Id)
             {
                 await ReplyAsync($"Only {MentionUtils.MentionRole(762789255965048833)} can change nicknames");
@@ -187,7 +188,7 @@ namespace MarvBotV3
                 nick += $"{s} ";
 
             await bl.SaveGold(Context.User, Context.Guild, -costToChangeNick);
-            await Context.Guild.GetUser(user.Id).ModifyAsync(x => x.Nickname = nick.Trim());
+            await Context.Guild.GetUserAsync(user.Id).Result.ModifyAsync(x => x.Nickname = nick.Trim());
         }
 
         [Command("Help")]

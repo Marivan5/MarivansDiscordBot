@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MarvBotV3
+namespace MarvBotV3.BusinessLayer
 {
     public class MarvBotBusinessLayer
     {
@@ -18,13 +18,13 @@ namespace MarvBotV3
             _da = da; 
         }
 
-        public async Task SaveGold(IUser user, SocketGuild guild, int amount)
+        public async Task SaveGold(IUser user, IGuild guild, int amount)
         {
             await _da.SaveGold(user, guild.Id, amount);
             await CheckRichestPerson(guild);
         }
 
-        private async Task CheckRichestPerson(SocketGuild guild)
+        private async Task CheckRichestPerson(IGuild guild)
         {
             var newRichestPerson = (await _da.GetTopXGold(1)).FirstOrDefault()?.UserID ?? 0;
 
@@ -35,15 +35,15 @@ namespace MarvBotV3
             if(currentRichestPerson == null || newRichestPerson != currentRichestPerson.Id)
             {
                 var guildRole = (IRole)guild.GetRole(Program.serverConfig.richRole);
-                await guild.GetUser(newRichestPerson).AddRoleAsync(guildRole);
+                await guild.GetUserAsync(newRichestPerson).Result.AddRoleAsync(guildRole);
 
                 if(currentRichestPerson != null)
                     await currentRichestPerson.RemoveRoleAsync(guildRole);
             }
         }
 
-        public SocketGuildUser GetCurrentRichestPerson(SocketGuild guild) => 
-            guild.Users.FirstOrDefault(x => x.Roles.Any(y => y.Id == Program.serverConfig.richRole));
+        public IGuildUser GetCurrentRichestPerson(IGuild guild) => 
+            guild.GetUsersAsync().Result.FirstOrDefault(x => x.RoleIds.Contains(Program.serverConfig.richRole));
 
         public async Task SaveUserAcitivity(IUser user, string beforeActivity, string afterActivity) => 
             await _da.SaveUserAcitivity(user, beforeActivity, afterActivity);
@@ -81,7 +81,7 @@ namespace MarvBotV3
             return $"{Years} Year" + (Years > 1 ? "s" : "") + $" {Months} Month" + (Months > 1 ? "s" : "") + $" {Days} Day" + (Days > 1 ? "s" : "");
         }
 
-        public async Task<string> SetResultPoll(long id, bool result, SocketGuild guild)
+        public async Task<string> SetResultPoll(long id, bool result, IGuild guild)
         {
             var tbPoll = await _da.GetActivePolls().Pipe(x => x.Where(y => y.ID == id).SingleOrDefault());
 
@@ -95,7 +95,7 @@ namespace MarvBotV3
 
             foreach (var bet in tbBets)
             {
-                var user = guild.GetUser(bet.UserID);
+                var user = await guild.GetUserAsync(bet.UserID);
                 var amount = bet.Bet == result ? bet.BetAmount : -bet.BetAmount;
                 await SaveGold(user, guild, amount * 2);
             }

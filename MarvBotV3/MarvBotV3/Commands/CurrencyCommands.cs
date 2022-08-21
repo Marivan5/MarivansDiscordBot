@@ -1,8 +1,8 @@
 ﻿using Discord;
 using Discord.Commands;
+using MarvBotV3.BusinessLayer;
 using MarvBotV3.Database;
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -11,17 +11,19 @@ namespace MarvBotV3.Commands
     [Group("Gold")]
     [Alias("cash", "dinero", "money", "currency", "bank", "ducates", "euro", "dollar", "dollaroos")]
     [Summary("Currency group")]
-    public class CurrencyCommands : ModuleBase<ShardedCommandContext>
+    public class CurrencyCommands : ModuleBase<CommandContext>
     {
         int jackpotBorder = 250;
         int winningNumber = 60;
         DataAccess da;
         MarvBotBusinessLayer bl;
+        CurrencyLogic cl;
 
         public CurrencyCommands()
         {
             da = new DataAccess(new DatabaseContext());
             bl = new MarvBotBusinessLayer(da);
+            cl = new CurrencyLogic(da, bl);
         }
 
         [Command("How")]
@@ -67,7 +69,7 @@ namespace MarvBotV3.Commands
                 var reply = "";
                 try
                 {
-                    reply = await Gamble(amount);
+                    reply = await cl.Gamble(amount, Context.User, Context.Guild);
                 }
                 catch (Exception e)
                 {
@@ -94,7 +96,7 @@ namespace MarvBotV3.Commands
             for (int i = 0; i < times; ++i)
                 try
                 {
-                    reply += await Gamble(amount);
+                    reply += await cl.Gamble(amount, Context.User, Context.Guild);
                 }
                 catch (Exception e)
                 {
@@ -103,68 +105,6 @@ namespace MarvBotV3.Commands
                 }
 
             await ReplyAsync(reply);
-        }
-
-        private async Task<string> Gamble(int betAmount) // Should be in business layer
-        {
-            string reply = "";
-            var currentGold = await da.GetGold(Context.User.Id);
-
-            if (currentGold < betAmount)
-                throw new ArgumentException($"You only have {currentGold.ToString("n0", Program.nfi)}. Can't gamble more.");
-            if (betAmount <= 0)
-                throw new ArgumentException($"You can't gamble 0 gold.");
-
-            var rng = new Random();
-            var result = rng.Next(0, 101);
-            if (result == 100 && betAmount >= jackpotBorder)
-                if (rng.Next(0, 101) != 100)
-                    result = 99;
-
-            if (bl.GetCurrentRichestPerson(Context.Guild).Id == Context.User.Id && result == 100)
-                result = rng.Next(winningNumber, 100);
-
-            var cheatList = Program.serverConfig.whiteList;
-            if (cheatList.Contains(Context.User.Id)) // cheat
-                result = rng.Next(winningNumber, 100);
-
-            var nextRoll = await da.GetNextRoll(Context.User.Id, true);
-
-            if (nextRoll != null)
-                result = nextRoll.NextRoll;
-           
-            reply += $"You rolled {result}." + Environment.NewLine;
-            bool won;
-
-            var changeAmount = betAmount;
-            if (result >= winningNumber)
-            {
-                int jackpot = await da.GetGold(276456075559960576);
-                won = true;
-                if (result == 100 && betAmount < jackpot && betAmount >= jackpotBorder)
-                {
-                    changeAmount = betAmount * 100 > jackpot ? jackpot : betAmount * 100;
-                    reply += ($":tada: {Context.User.Mention} **WIN THE JACKPOT**, **{changeAmount.ToString("n0", Program.nfi)}** gold has been added to your bank. :tada:") + Environment.NewLine;
-                    await da.SaveGoldToBot(-changeAmount + jackpotBorder);
-                }
-                else
-                {
-                    reply += ($"{Context.User.Mention} **WIN**, **{changeAmount.ToString("n0", Program.nfi)}** gold has been added to your bank.") + Environment.NewLine;
-                }
-                await bl.SaveGold(Context.User, Context.Guild, changeAmount);
-            }
-            else
-            {
-                won = false;
-                reply += ($"{Context.User.Mention} has lost, **{betAmount.ToString("n0", Program.nfi)}** gold has been removed from your bank.") + Environment.NewLine;
-                await bl.SaveGold(Context.User, Context.Guild, -betAmount);
-                if (betAmount > 1)
-                    await da.SaveGoldToBot(betAmount / 2);
-            }
-            await da.UpdateGambleAmount(Context.User);
-            await da.SaveStats(Context.User, won, betAmount, changeAmount, result);
-
-            return reply;
         }
 
         [Command("Give")]
@@ -207,7 +147,7 @@ namespace MarvBotV3.Commands
         [Command("giveEveryone")]
         public async Task GiveGoldEveryone(int amount)
         {
-            var users = Context.Guild.Users;
+            var users = await Context.Guild.GetUsersAsync();
             await da.GiveGoldEveryone(users.Where(x => !x.IsSelfDeafened && x.Status == UserStatus.Online && !x.IsBot).ToList(), amount);
             await ReplyAsync($"You have given everyone who is online, **{amount.ToString("n0", Program.nfi)}** gold");
         }
@@ -235,53 +175,14 @@ namespace MarvBotV3.Commands
         [Alias("info", "stat"), Summary("Gets stats for **user**")]
         public async Task GetStats(IUser user = null)
         {
-            if (user == null)
-                user = Context.User;
-
-            var stats = await da.GetStats(user.Id);
-
-            if (stats == null)
-            {
-                await ReplyAsync($"Can't find any stats on {user.Mention}.");
-                return;
-            }
-
-            var reply = "";
-            reply += ($"{user.Mention} has gambled **{stats.Count()}** time(s)") + Environment.NewLine;
-            float winPercent = ((float)stats.Where(x => x.Won == true).Count() / (float)stats.Count()) * 100;
-            reply += ($"{user.Mention} has **won** {winPercent}% of their gambles") + Environment.NewLine;
-            var amountWon = stats.Where(x => x.Won == true).Select(x => x.ChangeAmount).ToList();
-            reply += ($"{user.Mention} has **won** a total amount of **{amountWon.Sum().ToString("n0", Program.nfi)}** gold") + Environment.NewLine;
-            var amountLost = stats.Where(x => x.Won == false).Select(x => x.ChangeAmount).ToList();
-            reply += ($"{user.Mention} has **lost** a total amount of **{amountLost.Sum().ToString("n0", Program.nfi)}** gold") + Environment.NewLine;
-            await ReplyAsync(reply);
+            await Context.Message.ReplyAsync(await cl.GetStats(Context.User, user));
         }
         
         [Command("Today")]
         [Alias("Todaystats", "statstoday"), Summary("Gets stats for **user** from the last 24 hours")]
         public async Task GetStatsToday(IUser user = null)
         {
-            if (user == null)
-                user = Context.User;
-
-            var yesterday = DateTime.Now.AddDays(-1);
-            var stats = await da.GetStats(user.Id, yesterday);
-
-            if (stats == null)
-            {
-                await ReplyAsync($"Can't find any stats on {user.Mention} in the last 24 hours.");
-                return;
-            }
-
-            var reply = "";
-            reply += ($"{user.Mention} has gambled **{stats.Count()}** time(s) in the last 24 hours.") + Environment.NewLine;
-            float winPercent = ((float)stats.Where(x => x.Won == true).Count() / (float)stats.Count()) * 100;
-            reply += ($"{user.Mention} has **won** {winPercent}% of their gambles in the last 24 hours") + Environment.NewLine;
-            var amountWon = stats.Where(x => x.Won == true).Select(x => x.ChangeAmount).ToList();
-            reply += ($"{user.Mention} has **won** a total amount of **{amountWon.Sum().ToString("n0", Program.nfi)}** gold in the last 24 hours") + Environment.NewLine;
-            var amountLost = stats.Where(x => x.Won == false).Select(x => x.ChangeAmount).ToList();
-            reply += ($"{user.Mention} has **lost** a total amount of **{amountLost.Sum().ToString("n0", Program.nfi)}** gold in the last 24 hours") + Environment.NewLine;
-            await ReplyAsync(reply);
+            await Context.Message.ReplyAsync(await cl.GetStatsToday(Context.User, user));
         }
 
         [Command("freeGold")]

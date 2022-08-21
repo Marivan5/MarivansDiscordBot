@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
 using MarvBotV3.Dto;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,9 +38,8 @@ namespace MarvBotV3
 
             using (var services = ConfigureServices(config))
             {
-                var client = services.GetRequiredService<DiscordShardedClient>();
+                var client = services.GetRequiredService<DiscordSocketClient>();
 
-                client.ShardReady += ReadyAsync;
                 client.Log += LogAsync;
 
                 await services.GetRequiredService<CommandHandler>().InitializeAsync();
@@ -48,12 +48,6 @@ namespace MarvBotV3
 
                 await Task.Delay(-1);
             }
-        }
-
-        private Task ReadyAsync(DiscordSocketClient shard)
-        {
-            Console.WriteLine($"Shard Number {shard.ShardId} is connected and ready!");
-            return Task.CompletedTask;
         }
 
         private Task LogAsync(LogMessage log)
@@ -100,7 +94,8 @@ namespace MarvBotV3
         private ServiceProvider ConfigureServices(DiscordSocketConfig config)
         {
             return new ServiceCollection()
-                .AddSingleton(new DiscordShardedClient(config))
+                .AddSingleton(new DiscordSocketClient(config))
+                .AddSingleton<InteractionService>()
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandler>()
                 .BuildServiceProvider();

@@ -95,7 +95,7 @@ namespace MarvBotV3.Database
             await db.SaveChangesAsync();
         }
 
-        public async Task GiveGoldEveryone(List<SocketGuildUser> users, int amount)
+        public async Task GiveGoldEveryone(List<IGuildUser> users, int amount)
         {
             foreach (var user in users)
             {

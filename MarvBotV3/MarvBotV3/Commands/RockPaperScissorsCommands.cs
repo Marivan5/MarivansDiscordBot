@@ -10,7 +10,7 @@ namespace MarvBotV3.Commands
     [Group("RockPaperScissors")]
     [Alias("RPS", "StenSaxPåse", "ssp")]
     [Summary("RPS group")]
-    public class RockPaperScissorsCommands : ModuleBase<ShardedCommandContext>
+    public class RockPaperScissorsCommands : ModuleBase<CommandContext>
     {
         DataAccess da;
 

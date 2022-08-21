@@ -4,13 +4,14 @@ using System.Threading.Tasks;
 using System.Linq;
 using Discord;
 using System;
+using MarvBotV3.BusinessLayer;
 
 namespace MarvBotV3.Commands
 {
     [Group("Poll")]
     [Alias("polls")]
     [Summary("Polls")]
-    public class PollsCommands : ModuleBase<ShardedCommandContext>
+    public class PollsCommands : ModuleBase<CommandContext>
     {
         DataAccess da;
         MarvBotBusinessLayer bl;

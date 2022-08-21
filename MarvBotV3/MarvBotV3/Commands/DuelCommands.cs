@@ -10,7 +10,7 @@ namespace MarvBotV3.Commands
     [Group("Duel")]
     [Alias("vs", "1v1", "fight")]
     [Summary("Duel group")]
-    public class DuelCommands : ModuleBase<ShardedCommandContext>
+    public class DuelCommands : ModuleBase<CommandContext>
     {
         DataAccess da;
 

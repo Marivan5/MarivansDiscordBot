@@ -9,14 +9,19 @@ using System.Linq;
 using System.Collections.Generic;
 using MarvBotV3.Database;
 using MarvBotV3.Dto;
+using Discord.Net;
+using Newtonsoft.Json;
+using Discord.Interactions;
+using MarvBotV3.BusinessLayer;
 
 namespace MarvBotV3
 {
     public class CommandHandler
     {
         public static CommandService _commands;
-        public readonly DiscordShardedClient _discord;
+        public readonly DiscordSocketClient _discord;
         private readonly IServiceProvider _services;
+        private readonly InteractionService _interactionService;
         private int goldToEveryoneTimer = 10;
 
         public static List<SocketUser> freeMsgList = new List<SocketUser>();
@@ -25,7 +30,8 @@ namespace MarvBotV3
         public CommandHandler(IServiceProvider services)
         {
             _commands = services.GetRequiredService<CommandService>();
-            _discord = services.GetRequiredService<DiscordShardedClient>();
+            _discord = services.GetRequiredService<DiscordSocketClient>();
+            _interactionService = services.GetRequiredService<InteractionService>();
             _services = services;
 
             //_commands.CommandExecuted += CommandExecutedAsync;
@@ -36,13 +42,33 @@ namespace MarvBotV3
             _discord.UserLeft += UserLeft;
             _discord.UserVoiceStateUpdated += ChangeVoiceChannel;
             _discord.ButtonExecuted += ButtonExecuted;
+            _discord.Ready += ReadyAsync;
+            _discord.InteractionCreated += InteractionCreated;
             //_ = RunIntervalTask();
 
             ServerConfig.PropertyChanged += ServerConfig_PropertyChanged;
             goldToEveryoneTimer = Program.serverConfig.GoldToEveryoneTimer;
 
             SetTimer();
+        }
 
+        private async Task InteractionCreated(SocketInteraction arg)
+        {
+            try
+            {
+                var context = new SocketInteractionContext(_discord, arg);
+                await _interactionService.ExecuteCommandAsync(context, _services);
+            }
+            catch (Exception ex)
+            {
+
+                Console.WriteLine(ex.ToString());
+            }
+        }
+
+        private async Task ReadyAsync()
+        {
+            await _interactionService.RegisterCommandsGloballyAsync();
         }
 
         private void ServerConfig_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -195,7 +221,7 @@ namespace MarvBotV3
             if (component.Data.CustomId.StartsWith("duel_"))
             {
                 long duelId = Convert.ToInt64(new string(component.Data.CustomId.Where(Char.IsDigit).ToArray()));
-                Duel duel = Program.activeDuels.FirstOrDefault(x => x.DuelId == duelId);
+                Duel duel = Program.awaitingDuels.FirstOrDefault(x => x.DuelId == duelId);
 
                 if (component.Data.CustomId.StartsWith("duel_countdown"))
                     return;
@@ -325,8 +351,11 @@ namespace MarvBotV3
         private Task UserJoined(SocketGuildUser arg) => 
             arg.AddRoleAsync(arg.Guild.GetRole(349580645502025728));
 
-        public async Task InitializeAsync() => 
+        public async Task InitializeAsync()
+        {
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+            await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+        }
 
         public async Task MessageReceivedAsync(SocketMessage rawMessage)
         {
@@ -384,7 +413,7 @@ namespace MarvBotV3
                 }
             }
 
-            var context = new ShardedCommandContext(_discord, message);
+            var context = new CommandContext(_discord, message);
 
             foreach (var duel in Program.awaitingDuels)
             {
@@ -600,7 +629,7 @@ namespace MarvBotV3
             foreach (var guild in guilds)
             {
                 var onlineUsers = guild.Users.Where(x => !x.IsSelfDeafened && x.Status == UserStatus.Online && !x.IsBot).ToList();
-                onlineUsers.Remove(bl.GetCurrentRichestPerson(guild));
+                onlineUsers.Remove(onlineUsers.FirstOrDefault(x => x.Id == bl.GetCurrentRichestPerson(guild).Id));
                 var userActivities = onlineUsers.GroupBy(x => new { x.Activities.FirstOrDefault()?.Name })
                     .Where(x => x.Key.Name != null && x.Count() > 1 && x.Key.Name != "Custom Status")
                     .Select(x => x.ToList());
