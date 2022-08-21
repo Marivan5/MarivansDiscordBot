@@ -34,18 +34,13 @@ namespace MarvBotV3.Commands
                 $"You can gamble your gold by typing '!gold roll **Amount**', if you roll a {winningNumber} or above, you win, else you lose. You can also duel people and bet gold on your self by typing '!duel **@User** **Amount**.'");
         }
 
-        [Command("Me")]
-        [Alias("", "my", "stash")]
-        public async Task MeGold()
-        {
-            var userGold = await da.GetGold(Context.User.Id);
-            await ReplyAsync($"You have **{(userGold).ToString("n0", Program.nfi)}** gold.");
-        }
-
         [Command("info")]
-        [Alias("howmuch", "bank", "stash")]
-        public async Task InfoGold(IUser user)
+        [Alias("", "howmuch", "bank", "stash")]
+        public async Task InfoGold(IUser user = null)
         {
+            if (user == null)
+                user = Context.User;
+
             var userGold = await da.GetGold(user.Id);
             await ReplyAsync($"{user.Mention} has **{userGold.ToString("n0", Program.nfi)}** gold.");
         }
@@ -66,7 +61,7 @@ namespace MarvBotV3.Commands
             if (input.ToLower() == "all" || input.ToLower() == "all in")
             {
                 var amount = await da.GetGold(Context.User.Id);
-                var reply = "";
+                string reply;
                 try
                 {
                     reply = await cl.Gamble(amount, Context.User, Context.Guild);
@@ -189,82 +184,14 @@ namespace MarvBotV3.Commands
         [Alias("pls", "plsSir", "välfärd"), Summary("Gives you a random amount of gold between 1-100")]
         public async Task DailyFreeGold()
         {
-            var top3 = await da.GetTopXGold(3).Pipe(x => x.Select(y => y.UserID).ToList());
-            if (top3.Contains(Context.User.Id))
-            {
-                await ReplyAsync("You are too rich to recieve free cash.");
-                return;
-            }
-
-            var lastDonation = await da.GetLatestDonation(Context.Guild.Id);
-            int waitHours = Program.serverConfig.donationWaitHours;
-
-            if (lastDonation != null && (DateTime.Now - lastDonation.TimeStamp).TotalHours < waitHours)
-            {
-                await ReplyAsync($"Last donations was given to {MentionUtils.MentionUser(lastDonation.UserID)} at {lastDonation.TimeStamp:yyyy-MM-dd HH:mm:ss}. I only give out 1 donation per {waitHours} hours");
-                return;
-            }
-
-            var botGoldAmount = await da.GetGold(276456075559960576);
-
-            if (botGoldAmount <= 0)
-            {
-                await ReplyAsync("I have no money left to give.");
-                return;
-            }
-
-            var rng = new Random();
-            var donationAmount = rng.Next(1, 101);
-
-            if (donationAmount > botGoldAmount)
-                donationAmount = botGoldAmount;
-
-            await da.SaveGoldToBot(-donationAmount);
-            await bl.SaveGold(Context.User, Context.Guild, donationAmount);
-            await da.SetDonation(Context.User, Context.Guild.Id, donationAmount);
-            await ReplyAsync($"I have given you **{donationAmount}** gold. Spend with care.");
+            await Context.Message.ReplyAsync(await cl.DailyFreeGold(Context.User, Context.Guild));
         }
 
         [Command("Purge")]
         [Alias("delete", "remove", "annihilate", "kill"), Summary("Deletes **user's** **amount** gold")]
         public async Task GoldPurge(IUser user, int amount = 0)
         {
-            //var richBitch = Context.Guild.Users.First(x => x.Roles.Select(z => z.Id).ToList().Contains(richBitchId)); bl.GetCurrentRichestPerson(Context.Guild)
-            //if (richBitch.Id != Context.User.Id)
-            //{
-            //    await ReplyAsync($"Only {MentionUtils.MentionRole(richBitchId)} can purge someone");
-            //    return;
-            //}
-            if (user == null)
-            {
-                await ReplyAsync("Type '!Gold purge *User* *Amount*'");
-                return;
-            }
-            if (user.Id == Context.User.Id)
-            {
-                await ReplyAsync("Can't purge yourself");
-                return;
-            }
-            var usersGold = await da.GetGold(user.Id);
-            if (amount == 0 || amount > usersGold)
-                amount = usersGold;
-            if (amount <= 0)
-            {
-                await ReplyAsync($"{user.Mention} has too little money");
-                return;
-            }
-
-            var userGoldAmount = await da.GetGold(Context.User.Id);
-
-            if (userGoldAmount < amount)
-            {
-                await ReplyAsync($"You need more gold than **{amount}** to purge {user.Mention}");
-                return;
-            }
-
-            await ReplyAsync($"{Context.User.Mention} has removed **{amount}** gold from {user.Mention}");
-            await bl.SaveGold(Context.User, Context.Guild, -amount);
-            await bl.SaveGold(user, Context.Guild, -amount);
+            await Context.Message.ReplyAsync(await cl.GoldPurge(Context.User, Context.Guild, user, amount));
         }
     }
 }
