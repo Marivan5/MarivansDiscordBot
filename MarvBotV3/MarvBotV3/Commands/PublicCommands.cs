@@ -16,13 +16,13 @@ namespace MarvBotV3
     {
         DataAccess da;
         MarvBotBusinessLayer bl;
-        BusinessLayer.RiksbankenBusiness rb;
+        RiksbankenBusiness rb;
 
         public PublicCommands()
         {
             da = new DataAccess(new DatabaseContext());
             bl = new MarvBotBusinessLayer(da);
-            rb = new BusinessLayer.RiksbankenBusiness(da);
+            rb = new RiksbankenBusiness(da);
         }
 
         // Get info on a user, or the user who invoked the command if one is not specified
@@ -38,14 +38,16 @@ namespace MarvBotV3
         [Alias("qr")]
         public async Task GetQRCode(string data)
         {
-            QRCodeGenerator qrGenerator = new QRCodeGenerator();
-            QRCodeData qrCodeData = qrGenerator.CreateQrCode(data, QRCodeGenerator.ECCLevel.Q);
-            QRCode qrCode = new QRCode(qrCodeData);
-            var qrimg = qrCode.GetGraphic(20);
-            var ms = new MemoryStream();
-            qrimg.Save(ms, System.DrawingCore.Imaging.ImageFormat.Png);
-            ms.Position = 0;
-            await Context.Channel.SendFileAsync(ms, "qr-code.png");
+            QRCodeData qrCodeData;
+            using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
+            {
+                qrCodeData = qrGenerator.CreateQrCode(data, QRCodeGenerator.ECCLevel.Q);
+            }
+            var qrCode = new PngByteQRCode(qrCodeData);
+            var qrCodeImage = qrCode.GetGraphic(20);
+            var stream = new MemoryStream(qrCodeImage);
+            stream.Position = 0;
+            await Context.Channel.SendFileAsync(stream, "qr-code.png");
         }
 
         [Command("temp")]
