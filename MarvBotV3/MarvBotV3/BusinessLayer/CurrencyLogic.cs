@@ -130,7 +130,6 @@ namespace MarvBotV3.BusinessLayer
 
         public async Task<string> DailyFreeGold(IUser user, IGuild guild)
         {
-            var reply = "";
             var top3 = await _da.GetTopXGold(3).Pipe(x => x.Select(y => y.UserID).ToList());
             if (top3.Contains(user.Id))
                 return "You are too rich to recieve free cash.";

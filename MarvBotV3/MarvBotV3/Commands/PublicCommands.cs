@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using Discord;
 using Discord.Commands;
 using MarvBotV3.BusinessLayer;
 using MarvBotV3.Database;
+using QRCoder;
 
 namespace MarvBotV3
 {
@@ -30,6 +32,20 @@ namespace MarvBotV3
         {
             user ??= Context.User;
             await ReplyAsync(user.ToString());
+        }
+
+        [Command("qrcode")]
+        [Alias("qr")]
+        public async Task GetQRCode(string data)
+        {
+            QRCodeGenerator qrGenerator = new QRCodeGenerator();
+            QRCodeData qrCodeData = qrGenerator.CreateQrCode(data, QRCodeGenerator.ECCLevel.Q);
+            QRCode qrCode = new QRCode(qrCodeData);
+            var qrimg = qrCode.GetGraphic(20);
+            var ms = new MemoryStream();
+            qrimg.Save(ms, System.DrawingCore.Imaging.ImageFormat.Png);
+            ms.Position = 0;
+            await Context.Channel.SendFileAsync(ms, "qr-code.png");
         }
 
         [Command("temp")]

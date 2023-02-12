@@ -3,7 +3,6 @@ using Discord.Interactions;
 using MarvBotV3.BusinessLayer;
 using MarvBotV3.Database;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace MarvBotV3.SlashCommands

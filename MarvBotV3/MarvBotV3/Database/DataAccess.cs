@@ -18,7 +18,7 @@ namespace MarvBotV3.Database
             db = dbContext;
         }
 
-        public Task SaveChanges() => 
+        public Task SaveChanges() =>
             db.SaveChangesAsync();
 
         public async Task<int> GetGold(ulong userID)
