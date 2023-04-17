@@ -348,6 +348,9 @@ namespace MarvBotV3.Database
         public Task<List<TbPolls>> GetActivePolls() => 
             db.TbPolls.AsQueryable().Where(x => x.Result == null).ToListAsync();
 
+        public Task<List<TbBets>> GetActiveBetsOnPoll(int id) =>
+            db.TbBets.AsQueryable().Where(x => x.PollID == id).ToListAsync();
+
         public async Task<long> SaveNewPoll(string name, ulong creator)
         {
             var tbPoll = new TbPolls

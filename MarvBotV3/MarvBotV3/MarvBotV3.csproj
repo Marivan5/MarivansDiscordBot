@@ -28,6 +28,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="NAudio" Version="2.1.0" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="7.0.0" />
     <PackageReference Include="QRCoder-ImageSharp" Version="0.9.0" />
   </ItemGroup>
@@ -38,6 +39,8 @@
     <PackageReference Include="System.ServiceModel.NetTcp" Version="4.10.0" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.10.0" />
     <PackageReference Include="System.ServiceModel.Security" Version="4.10.0" />
+    <PackageReference Include="VideoLibrary" Version="3.2.3" />
+    <PackageReference Include="YoutubeExplode" Version="6.2.8" />
   </ItemGroup>
 
   <ItemGroup>
