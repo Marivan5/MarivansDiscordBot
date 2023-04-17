@@ -87,7 +87,7 @@ namespace MarvBotV3.Commands
 
             if (!activeBets.Any())
             {
-                await ReplyAsync("You have no active bets");
+                await ReplyAsync($"{MentionUtils.MentionUser(user.Id)} have no active bets");
                 return;
             }
 
