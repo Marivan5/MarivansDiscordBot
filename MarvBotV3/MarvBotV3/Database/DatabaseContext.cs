@@ -19,6 +19,7 @@ namespace MarvBotV3
         public DbSet<TbBets> TbBets { get; set; }
         public DbSet<TbBirthdays> TbBirthdays { get; set; }
         public DbSet<TbCalendarDays> TbCalendarDays { get; set; }
+        public DbSet<TbInvestment> TbInvestments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

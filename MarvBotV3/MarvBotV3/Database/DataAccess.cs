@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static QRCoder.PayloadGenerator.SwissQrCode;
 
 namespace MarvBotV3.Database
 {
@@ -396,6 +397,26 @@ namespace MarvBotV3.Database
                 TimeStamp = DateTime.Now
             });
             await db.SaveChangesAsync();
+        }
+
+        public async Task SaveInvestment(IUser user, ulong guildID, int amount)
+        {
+            db.TbInvestments.Add(new TbInvestment
+            {
+                UserID = user.Id,
+                Username = user.Username,
+                InvestAmount = amount,
+            });
+
+            await db.SaveChangesAsync();
+        }
+
+        public async Task<List<TbInvestment>> GetInvestments(ulong userID)
+        {
+            if (!db.TbInvestments.Any(x => x.UserID == userID))
+                return null;
+
+            return await db.TbInvestments.AsQueryable().Where(x => x.UserID == userID).ToListAsync();
         }
     }
 }
