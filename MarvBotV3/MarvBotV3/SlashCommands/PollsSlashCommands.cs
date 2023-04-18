@@ -3,12 +3,13 @@ using Discord.Interactions;
 using MarvBotV3.BusinessLayer;
 using MarvBotV3.Database;
 using RiksbankenService;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace MarvBotV3.SlashCommands;
 
-[Group("Polls", "Polls Group")]
+[Group("polls", "Polls Group")]
 public class PollsSlashCommands : InteractionModuleBase<SocketInteractionContext>
 {
     DataAccess da;
@@ -20,7 +21,7 @@ public class PollsSlashCommands : InteractionModuleBase<SocketInteractionContext
         bl = new MarvBotBusinessLayer(da);
     }
 
-    [SlashCommand("Active", "Gets active polls")]
+    [SlashCommand("active", "Gets active polls")]
     public async Task GetActivePolls()
     {
         var reply = "";
@@ -38,7 +39,7 @@ public class PollsSlashCommands : InteractionModuleBase<SocketInteractionContext
     }
 
     [RequireOwner]
-    [SlashCommand("New", "Creates a new poll")]
+    [SlashCommand("new", "Creates a new poll")]
     public async Task SetNewPoll(string name)
     {
         name = name.Trim();
@@ -47,14 +48,14 @@ public class PollsSlashCommands : InteractionModuleBase<SocketInteractionContext
     }
 
     [RequireOwner]
-    [SlashCommand("Result", "Sets the result of a poll")]
+    [SlashCommand("result", "Sets the result of a poll")]
     public async Task GetPollResult(int id, bool result)
     {
         await RespondAsync(await bl.SetResultPoll(id, result, Context.Guild));
     }
 
 
-    [SlashCommand("Bet", "Adds a bet to a poll")]
+    [SlashCommand("bet", "Adds a bet to a poll")]
     public async Task BetOnPoll(int id, bool vote, int amount)
     {
         var userAmount = await da.GetGold(Context.User.Id);
@@ -69,7 +70,7 @@ public class PollsSlashCommands : InteractionModuleBase<SocketInteractionContext
         await RespondAsync($"Added new bet");
     }
 
-    [SlashCommand("Bets", "Gets all votes for a poll")]
+    [SlashCommand("bets", "Gets all votes for a poll")]
     public async Task GetVotes(int id)
     {
         var poll = (await da.GetActivePolls()).Where(x => x.ID == id).ToList();
@@ -83,18 +84,18 @@ public class PollsSlashCommands : InteractionModuleBase<SocketInteractionContext
         var votes = await da.GetActiveBetsOnPoll(id);
         var reply = "";
         foreach (var vote in votes)
-            reply += $"Bet prediction: {vote.Bet} - User: {MentionUtils.MentionUser(vote.UserID)} - Bet amount: {vote.BetAmount} gold)";
+            reply += $"Bet prediction: {vote.Bet} - User: {MentionUtils.MentionUser(vote.UserID)} - Bet amount: **{vote.BetAmount.ToString("n0", Program.nfi)}** gold)" + Environment.NewLine;
         await RespondAsync(reply);
     }
 
-    [SlashCommand("User Bets", "Gets all votes for a poll")]
+    [SlashCommand("user-bets", "Gets all votes for a poll")]
     public async Task GetVotesForUser(IUser user = null)
     {
         var votes = await bl.GetActiveBets(user);
         var reply = "";
 
         foreach (var vote in votes)
-            reply += $"Bet prediction: {vote.Bet} - User: {MentionUtils.MentionUser(vote.UserID)} - Bet amount: {vote.BetAmount} gold)";
+            reply += $"Bet prediction: {vote.Bet} - User: {MentionUtils.MentionUser(vote.UserID)} - Bet amount: **{vote.BetAmount.ToString("n0", Program.nfi)}** gold)";
 
         await RespondAsync(reply);
     }
