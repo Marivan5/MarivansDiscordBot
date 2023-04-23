@@ -1,12 +1,10 @@
 ﻿using Discord;
-using Discord.WebSocket;
 using MarvBotV3.Database.Tables;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using static QRCoder.PayloadGenerator.SwissQrCode;
 
 namespace MarvBotV3.Database
 {

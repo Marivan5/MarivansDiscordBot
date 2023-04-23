@@ -23,6 +23,7 @@ namespace MarvBotV3.BusinessLayer
         private int[] usersDuringDay = new int[13];
         private double[] weeklyFactor = new double[7];
         private double sumWeeklyFactor;
+        private const ulong CHANNEL_ID = 158194839215669248;
         public UserCountModule(DiscordSocketClient client)
         {
             _client = client;
@@ -81,7 +82,5 @@ namespace MarvBotV3.BusinessLayer
         }
 
     }
-
-    private const ulong CHANNEL_ID = 158194839215669248;
 
 }
