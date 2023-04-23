@@ -1,6 +1,5 @@
 ﻿using Discord;
 using MarvBotV3.Database;
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 

@@ -1,5 +1,4 @@
-﻿using Discord;
-using Discord.Interactions;
+﻿using Discord.Interactions;
 using MarvBotV3.BusinessLayer;
 using MarvBotV3.Database;
 using System;
@@ -7,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MarvBotV3.SlashCommands
 {
-    [Group("gold", "Currency Group")]
+    [Group("invest", "Invest Group")]
     public class StockSlashCommands : InteractionModuleBase<SocketInteractionContext>
     {
         DataAccess da;
@@ -21,7 +20,8 @@ namespace MarvBotV3.SlashCommands
             sl = new StockLogic(da, bl);
         }
 
-        [SlashCommand("invest", "invest in stock")]
+        [RequireOwner]
+        [SlashCommand("buy", "invest in stock")]
         public async Task InvestGold(int investment = 10)
         {
             string reply = "";
@@ -38,6 +38,7 @@ namespace MarvBotV3.SlashCommands
             await RespondAsync(reply);
         }
 
+        [RequireOwner]
         [SlashCommand("sell", "invest in stock")]
         public async Task SellInvestment(int amount)
         {
