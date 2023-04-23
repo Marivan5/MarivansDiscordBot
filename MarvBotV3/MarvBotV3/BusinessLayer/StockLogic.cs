@@ -1,5 +1,6 @@
 ﻿using Discord;
 using MarvBotV3.Database;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -25,11 +26,10 @@ namespace MarvBotV3.BusinessLayer
             if (InvestAmount <= 0)
                 return($"You can't Invest 0 gold.");
 
-            var changeAmount = InvestAmount;
+            await _bl.SaveGold(user, guild, -InvestAmount);
+            await _da.SaveInvestment(user, guild.Id, InvestAmount);
 
-            await _bl.SaveGold(user, guild, changeAmount);
-
-            return $"{user.Mention} has invested **{changeAmount.ToString("n0", Program.nfi)}** gold.";
+            return $"{user.Mention} has invested **{InvestAmount.ToString("n0", Program.nfi)}** gold.";
         }
 
 
@@ -42,9 +42,16 @@ namespace MarvBotV3.BusinessLayer
             }
             var sum = userInvestment.Sum(x => x.InvestAmount);
 
+            // Change sum with weekly factor
             var amountInvestment = 1.1 * sum;
 
+            if(amount > amountInvestment) 
+            {
+                return ("You can't sell more money than you have invested");
+            }
+
             await _da.SaveGold(user, guild.Id, amount);
+            await _da.SaveInvestment(user, guild.Id, -amount);
 
             return $"{user.Mention} has sold **{amountInvestment.ToString("n0", Program.nfi)}** of gold in stock.";
         }
