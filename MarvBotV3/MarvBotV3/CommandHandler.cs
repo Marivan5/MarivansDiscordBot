@@ -11,8 +11,6 @@ using MarvBotV3.Database;
 using MarvBotV3.Dto;
 using Discord.Interactions;
 using MarvBotV3.BusinessLayer;
-using System.Diagnostics;
-using System.IO;
 
 namespace MarvBotV3
 {
