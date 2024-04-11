@@ -284,9 +284,9 @@ public class CommandHandler
     private async Task PresenceUpdated(SocketUser user, SocketPresence before, SocketPresence after)
     {
         IRole gameRole = null;
-        List<SocketGuild> guilds = user.MutualGuilds.ToList();
+        List<SocketGuild> guilds = [.. user.MutualGuilds];
 
-        if (!before.Activities.Any() && !after.Activities.Any())
+        if (before.Activities.Count == 0 && after.Activities.Count == 0)
             return;
 
         var da = new DataAccess(new DatabaseContext());
@@ -305,7 +305,7 @@ public class CommandHandler
 
             if (before.Activities.FirstOrDefault() != null)
             {
-                if (beforeName == afterName)
+                if (beforeName.Equals(afterName))
                     return;
 
                 gameRole = guild.Roles.Where(x => x.ToString().Equals(beforeName) && !x.IsMentionable).FirstOrDefault();
@@ -322,7 +322,9 @@ public class CommandHandler
 
                 if (gameRole == null) // if role does not exist, create it
                     gameRole = await guild.CreateRoleAsync(afterName, permissions: GuildPermissions.None, color: Color.Default, isHoisted: false, false);
+
                 var channel = guild.VoiceChannels.Where(x => x.ToString().Equals(gameRole.Name) && x.Bitrate == 96000).FirstOrDefault();
+
                 if (channel == null)
                 {
                     var properties = new VoiceChannelProperties
@@ -330,9 +332,10 @@ public class CommandHandler
                         Bitrate = 96000
                     };
                     var altChannel = await guild.CreateVoiceChannelAsync(gameRole.Name);
-                    await altChannel.AddPermissionOverwriteAsync(guild.EveryoneRole, new OverwritePermissions(connect: PermValue.Deny, viewChannel: PermValue.Deny));
-                    await altChannel.AddPermissionOverwriteAsync(gameRole, new OverwritePermissions(connect: PermValue.Allow, viewChannel: PermValue.Allow));
-                    await altChannel.ModifyAsync(x => x.Bitrate = properties.Bitrate);
+                    var task1 = altChannel.AddPermissionOverwriteAsync(guild.EveryoneRole, new OverwritePermissions(connect: PermValue.Deny, viewChannel: PermValue.Deny));
+                    var task2 = altChannel.AddPermissionOverwriteAsync(gameRole, new OverwritePermissions(connect: PermValue.Allow, viewChannel: PermValue.Allow));
+                    var task3 = altChannel.ModifyAsync(x => x.Bitrate = properties.Bitrate);
+                    await Task.WhenAll(task1, task2, task3);
                 }
                 await guildUser.AddRoleAsync(gameRole);
             }
@@ -453,82 +456,6 @@ public class CommandHandler
         Program.activeDuels.Add(new Duel { DuelId = duelId, Challenger = challenger, Challenge = challenge, BetAmount = betAmount, TimeStamp = DateTime.Now });
     }
 
-    public async Task ChangeGameAndRole(Cacheable<SocketGuildUser, ulong> beforeChangeUser, SocketGuildUser afterChangeUser)
-    {
-        //Console.WriteLine("ChangeGameAndRole");
-        SocketGuildUser user = afterChangeUser;
-        IRole gameRole = null;
-        SocketGuild guild = user.Guild;
-
-        if (!beforeChangeUser.Value.Activities.Any() && !afterChangeUser.Activities.Any())
-            return;
-
-        var da = new DataAccess(new DatabaseContext());
-        var bl = new MarvBotBusinessLayer(da);
-
-        if (!string.IsNullOrWhiteSpace(beforeChangeUser.Value.Activities.FirstOrDefault()?.Name) || !string.IsNullOrWhiteSpace(afterChangeUser.Activities.FirstOrDefault()?.Name))
-            if (beforeChangeUser.Value.Activities.FirstOrDefault()?.Name != afterChangeUser.Activities.FirstOrDefault()?.Name)
-                await bl.SaveUserAcitivity(user, beforeChangeUser.Value.Activities.FirstOrDefault()?.Name ?? "", afterChangeUser.Activities.FirstOrDefault()?.Name ?? "");
-
-        var beforeName = beforeChangeUser.Value.Activities.FirstOrDefault()?.Name.Trim() ?? null;
-        var afterName = afterChangeUser.Activities.FirstOrDefault()?.Name.Trim() ?? null;
-
-        if (afterChangeUser.Activities.FirstOrDefault() != null)
-        {
-            if(beforeChangeUser.Value.Activities.FirstOrDefault() != null)
-            {
-                if(beforeName == afterName)
-                    return;
-
-                gameRole = guild.Roles.Where(x => x.ToString().Equals(beforeName) && !x.IsMentionable).FirstOrDefault();
-                await DeleteGameRoleAndVoiceChannel(guild, gameRole, user);
-                gameRole = null;
-            }
-            gameRole = guild.Roles.Where(x => x.ToString().Equals(afterName) && !x.IsMentionable).FirstOrDefault();
-
-            if (gameRole == null) // if role does not exist, create it
-                gameRole = await guild.CreateRoleAsync(afterName, permissions: GuildPermissions.None, color: Color.Default, isHoisted: false, false);
-            var channel = guild.VoiceChannels.Where(x => x.ToString().Equals(gameRole.Name) && x.Bitrate == 96000).FirstOrDefault();
-            if (channel == null)
-            {
-                var properties = new VoiceChannelProperties
-                {
-                    Bitrate = 96000
-                };
-                var altChannel = await guild.CreateVoiceChannelAsync(gameRole.Name);
-                await altChannel.AddPermissionOverwriteAsync(guild.EveryoneRole, new OverwritePermissions(connect: PermValue.Deny, viewChannel: PermValue.Deny));
-                await altChannel.AddPermissionOverwriteAsync(gameRole, new OverwritePermissions(connect: PermValue.Allow, viewChannel: PermValue.Allow));
-                await altChannel.ModifyAsync(x => x.Bitrate = properties.Bitrate); 
-                //await user.ModifyAsync(x => x.Channel = altChannel); // Flyttar användaren
-            }
-            //else
-            //{
-            //    await user.ModifyAsync(x => x.Channel = altChannel); // Flyttar användaren
-            //}
-            await user.AddRoleAsync(gameRole);
-        }
-        else if (beforeChangeUser.Value.Activities.FirstOrDefault() != null && afterChangeUser.Activities.FirstOrDefault() == null)
-        {
-            gameRole = guild.Roles.Where(x => x.ToString().Equals(beforeName) && !x.IsMentionable).FirstOrDefault();
-
-            if (gameRole == null)
-                return;
-
-            await DeleteGameRoleAndVoiceChannel(guild, gameRole, user);
-            //Discord.Rest.RestVoiceChannel altChannel = null;
-            //SocketVoiceChannel channel = guild.VoiceChannels.Where(input => input.ToString().Equals("General")).FirstOrDefault();
-            //if (channel == null)
-            //{
-            //    altChannel = await guild.CreateVoiceChannelAsync("General");
-            //    await user.ModifyAsync(x => x.Channel = altChannel);
-            //}
-            //else
-            //{
-            //    await user.ModifyAsync(x => x.Channel = channel);
-            //}
-        }
-    }
-
     private async Task DeleteGameRoleAndVoiceChannel(SocketGuild guild, IRole gameRole, SocketGuildUser user)
     {
         await user.RemoveRoleAsync(gameRole);
@@ -536,8 +463,9 @@ public class CommandHandler
         if (!guild.Users.Where(x => x != user).Any(x => x.Roles.Contains(gameRole))) // raderar
         {
             SocketVoiceChannel channel = guild.VoiceChannels.Where(x => x.ToString().Equals(gameRole.Name) && x.Bitrate == 96000).FirstOrDefault();
-            await gameRole.DeleteAsync();
-            await channel.DeleteAsync();
+            var task1 = gameRole.DeleteAsync();
+            var task2 = channel.DeleteAsync();
+            await Task.WhenAll(task1, task2);
         }
     }
 
