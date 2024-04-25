@@ -249,12 +249,14 @@ namespace MarvBotV3
             var birthdays = await da.GetBirthdays().Pipe(x => x.OrderBy(x => x.Birthday.Month).ThenBy(x => x.Birthday.Day));
             if (birthdays == null)
             {
-                await ReplyAsync("No birthdays have a registred");
+                await ReplyAsync("No birthdays have been registred");
                 return;
             }
             var reply = "";
+            var order = birthdays.Where(x => x.Birthday.Month > DateTime.Today.Month || (x.Birthday.Month == DateTime.Today.Month && x.Birthday.Day >= DateTime.Today.Day)).OrderBy(x => x.Birthday.Month).ThenBy(x => x.Birthday.Day).ToList();
+            order.AddRange(birthdays.Where(x => x.Birthday.Month < DateTime.Today.Month || (x.Birthday.Month == DateTime.Today.Month && x.Birthday.Day < DateTime.Today.Day)).OrderBy(x => x.Birthday.Month).ThenBy(x => x.Birthday.Day).ToList());
 
-            foreach (var bday in birthdays)
+            foreach (var bday in order)
             {
                 reply += BirthdayReply(bday.UserID, bday.Birthday);
             }
@@ -262,9 +264,9 @@ namespace MarvBotV3
         }
 
         private string BirthdayReply(ulong userID, DateTime birthday) =>
-            $"{MentionUtils.MentionUser(userID)} was born on {birthday:yyyy-MM-dd}. " +
+            $"{MentionUtils.MentionUser(userID)} was born {birthday:yyyy-MM-dd}. " +
             $"They are {bl.CalculateYourAge(birthday)} old. " +
-            $"There are {bl.CalculateDaysUntilNextDate(birthday)} days until next their birthday.{Environment.NewLine}";
+            $"{bl.CalculateDaysUntilNextDate(birthday)} days until next their birthday.{Environment.NewLine}";
 
         [Command("FreeDays")]
         [Alias("RedDays", "RödaDagar", "Holidays", "Holiday")]

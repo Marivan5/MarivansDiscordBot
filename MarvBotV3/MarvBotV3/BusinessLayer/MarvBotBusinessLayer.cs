@@ -78,7 +78,7 @@ namespace MarvBotV3.BusinessLayer
                 }
             }
             int Days = Now.Subtract(PastYearDate.AddMonths(Months)).Days;
-            return $"{Years} Year" + (Years > 1 ? "s" : "") + $" {Months} Month" + (Months > 1 ? "s" : "") + $" {Days} Day" + (Days > 1 ? "s" : "");
+            return $"{Years} Year" + (Years > 1 ? "s" : "") + (Months > 0 ? $", {Months} Month" + (Months > 1 ? "s" : "") : "") + (Days > 0 ? $", {Days} Day" + (Days > 1 ? "s" : "") : "");
         }
 
         public async Task<string> SetResultPoll(long id, bool result, IGuild guild)
