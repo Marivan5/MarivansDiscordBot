@@ -344,7 +344,7 @@ namespace MarvBotV3.Database
         public Task<List<TbCalendarDays>> GetCalendarDaysForYear(int year) => 
             db.TbCalendarDays.AsQueryable().Where(x => x.CalendarDate.Year == year).ToListAsync();
 
-        public Task<List<TbPolls>> GetActivePolls() => 
+        public Task<List<TbPolls>> GetActiveBets() => 
             db.TbPolls.AsQueryable().Where(x => x.Result == null).ToListAsync();
 
         public Task<List<TbBets>> GetActiveBetsOnPoll(int id) =>
@@ -383,7 +383,7 @@ namespace MarvBotV3.Database
 
         public async Task SaveNewBet(int id, bool result, int amount, IUser user)
         {
-            var activePoll = await GetActivePolls().Pipe(x => x.Where(y => y.ID == id).ToList());
+            var activePoll = await GetActiveBets().Pipe(x => x.Where(y => y.ID == id).ToList());
 
             if (!activePoll.Any())
                 return;

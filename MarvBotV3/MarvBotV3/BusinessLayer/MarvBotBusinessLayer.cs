@@ -1,5 +1,4 @@
 ﻿using Discord;
-using Discord.WebSocket;
 using MarvBotV3.Database;
 using MarvBotV3.Database.Tables;
 using System;
@@ -81,12 +80,15 @@ namespace MarvBotV3.BusinessLayer
             return $"{Years} Year" + (Years > 1 ? "s" : "") + (Months > 0 ? $", {Months} Month" + (Months > 1 ? "s" : "") : "") + (Days > 0 ? $", {Days} Day" + (Days > 1 ? "s" : "") : "");
         }
 
-        public async Task<string> SetResultPoll(long id, bool result, IGuild guild)
+        public async Task<string> SetResultPoll(long id, bool result, IGuild guild, ulong userId)
         {
-            var tbPoll = await _da.GetActivePolls().Pipe(x => x.Where(y => y.ID == id).SingleOrDefault());
+            var tbPoll = await _da.GetActiveBets().Pipe(x => x.Where(y => y.ID == id).SingleOrDefault());
+
+            if (tbPoll.CreatorUserID != userId)
+                return "Only the creator can set the result of the bet";
 
             if (tbPoll == null)
-                return $"Can't find active poll with ID {id}";
+                return $"Can't find active bet with ID {id}";
 
             tbPoll.Result = result;
             tbPoll.ResultTimeStamp = DateTime.Now;
@@ -102,7 +104,7 @@ namespace MarvBotV3.BusinessLayer
 
             await _da.SaveChanges();
 
-            return $"Result saved for poll: {tbPoll.Name} {Environment.NewLine}" +
+            return $"Result saved for bet: {tbPoll.Name} {Environment.NewLine}" +
                 $"Winners: {tbBets.Count(x => x.Bet == result)} {Environment.NewLine}" +
                 $"Losers: {tbBets.Count(x => x.Bet != result)}";
         }
@@ -110,7 +112,7 @@ namespace MarvBotV3.BusinessLayer
         public async Task<List<TbBets>> GetActiveBets(IUser user)
         {
             var allBets = await _da.GetBetsFromUserId(user.Id);
-            var activePollIds = await _da.GetActivePolls().Pipe(x => x.Select(y => y.ID).ToList());
+            var activePollIds = await _da.GetActiveBets().Pipe(x => x.Select(y => y.ID).ToList());
 
             return allBets.Where(x => activePollIds.Contains(x.PollID)).ToList();
         }

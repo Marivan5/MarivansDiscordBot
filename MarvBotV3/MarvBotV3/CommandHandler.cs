@@ -296,8 +296,8 @@ public class CommandHandler
             if (before.Activities.FirstOrDefault()?.Name != after.Activities.FirstOrDefault()?.Name)
                 await bl.SaveUserAcitivity(user, before.Activities.FirstOrDefault()?.Name ?? "", after.Activities.FirstOrDefault()?.Name ?? "");
 
-        var beforeName = before.Activities.FirstOrDefault()?.Name.Trim() ?? null;
-        var afterName = after.Activities.FirstOrDefault()?.Name.Trim() ?? null;
+        var beforeName = "Game: " + before.Activities.FirstOrDefault()?.Name.Trim() ?? null;
+        var afterName = "Game: " + after.Activities.FirstOrDefault()?.Name.Trim() ?? null;
 
         foreach (var guild in guilds)
         {
@@ -338,6 +338,21 @@ public class CommandHandler
                     await Task.WhenAll(task1, task2, task3);
                 }
                 await guildUser.AddRoleAsync(gameRole);
+            }
+
+            var allRoles = guild.Roles.Where(x => x.Name.StartsWith("Game:")).ToList();
+            var allChannels = guild.VoiceChannels.Where(x => x.Name.StartsWith("Game:")).ToList();
+
+            foreach (var channel in allChannels)
+            {
+                if (!guild.Users.Any(x => x.Activities.Any(x => x.Name == channel.Name))) // raderar
+                    await channel.DeleteAsync();
+            }
+
+            foreach (var role in allRoles)
+            {
+                if (!guild.Users.Any(x => x.Activities.Any(x => x.Name == role.Name))) // raderar
+                    await role.DeleteAsync();
             }
         }
     }

@@ -27,7 +27,7 @@ namespace MarvBotV3.Commands
         public async Task Active()
         {
             var reply = "";
-            var activePolls = await da.GetActivePolls();
+            var activePolls = await da.GetActiveBets();
 
             if (!activePolls.Any())
             {
@@ -36,12 +36,11 @@ namespace MarvBotV3.Commands
             }
 
             foreach (var poll in activePolls)
-                reply += $"ID: {poll.ID} : {poll.Name}";
+                reply += $"ID: {poll.ID} : {poll.Name}" + Environment.NewLine;
 
             await ReplyAsync(reply);
         }
 
-        [RequireOwner]
         [Command("New")]
         [Alias("Ny")]
         public async Task SetNewPoll(params string[] name)
@@ -56,11 +55,10 @@ namespace MarvBotV3.Commands
             await ReplyAsync($"Added new poll with ID: {id}, Name: {pollName}");
         }
 
-        [RequireOwner]
         [Command("Result")]
         [Alias("Res", "Resultat", "Set")]
         public async Task SetResultPoll(long id, bool result) => 
-            await ReplyAsync(await bl.SetResultPoll(id, result, Context.Guild));
+            await ReplyAsync(await bl.SetResultPoll(id, result, Context.Guild, Context.User.Id));
 
         [Command("Bet")]
         public async Task BetOnPoll(int id, bool result, int amount)
