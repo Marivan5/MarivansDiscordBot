@@ -345,13 +345,13 @@ public class CommandHandler
 
             foreach (var channel in allChannels)
             {
-                if (!guild.Users.Any(x => x.Activities.Any(x => x.Name == channel.Name))) // raderar
+                if (!guild.Users.Any(x => x.Activities.Any(x => $"Game: {x.Name}" == channel.Name))) // raderar
                     await channel.DeleteAsync();
             }
 
             foreach (var role in allRoles)
             {
-                if (!guild.Users.Any(x => x.Activities.Any(x => x.Name == role.Name))) // raderar
+                if (!guild.Users.Any(x => x.Activities.Any(x => $"Game: {x.Name}" == role.Name))) // raderar
                     await role.DeleteAsync();
             }
         }
