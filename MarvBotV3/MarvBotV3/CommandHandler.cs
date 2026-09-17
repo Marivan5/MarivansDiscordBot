@@ -1,16 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using Discord;
 using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
-using System.Linq;
-using System.Collections.Generic;
+using MarvBotV3.BusinessLayer;
 using MarvBotV3.Database;
 using MarvBotV3.Dto;
-using Discord.Interactions;
-using MarvBotV3.BusinessLayer;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MarvBotV3;
 
@@ -357,10 +357,10 @@ public class CommandHandler
         }
     }
 
-    private Task UserLeft(SocketGuild arg1, SocketUser arg2) => 
+    private Task UserLeft(SocketGuild arg1, SocketUser arg2) =>
         new DataAccess(new DatabaseContext()).DeleteUser(arg2.Id);
 
-    private Task UserJoined(SocketGuildUser arg) => 
+    private Task UserJoined(SocketGuildUser arg) =>
         arg.AddRoleAsync(arg.Guild.GetRole(349580645502025728));
 
     public async Task InitializeAsync()
@@ -372,9 +372,9 @@ public class CommandHandler
     public async Task MessageReceivedAsync(SocketMessage rawMessage)
     {
         // Ignore system messages, or messages from other bots
-        if (rawMessage is not SocketUserMessage message) 
+        if (rawMessage is not SocketUserMessage message)
             return;
-        if (message.Source != MessageSource.User) 
+        if (message.Source != MessageSource.User)
             return;
 
         if (Program.serverConfig.blacklistWords.Any(message.Content.ToLower().Contains))
@@ -437,7 +437,7 @@ public class CommandHandler
         var argPos = 0;
         if (!message.HasCharPrefix(prefix, ref argPos) && !message.HasMentionPrefix(_discord.CurrentUser, ref argPos))
             return;
-        
+
         var result = await _commands.ExecuteAsync(context, argPos, _services);
 
         if (result.Error.HasValue)
@@ -489,7 +489,7 @@ public class CommandHandler
     public async Task ChangeVoiceChannel(SocketUser user, SocketVoiceState beforeState, SocketVoiceState afterState)
     {
         SocketGuild guild = afterState.VoiceChannel?.Guild;
-        if(guild == null)
+        if (guild == null)
             guild = beforeState.VoiceChannel.Guild;
 
         SocketGuildUser guildUser = guild.GetUser(user.Id);
@@ -532,18 +532,19 @@ public class CommandHandler
         var bl = new MarvBotBusinessLayer(da);
 
         var birthdays = await da.GetTodaysBirthdaysWithoutGift();
+
         if (!birthdays.Any())
             return;
 
         var guilds = _discord.Guilds;
-        
+
         foreach (var guild in guilds)
         {
             foreach (var birthday in birthdays)
             {
                 if (guild.Users.Select(x => x.Id).Contains(birthday.UserID))
                 {
-                    await guild.DefaultChannel
+                    await guild.SystemChannel
                         .SendMessageAsync($":tada: Happy birthday {MentionUtils.MentionUser(birthday.UserID)} :tada:");
                     await da.UpdateBirthdayLastGiftGiven(guild.GetUser(birthday.UserID), DateTime.Now);
                 }
@@ -563,22 +564,26 @@ public class CommandHandler
         var bl = new MarvBotBusinessLayer(da);
 
         var guilds = _discord.Guilds;
-        foreach (var guild in guilds)
+        try
         {
-            var onlineUsers = guild.Users.Where(x => !x.IsSelfDeafened && x.Status == UserStatus.Online && !x.IsBot).ToList();
-            onlineUsers.Remove(onlineUsers.FirstOrDefault(x => x.Id == bl.GetCurrentRichestPerson(guild).Id));
-            var userActivities = onlineUsers.GroupBy(x => new { x.Activities.FirstOrDefault()?.Name })
-                .Where(x => x.Key.Name != null && x.Count() > 1 && x.Key.Name != "Custom Status")
-                .Select(x => x.ToList());
+            foreach (var guild in guilds)
+            {
+                var onlineUsers = guild.Users.Where(x => !x.IsSelfDeafened && x.Status == UserStatus.Online && !x.IsBot).ToList();
+                onlineUsers.Remove(onlineUsers.FirstOrDefault(x => x.Id == bl.GetCurrentRichestPerson(guild).Id));
+                var userActivities = onlineUsers.GroupBy(x => new { x.Activities.FirstOrDefault()?.Name })
+                    .Where(x => x.Key.Name != null && x.Count() > 1 && x.Key.Name != "Custom Status")
+                    .Select(x => x.ToList());
 
-            foreach (var user in onlineUsers)
-                await bl.SaveGold(user, guild, 1);
+                foreach (var user in onlineUsers)
+                    await bl.SaveGold(user, guild, 1);
 
-            foreach (var act in userActivities)
-                foreach (var user in act)
-                    await bl.SaveGold(user, guild, 2);
+                foreach (var act in userActivities)
+                    foreach (var user in act)
+                        await bl.SaveGold(user, guild, 2);
+            }
         }
-        //await da.GiveGoldEveryone(users, 1); // Is super wierd after a days running for some reason
-        //await da.GiveGoldEveryone(extraGoldUsers, 2);
+        catch (Exception ex)
+        {
+        }
     }
 }

@@ -58,7 +58,7 @@ namespace MarvBotV3
             foreach (var data in tempData)
             {
                 var reply = $"At {data.Time} it was {data.Temperature.ToString("0.00", Program.nfi)}C at {data.Room}";
-                if(data.Humidity != 0)
+                if (data.Humidity != 0)
                     reply += $" with a humidity of {data.Humidity.ToString("0.00", Program.nfi)}%";
 
                 await ReplyAsync(reply);
@@ -69,7 +69,7 @@ namespace MarvBotV3
         [Alias("video")]
         public async Task VideoChannelInfo()
         {
-            if(Program.serverConfig.videoChannel == 0)
+            if (Program.serverConfig.videoChannel == 0)
                 await ReplyAsync("Video channel is not set.");
             else
                 await ReplyAsync("Video channel is set to: " + MentionUtils.MentionChannel(Program.serverConfig.videoChannel));
@@ -151,7 +151,7 @@ namespace MarvBotV3
         [Alias("roll")]
         public async Task DiceRoll(int lowValue = 1, int highValue = 6, int amount = 1)
         {
-            if(amount > 20)
+            if (amount > 20)
             {
                 await ReplyAsync("Amount cant be more than 20");
                 amount = 20;
@@ -170,7 +170,7 @@ namespace MarvBotV3
 
             for (int i = 0; i < amount; i++)
             {
-                reply += "Roll " + (i+1).ToString() + ": " + rng.Next(lowValue, highValue) + Environment.NewLine;
+                reply += "Roll " + (i + 1).ToString() + ": " + rng.Next(lowValue, highValue) + Environment.NewLine;
             }
 
             await ReplyAsync(reply);
@@ -234,14 +234,16 @@ namespace MarvBotV3
             if (user == null)
                 user = Context.User;
             var birthday = await da.GetBirthday(user);
+
             if (birthday == null)
             {
                 await ReplyAsync("User does not have a registred birthday");
                 return;
             }
+
             await ReplyAsync(BirthdayReply(birthday.UserID, birthday.Birthday));
         }
-        
+
         [Command("Birthdays")]
         [Alias("Bdays", "GetBirthdays", "AllBirthdays")]
         public async Task GetBirthdays()
@@ -252,21 +254,39 @@ namespace MarvBotV3
                 await ReplyAsync("No birthdays have been registred");
                 return;
             }
+
             var reply = "";
             var order = birthdays.Where(x => x.Birthday.Month > DateTime.Today.Month || (x.Birthday.Month == DateTime.Today.Month && x.Birthday.Day >= DateTime.Today.Day)).OrderBy(x => x.Birthday.Month).ThenBy(x => x.Birthday.Day).ToList();
             order.AddRange(birthdays.Where(x => x.Birthday.Month < DateTime.Today.Month || (x.Birthday.Month == DateTime.Today.Month && x.Birthday.Day < DateTime.Today.Day)).OrderBy(x => x.Birthday.Month).ThenBy(x => x.Birthday.Day).ToList());
 
             foreach (var bday in order)
-            {
                 reply += BirthdayReply(bday.UserID, bday.Birthday);
+
+            if (reply.Length > 2000)
+            {
+                for (int i = 0; i < reply.Length; i += 2000)
+                {
+                    int chunkSize = Math.Min(2000, reply.Length - i);
+                    if (chunkSize == 2000)
+                    {
+                        int lastNewline = reply.LastIndexOf('\n', i + chunkSize - 1, chunkSize);
+                        if (lastNewline > i)
+                        {
+                            chunkSize = lastNewline - i + 1;
+                        }
+                    }
+                    var chunk = reply.Substring(i, chunkSize);
+                    await ReplyAsync(chunk);
+                }
             }
+
             await ReplyAsync(reply);
         }
 
         private string BirthdayReply(ulong userID, DateTime birthday) =>
             $"{MentionUtils.MentionUser(userID)} was born {birthday:yyyy-MM-dd}. " +
-            $"They are {bl.CalculateYourAge(birthday)} old. " +
-            $"{bl.CalculateDaysUntilNextDate(birthday)} days until next their birthday.{Environment.NewLine}";
+            $"{bl.CalculateYourAge(birthday)} old. " +
+            $"{bl.CalculateDaysUntilNextDate(birthday)} days until next birthday.{Environment.NewLine}";
 
         [Command("FreeDays")]
         [Alias("RedDays", "RödaDagar", "Holidays", "Holiday")]
@@ -283,7 +303,7 @@ namespace MarvBotV3
             foreach (var day in days)
             {
                 var daysToGo = bl.CalculateDaysUntilNextDate(day.CalendarDate, false);
-                string afterText = year == DateTime.Today.Year ? $"It is currently { Math.Abs(daysToGo) } days " + (daysToGo > 0 ? "left." : "ago.") : "";
+                string afterText = year == DateTime.Today.Year ? $"It is currently {Math.Abs(daysToGo)} days " + (daysToGo > 0 ? "left." : "ago.") : "";
                 reply += $"{index}: {day.CalendarDate:dddd yyyy-MM-dd} is a holiday. " + afterText + Environment.NewLine;
                 ++index;
             }
